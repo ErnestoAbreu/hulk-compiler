@@ -91,7 +91,6 @@ enum class TokenType {
     COLON,              // :
     COMMA,              // ,
     DOT,                // .
-    // QUESTION,        // ?
     
     // Delimitadores
     LPAREN,             // (

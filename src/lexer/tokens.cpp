@@ -2,7 +2,7 @@
 #include <string>
 
 // Token simple con: Type, Value, Line y Collumn
-struct tokens
+struct Token
 {
     TokenType type;
     std::string value;
@@ -14,85 +14,112 @@ struct tokens
 enum class TokenType {
 
     // Identificadores y literales
-    IDENTIFIER,     // nombre de variable/función
-    NUMBER,         // número entero o decimal
-    STRING,         // cadena entre comillas
-    CHAR,           // carácter entre comillas simples
-    
+    IDENTIFIER,         // nombre de variable/funcion
+    NUMBER,             // numero entero o decimal
+    STRING,             // cadena entre comillas dobles
+    CHAR,               // caracter unico entre comillas simples
+    TRUE,               // true
+    FALSE,              // false
+
+    // Tipos reservados 
+    T_OBJECT,           // Object  todos los tipos heredan de este
+    T_NUMBER,           // Number
+    T_BOOLEAN,          // Boolean
+    T_STRING,           // String
+    T_CHAR,             // Char
+
     // Palabras clave
-    KEYWORD_IF,     // if
-    KEYWORD_ELSE,   // else
-    KEYWORD_WHILE,  // while
-    KEYWORD_FOR,    // for
-    KEYWORD_RETURN, // return
-    KEYWORD_FUNC,   // function
-    KEYWORD_LET,    // let
-    KEYWORD_CONST,  // const
-    KEYWORD_TRUE,   // true
-    KEYWORD_FALSE,  // false
-    
+    KW_IF,              // if
+    KW_ELIF,            // elif
+    KW_ELSE,            // else
+
+    KW_WHILE,           // while
+    KW_FOR,             // for
+
+    KW_FUNCTION,        // function
+    KW_LET,             // let
+    KW_IN,              // in
+
+    KW_TYPE,            // type
+    KW_NEW,             // new
+    KW_INHERITS,        // inherits
+    KW_SELF,            // aunque segun la definicion de Hulk no es una palabra rservada
+    KW_BASE,            // base : se refiere a la implementación del padre (o el antepasado más cercano que tiene una implementación)
+    KW_PROTOCOL,        // protocol : interfaces de toda la vida
+    KW_EXTECNDS,        // extends : para decir que un protocolo implementa otro protocolo 
+
     // Operadores aritméticos
-    OP_PLUS,        // +
-    OP_MINUS,       // -
-    OP_MULTIPLY,    // *
-    OP_DIVIDE,      // /
-    OP_MODULO,      // %
-    OP_INCREMENT,   // ++
-    OP_DECREMENT,   // --
-    OP_EXPONENT,    // **
+    OP_PLUS,            // +
+    OP_MINUS,           // -
+    OP_MULTIPLY,        // * tambien se usa para decir que una variabel es un Iterable Ej: numbers = Number* se usa para decir number es un Iterable de Number
+    OP_DIVIDE,          // /
+    OP_MODULE,          // %
+    OP_INCREMENT,       // ++
+    OP_DECREMENT,       // --
+    OP_EXPONENT,        // ** o ^
+    OP_CONCAT,          // @
+    OP_DOBLE_CONCAT,    // @@ lo cual es equivalente a @ " " @
     
-    // Operadores de asignación
-    OP_ASSIGN,      // =
-    OP_PLUS_ASSIGN, // +=
-    OP_MINUS_ASSIGN, // -=
-    OP_MULT_ASSIGN, // *=
-    OP_DIV_ASSIGN,  // /=
-    OP_MOD_ASSIGN,  // %=
+    // Operadores de asignacion
+    OP_ASSIGN,          // =
+    OP_DESTRUCT_ASSIGN, // := asignacion destructiva que se usa para reasignarle un valor a una variable
+    OP_PLUS_ASSIGN,     // +=
+    OP_MINUS_ASSIGN,    // -=
+    OP_MULT_ASSIGN,     // *=
+    OP_DIV_ASSIGN,      // /=
+    OP_MOD_ASSIGN,      // %=
     
-    // Operadores de comparación
-    OP_EQUAL,       // ==
-    OP_NOT_EQUAL,   // !=
-    OP_STRICT_EQ,   // ===
-    OP_STRICT_NEQ,  // !==
-    OP_LESS,        // <
-    OP_LESS_EQ,     // <=
-    OP_GREATER,     // >
-    OP_GREATER_EQ,  // >=
+    // Operadores de comparacion
+    OP_EQUAL,           // ==
+    OP_NOT_EQUAL,       // !=
+    OP_LESS,            // <
+    OP_LESS_EQ,         // <=
+    OP_GREATER,         // >
+    OP_GREATER_EQ,      // >=
+
+    // Operador de tipo
+    OP_IS,              // is : para comparar
+    OP_AS,              // as : tratar como un tipo estatico dado (da errores en tiempo de ejecucion)
     
-    // Operadores lógicos
-    OP_AND,         // &&
-    OP_OR,          // ||
-    OP_NOT,         // !
+    // Operadores logicos
+    OP_AND,             // &
+    OP_OR,              // | tambien se usa en la compresion de listas
+    OP_NOT,             // !
     
-    // Operadores a nivel de bits
-    // OP_BIT_AND,     // &
-    // OP_BIT_OR,      // |
-    // OP_BIT_XOR,     // ^
-    // OP_BIT_NOT,     // ~
-    // OP_LEFT_SHIFT,  // <<
-    // OP_RIGHT_SHIFT, // >>
-    
-    // Puntuación
-    SEMICOLON,      // ;
-    COLON,          // :
-    COMMA,          // ,
-    DOT,            // .
-    // QUESTION,       // ?
+    // Puntuacion
+    SEMICOLON,          // ;
+    COLON,              // :
+    COMMA,              // ,
+    DOT,                // .
+    // QUESTION,        // ?
     
     // Delimitadores
-    LPAREN,         // (
-    RPAREN,         // )
-    LBRACE,         // {
-    RBRACE,         // }
-    LBRACKET,       // [
-    RBRACKET,       // ]
+    LPAREN,             // (
+    RPAREN,             // )
+    LBRACE,             // {
+    RBRACE,             // }
+    LBRACKET,           // [
+    RBRACKET,           // ]
+
+    // Funciones reservadas *(No se si hacen falta)
+    F_RANGE,            // range
+    F_RANDOM,           // rand
+    F_PRINT,            // print
+    F_SIN,              // sin
+    F_COS,              // cos
+    F_LOG,              // log
+    F_COT,              // cot
+    F_TAN,              // tan
+
+    // constants
+    F_PI, 
     
     // Otros
-    ARROW,          // =>
-    // SPREAD,         // ...
-    COMMENT,        // // o /* y */
-    WHITESPACE,     // espacios, tabs
-    NEWLINE,        // \n
-    END_OF_FILE,    // fin de archivo
-    UNKNOWN         // token no reconocido
+    ARROW,              // => 
+    RT_ARROW,           // -> dice el Tipo de Retorno
+    COMMENT,            // // o /* y */
+    WHITESPACE,         // espacios, tabs
+    NEWLINE,            // \n
+    END_OF_FILE,        // fin de archivo
+    UNKNOWN             // token no reconocido
 };

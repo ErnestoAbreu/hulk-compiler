@@ -151,3 +151,177 @@ NFA char_class_nfa(const std::set<char>& chars) {
     return {s, t};
 }
 
+      
+// =========================== Parser de expresiones ===================================
+
+class Parser {
+    const std::string& pattern;
+    size_t pos = 0;
+
+public:
+    Parser(const std::string& pat): pattern(pat) {}
+
+    // Punto de entrada: hace un parseo recursivo descendente :)
+    NFA parse() {
+        NFA expr = parse_expr();
+        if (pos != pattern.size()) {
+            throw std::runtime_error("Caracter inesperado al final del patrón");
+        }
+        return expr;
+    }
+
+private:
+    // expr -> term ('|' term)*
+    NFA parse_expr() {
+        NFA left = parse_term();
+        while (pos < pattern.size() && pattern[pos] == '|') {
+            pos++;
+            NFA right = parse_term();
+            left = alt_nfa(left, right);
+        }
+        return left;
+    }
+
+    // term -> factor*
+    NFA parse_term() {
+        NFA result = parse_factor();
+        while (pos < pattern.size() && pattern[pos] != ')' && pattern[pos] != '|') {
+            NFA next = parse_factor();
+            result = concat_nfa(result, next);
+        }
+        return result;
+    }
+
+    // factor -> primary ('*' | '+')*
+    NFA parse_factor() {
+        NFA base = parse_primary();
+        while (pos < pattern.size()) {
+            char op = pattern[pos];
+            if (op == '*') {
+                base = star_nfa(base);
+                pos++;
+            } else if (op == '+') {
+                base = plus_nfa(base);
+                pos++;
+            } else break;
+        }
+        return base;
+    }
+
+    // primary -> '(' expr ')' | '.' | char_class | literal
+    NFA parse_primary() {
+        if (pos >= pattern.size()) {
+            throw std::runtime_error("Fin inesperado de patrón");
+        }
+        char c = pattern[pos];
+        if (c == '(') {  // agrupación
+            pos++;
+            NFA inside = parse_expr();
+            if (pos >= pattern.size() || pattern[pos] != ')') {
+                throw std::runtime_error("Falta ')'");
+            }
+            pos++;
+            return inside;
+        }
+        if (c == '.') {  // comodin
+            pos++;
+            return any_nfa();
+        }
+        if (c == '[') {  // clase de caracteres
+            pos++;
+            std::set<char> chars;
+            bool neg = false;
+            if (pattern[pos] == '^') { neg = true; pos++; }
+            while (pos < pattern.size() && pattern[pos] != ']') {
+                if (pos + 2 < pattern.size() && pattern[pos+1] == '-') {
+                    char start = pattern[pos];
+                    char end = pattern[pos+2];
+                    for (char x = start; x <= end; ++x) chars.insert(x);
+                    pos += 3;
+                } else {
+                    chars.insert(pattern[pos]);
+                    pos++;
+                }
+            }
+            if (pos >= pattern.size() || pattern[pos] != ']') {
+                throw std::runtime_error("Falta ']'");
+            }
+            pos++;
+            return char_class_nfa(chars);
+        }
+        // caracter literal
+        pos++;
+        return char_nfa(c);
+    }
+};
+
+             
+// ========================== Simulación del NFA ====================================
+
+// Añade un estado y recorre las transiciones epsilon
+void add_state(StatePtr s, std::set<StatePtr>& states) {
+    if (states.count(s)) return;
+    states.insert(s);
+    for (auto& tr : s->out) {
+        if (tr.type == TransitionType::EPSILON) {
+            add_state(tr.next, states);
+        }
+    }
+}
+
+// Verifica si el NFA acepta todo el texto
+bool match(const NFA& nfa, const std::string& text) {
+    std::set<StatePtr> current;
+    add_state(nfa.start, current);
+    for (char c : text) {
+        std::set<StatePtr> next_states;
+        for (auto s : current) {
+            for (auto& tr : s->out) {
+                if ((tr.type == TransitionType::CHAR && tr.c == c) || tr.type == TransitionType::ANY) {
+                    add_state(tr.next, next_states);
+                }
+            }
+        }
+        current = std::move(next_states);
+    }
+    // al llegar al final del texto, ver si es estado final valido
+    for (auto s : current) {
+        if (s->is_accept) return true;
+    }
+    return false;
+}
+
+         
+/*
+Explicacion detallada de todo para despues documentar:
+
+1. Estructuras de datos:
+   - State: representa un estado con sus transiciones (out).
+   - Transition: tipo (CHAR, ANY, EPSILON), caracter asociado, y estado destino.
+   - NFA: par de estados (start y accept) que configuran el autómata.
+
+2. Construcción de Thompson:
+   - Para cada operación regex se genera un sub-NFA:
+     * char_nfa: literales.
+     * any_nfa: comodin '.'.
+     * concat_nfa: concatenación con epsilon.
+     * alt_nfa: alternación con nuevo inicio y fin.
+     * star_nfa: bucle para '*'.
+     * plus_nfa: uno o más, usando star_nfa.
+     * char_class_nfa: clases y rangos de caracteres.
+
+3. Parser de expresiones:
+   - parse(): llama a parse_expr() y verifica que termine el patrón.
+   - parse_expr(): maneja '|' para alternación.
+   - parse_term(): une factores hasta ')' o '|'.
+   - parse_factor(): aplica '*' y '+' repetidamente.
+   - parse_primary(): detecta '()', '.', '[]' y literales.
+
+4. Simulación del NFA:
+   - add_state: agrega un estado y sigue epsilons.
+   - match: itera caracteres, transita por CHAR y ANY,
+     y al final busca un estado de aceptación.
+
+Este motor te permite construir varios NFAs para tus tokens y luego
+aplicar match() en el buffer de entrada para tu lexer.
+*/

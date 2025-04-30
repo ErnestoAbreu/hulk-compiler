@@ -379,36 +379,3 @@ bool match(const NFA &nfa, const std::string &text)
     }
     return false;
 }
-
-/*
-Explicacion detallada de todo para despues documentar:
-
-1. Estructuras de datos:
-   - State: representa un estado con sus transiciones (out).
-   - Transition: tipo (CHAR, ANY, EPSILON), caracter asociado, y estado destino.
-   - NFA: par de estados (start y accept) que definen al autómata (es un grafo de toda la vida lo que con inicio y fin).
-
-2. Construcción de Thompson: se basa en ir componiendo los NFA de una forma fija para obtener un nuevo NFA que abarque a todos los NFA que lo componen
-   - Para cada operación regex se genera un NFA: 
-     * char_nfa: literales.
-     * any_nfa: comodin '.'.
-     * concat_nfa: concatenación con epsilon.
-     * alt_nfa: alternación con nuevo inicio y fin.
-     * star_nfa: bucle para '*'.
-     * plus_nfa: uno o más, usando star_nfa.
-     * char_class_nfa: clases y rangos de caracteres.
-
-3. Parser de expresiones (hace un parseo recursivo descendente para crear el AST de las operaciones del regex e ir componiendolas 
-    de abajo hacia arriba usando Thompson):
-   - parse(): llama a parse_expr() y verifica que termine el patrón.
-   - parse_expr(): maneja '|' para alternación.
-   - parse_term(): une factores hasta ')' o '|'.
-   - parse_factor(): aplica '*' , '+' o '?' repetidamente.
-   - parse_primary(): detecta '()', '.', '[]' y literales.
-
-4. Simulación del NFA:
-   - add_state: agrega un estado y sigue epsilons.(primero estas ya que no consumen nada del patron)
-   - match: itera caracteres, transita por CHAR y ANY,
-     y al final busca un estado de aceptación.
-
-*/

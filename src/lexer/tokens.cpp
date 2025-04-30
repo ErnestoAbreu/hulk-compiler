@@ -10,7 +10,7 @@ struct Token
     int column;
 };
 
-// Enum con los 'types' posibles par a los tokens
+// Enum con los tipos posibles par a los tokens
 enum class TokenType {
 
     // Identificadores y literales

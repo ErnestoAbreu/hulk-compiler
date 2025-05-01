@@ -18,6 +18,7 @@ enum class TokenType {
     T_BOOLEAN,          // Boolean
     T_STRING,           // String
     T_CHAR,             // Char
+    T_NULL,             // Null
 
     // Palabras clave
     KW_IF,              // if
@@ -136,6 +137,7 @@ static const std::vector<std::pair<std::string, TokenType>> RegexsTokens = {
     // Literales
     {"\".*\"",      TokenType::STRING},
     {"'.'",         TokenType::CHAR},
+    {"Null",        TokenType::T_NULL},
     
     {"[0-9]*([.][0-9]+)?", TokenType::NUMBER},
 
@@ -218,74 +220,75 @@ static const std::vector<std::pair<std::string, TokenType>> RegexsTokens = {
 //
 std::string TokenType_to_string(TokenType type){
     switch(type){
-        case TokenType::COMMENT: return "COMMENT";
-        case TokenType::WHITESPACE : return "WHITESPACE";
-        case TokenType::NEWLINE : return "NEWLINE";
-        case TokenType::STRING : return "STRING";
-        case TokenType::CHAR : return "CHAR";
-        case TokenType::NUMBER : return "NUMBER";
-        case TokenType::KW_IF : return "KW_IF";
-        case TokenType::KW_ELSE : return "KW_ELSE";
-        case TokenType::KW_WHILE : return "KW_WHILE";
-        case TokenType::KW_FOR : return "KW_FOR";
-        case TokenType::KW_FUNCTION : return "KW_FUNCTION";
-        case TokenType::KW_LET : return "KW_LET";
-        case TokenType::KW_IN : return "KW_IN";
-        case TokenType::KW_TYPE : return "KW_TYPE";
-        case TokenType::KW_NEW : return "KW_NEW";
-        case TokenType::KW_INHERITS : return "KW_INHERITS";
-        case TokenType::KW_SELF : return "KW_SELF";
-        case TokenType::KW_BASE : return "KW_BASE";
-        case TokenType::KW_PROTOCOL : return "KW_PROTOCOL";
-        case TokenType::KW_EXTECNDS : return "KW_EXTECNDS";
-        case TokenType::TRUE : return "TRUE";
-        case TokenType::FALSE : return "FALSE";
-        case TokenType::T_OBJECT : return "T_OBJECT";
-        case TokenType::T_NUMBER : return "T_NUMBER";
-        case TokenType::T_BOOLEAN : return "T_BOOLEAN";
-        case TokenType::T_STRING : return "T_STRING";
-        case TokenType::T_CHAR : return "T_CHAR";
-        case TokenType::OP_IS : return "OP_IS";
-        case TokenType::OP_AS : return "OP_AS";
-        case TokenType::OP_EXPONENT : return "OP_EXPONENT";
-        case TokenType::OP_INCREMENT : return "OP_INCREMENT";
-        case TokenType::OP_DECREMENT : return "OP_DECREMENT";
-        case TokenType::OP_DOBLE_CONCAT : return "OP_DOBLE_CONCAT";
-        case TokenType::OP_DESTRUCT_ASSIGN : return "OP_DESTRUCT_ASSIGN";
-        case TokenType::OP_PLUS_ASSIGN : return "OP_PLUS_ASSIGN";
-        case TokenType::OP_MINUS_ASSIGN : return "OP_MINUS_ASSIGN";
-        case TokenType::OP_MULT_ASSIGN : return "OP_MULT_ASSIGN";
-        case TokenType::OP_DIV_ASSIGN : return "OP_DIV_ASSIGN";
-        case TokenType::OP_MOD_ASSIGN : return "OP_MOD_ASSIGN";
-        case TokenType::OP_EQUAL : return "OP_EQUAL";
-        case TokenType::OP_NOT_EQUAL : return "OP_NOT_EQUAL";
-        case TokenType::OP_LESS_EQ : return "OP_LESS_EQ";
-        case TokenType::OP_GREATER_EQ : return "OP_GREATER_EQ";
-        case TokenType::ARROW : return "ARROW";
-        case TokenType::RT_ARROW : return "RT_ARROW";
-        case TokenType::OP_ASSIGN : return "OP_ASSIGN";
-        case TokenType::OP_LESS : return "OP_LESS";
-        case TokenType::OP_GREATER : return "OP_GREATER";
-        case TokenType::OP_PLUS : return "OP_PLUS";
-        case TokenType::OP_MINUS : return "OP_MINUS";
-        case TokenType::OP_MULTIPLY : return "OP_MULTIPLY";
-        case TokenType::OP_DIVIDE : return "OP_DIVIDE";
-        case TokenType::OP_MODULE : return "OP_MODULE";
-        case TokenType::OP_AND : return "OP_AND";
-        case TokenType::OP_OR : return "OP_OR";
-        case TokenType::OP_NOT : return "OP_NOT";
-        case TokenType::OP_CONCAT : return "OP_CONCAT";
-        case TokenType::SEMICOLON : return "SEMICOLON";
-        case TokenType::COLON : return "COLON";
-        case TokenType::COMMA : return "COMMA";
-        case TokenType::DOT : return "DOT";
-        case TokenType::LPAREN : return "LPAREN";
-        case TokenType::RPAREN : return "RPAREN";
-        case TokenType::LBRACE : return "LBRACE";
-        case TokenType::RBRACE : return "RBRACE";
-        case TokenType::LBRACKET : return "LBRACKET";
-        case TokenType::RBRACKET : return "RBRACKET";
-        case TokenType::IDENTIFIER : return "IDENTIFIER";
+        case TokenType::COMMENT:                return "COMMENT";
+        case TokenType::WHITESPACE :            return "WHITESPACE";
+        case TokenType::NEWLINE :               return "NEWLINE";
+        case TokenType::STRING :                return "STRING";
+        case TokenType::CHAR :                  return "CHAR";
+        case TokenType::NUMBER :                return "NUMBER";
+        case TokenType::KW_IF :                 return "KW_IF";
+        case TokenType::KW_ELSE :               return "KW_ELSE";
+        case TokenType::KW_WHILE :              return "KW_WHILE";
+        case TokenType::KW_FOR :                return "KW_FOR";
+        case TokenType::KW_FUNCTION :           return "KW_FUNCTION";
+        case TokenType::KW_LET :                return "KW_LET";
+        case TokenType::KW_IN :                 return "KW_IN";
+        case TokenType::KW_TYPE :               return "KW_TYPE";
+        case TokenType::KW_NEW :                return "KW_NEW";
+        case TokenType::KW_INHERITS :           return "KW_INHERITS";
+        case TokenType::KW_SELF :               return "KW_SELF";
+        case TokenType::KW_BASE :               return "KW_BASE";
+        case TokenType::KW_PROTOCOL :           return "KW_PROTOCOL";
+        case TokenType::KW_EXTECNDS :           return "KW_EXTECNDS";
+        case TokenType::TRUE :                  return "TRUE";
+        case TokenType::FALSE :                 return "FALSE";
+        case TokenType::T_OBJECT :              return "T_OBJECT";
+        case TokenType::T_NUMBER :              return "T_NUMBER";
+        case TokenType::T_BOOLEAN :             return "T_BOOLEAN";
+        case TokenType::T_STRING :              return "T_STRING";
+        case TokenType::T_CHAR :                return "T_CHAR";
+        case TokenType::OP_IS :                 return "OP_IS";
+        case TokenType::OP_AS :                 return "OP_AS";
+        case TokenType::OP_EXPONENT :           return "OP_EXPONENT";
+        case TokenType::OP_INCREMENT :          return "OP_INCREMENT";
+        case TokenType::OP_DECREMENT :          return "OP_DECREMENT";
+        case TokenType::OP_DOBLE_CONCAT :       return "OP_DOBLE_CONCAT";
+        case TokenType::OP_DESTRUCT_ASSIGN :    return "OP_DESTRUCT_ASSIGN";
+        case TokenType::OP_PLUS_ASSIGN :        return "OP_PLUS_ASSIGN";
+        case TokenType::OP_MINUS_ASSIGN :       return "OP_MINUS_ASSIGN";
+        case TokenType::OP_MULT_ASSIGN :        return "OP_MULT_ASSIGN";
+        case TokenType::OP_DIV_ASSIGN :         return "OP_DIV_ASSIGN";
+        case TokenType::OP_MOD_ASSIGN :         return "OP_MOD_ASSIGN";
+        case TokenType::OP_EQUAL :              return "OP_EQUAL";
+        case TokenType::OP_NOT_EQUAL :          return "OP_NOT_EQUAL";
+        case TokenType::OP_LESS_EQ :            return "OP_LESS_EQ";
+        case TokenType::OP_GREATER_EQ :         return "OP_GREATER_EQ";
+        case TokenType::ARROW :                 return "ARROW";
+        case TokenType::RT_ARROW :              return "RT_ARROW";
+        case TokenType::OP_ASSIGN :             return "OP_ASSIGN";
+        case TokenType::OP_LESS :               return "OP_LESS";
+        case TokenType::OP_GREATER :            return "OP_GREATER";
+        case TokenType::OP_PLUS :               return "OP_PLUS";
+        case TokenType::OP_MINUS :              return "OP_MINUS";
+        case TokenType::OP_MULTIPLY :           return "OP_MULTIPLY";
+        case TokenType::OP_DIVIDE :             return "OP_DIVIDE";
+        case TokenType::OP_MODULE :             return "OP_MODULE";
+        case TokenType::OP_AND :                return "OP_AND";
+        case TokenType::OP_OR :                 return "OP_OR";
+        case TokenType::OP_NOT :                return "OP_NOT";
+        case TokenType::OP_CONCAT :             return "OP_CONCAT";
+        case TokenType::SEMICOLON :             return "SEMICOLON";
+        case TokenType::COLON :                 return "COLON";
+        case TokenType::COMMA :                 return "COMMA";
+        case TokenType::DOT :                   return "DOT";
+        case TokenType::LPAREN :                return "LPAREN";
+        case TokenType::RPAREN :                return "RPAREN";
+        case TokenType::LBRACE :                return "LBRACE";
+        case TokenType::RBRACE :                return "RBRACE";
+        case TokenType::LBRACKET :              return "LBRACKET";
+        case TokenType::RBRACKET :              return "RBRACKET";
+        case TokenType::IDENTIFIER :            return "IDENTIFIER";
+        case TokenType::T_NULL:                 return "Null"; 
         default : return "Unknown";
     }
 }

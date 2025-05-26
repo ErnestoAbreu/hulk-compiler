@@ -8,6 +8,7 @@
 
 using namespace std;
 
+namespace Lexer {
 vector<Token> lex(const string &input) {
   vector<pair<NFA, TokenType>> nfas;
   vector<Token> tokens;
@@ -62,3 +63,4 @@ vector<Token> lex(const string &input) {
   tokens.push_back(Token(TokenType::END_OF_FILE, "", line, column));
   return tokens;
 }
+}  // namespace Lexer

@@ -294,7 +294,7 @@ class Parser {
   }
 };
 
-// ========================== Simulación del NFA
+// ============== Simulación del NFA
 // ====================================
 
 // Añade un estado y recorre las transiciones epsilon

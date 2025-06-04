@@ -27,6 +27,10 @@ struct grammar_token {
     return value == other.value;
   }
 
+  bool operator!=(const grammar_token &other) const {
+    return !(value == other.value);
+  }
+
   bool operator<(const grammar_token &other) const {
     return value < other.value;
   }
@@ -130,7 +134,7 @@ struct grammar {
     }
   }
 
-  std::vector<grammar_token> calc_first() {
+  void calc_first() {
     ffirst.clear();
     for (auto &t : terminal) ffirst[t] = {t};
 
@@ -183,7 +187,7 @@ struct grammar {
     return result;
   }
 
-  std::vector<grammar_token> calc_follow() {
+  void calc_follow() {
     ffollow.clear();
     calc_first();
 

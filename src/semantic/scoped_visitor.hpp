@@ -108,6 +108,9 @@ namespace hulk {
             if (!ctx.variable_exists(id)) {
                 // todo handle error: variable does not exist in this scope
             }
+            if (id == "self") {
+                // todo handle error: cannot assign to self
+            }
             value->scoped_visit(ctx);
         }
 

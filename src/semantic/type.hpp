@@ -17,6 +17,8 @@ namespace hulk {
             string name;
             type* attr_type;
 
+            attribute() = default;
+
             attribute(const string& attr_name)
                 : name(attr_name), attr_type(nullptr) {
             }

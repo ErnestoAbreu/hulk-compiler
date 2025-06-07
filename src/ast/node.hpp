@@ -20,11 +20,9 @@ namespace hulk {
         // Abstract Syntax Tree (AST) Node Base Class
 
         struct node {
-            virtual void context_builder_visit(semantic::context& ctx) const;
-
-            virtual string print() const {
-                return "node";
-            }
+            virtual void context_builder_visit(semantic::context& ctx) const {}
+            virtual void scoped_visit(semantic::context& ctx) const {}
+            virtual string print() const { return "node"; }
         };
 
         struct program : node {
@@ -32,6 +30,7 @@ namespace hulk {
             expression* main;
 
             void context_builder_visit(semantic::context& ctx) const override;
+            void scoped_visit(semantic::context& ctx) const override;
         };
 
         // Statements
@@ -51,6 +50,7 @@ namespace hulk {
             vector<def_function*> methods;
 
             void context_builder_visit(semantic::context& ctx) const override;
+            void scoped_visit(semantic::context& ctx) const override;
         };
 
         struct def_function : statement {
@@ -60,12 +60,15 @@ namespace hulk {
             expression* body;
 
             void context_builder_visit(semantic::context& ctx) const override;
+            void scoped_visit(semantic::context& ctx) const override;
         };
 
         struct def_field : statement {
             string id;
             string type;
             expression* value;
+
+            void scoped_visit(semantic::context& ctx) const override;
         };
 
         // Expressions
@@ -74,11 +77,15 @@ namespace hulk {
 
         struct block_expr : expression {
             vector<expression*> exprs;
+
+            void scoped_visit(semantic::context& ctx) const override;
         };
 
         struct call_expr : expression {
             string id;
             vector<expression*> args;
+
+            void scoped_visit(semantic::context& ctx) const override;
         };
 
         struct let_expr : expression {
@@ -86,29 +93,30 @@ namespace hulk {
             string type;
             expression* value;
             expression* body;
+
+            void scoped_visit(semantic::context& ctx) const override;
         };
 
         struct assign_expr : expression {
             string id;
             expression* value;
+
+            void scoped_visit(semantic::context& ctx) const override;
         };
 
         struct if_expr : expression {
             expression* condition;
             expression* then_branch;
             expression* else_branch; // Optional
+
+            void scoped_visit(semantic::context& ctx) const override;
         };
 
         struct while_expr : expression {
             expression* condition;
             expression* body;
-        };
 
-        struct with_expr : expression {
-            expression* expr;
-            string id;
-            expression* then_branch;
-            expression* else_branch; // Optional 
+            void scoped_visit(semantic::context& ctx) const override;
         };
 
         /* Arithmetic expressions */
@@ -117,36 +125,31 @@ namespace hulk {
             string op;
             expression* left;
             expression* right;
+
+            void scoped_visit(semantic::context& ctx) const override;
         };
 
         struct unary_expr : expression {
             string op;
             expression* expr;
+
+            void scoped_visit(semantic::context& ctx) const override;
         };
 
         /* Literals */
 
+        struct variable : expression {
+            string id;
+
+            variable(const string& id) : id(id) {}
+
+            void scoped_visit(semantic::context& ctx) const override;
+        };
         struct literal : expression {
             string value; // "number", "boolean", "string"
-        };
+            string type;
 
-        struct number : literal {
-            double value;
-        };
-
-        struct boolean : literal {
-            bool value;
-        };
-
-        struct string_expr : literal {
-            string value;
-        };
-
-        /* Builtin functions */
-
-        struct builtin_function : expression {
-            string name;
-            vector<expression*> args;
+            literal(string value, string type) : value(value), type(type) {}
         };
 
     }   // namespace ast

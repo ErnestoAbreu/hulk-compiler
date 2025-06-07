@@ -12,6 +12,7 @@ namespace hulk {
         struct context {
             map<string, type> types;
             map<string, method> functions;
+            vector<map<string, attribute>> scopes;
 
             context() = default;
 
@@ -46,6 +47,51 @@ namespace hulk {
 
             method& get_function(const string& func_name) {
                 return functions[func_name];
+            }
+
+            void add_scope() {
+                if (scopes.empty())
+                    scopes.push_back(map<string, attribute>());
+                else
+                    scopes.push_back(scopes.back());
+            }
+
+            void rollback_scope() {
+                if (!scopes.empty()) {
+                    scopes.pop_back();
+                }
+            }
+
+            map<string, attribute>& current_scope() {
+                if (scopes.empty()) {
+                    // todo handle internal error;
+                }
+                return scopes.back();
+            }
+
+            void add_variable(const string& var_name) {
+                if (scopes.empty()) {
+                    // todo handle internal error;
+                }
+                else
+                    current_scope()[var_name] = attribute(var_name);
+            }
+
+            void add_variable(const string& var_name, const string& type_name) {
+                if (scopes.empty()) {
+                    // todo handle internal error;
+                }
+                else
+                    current_scope()[var_name] = attribute(var_name, get_type(type_name));
+            }
+
+            bool variable_exists(const string& var_name) {
+                if (scopes.empty()) return false;
+                return current_scope().find(var_name) != current_scope().end();
+            }
+
+            attribute& get_variable(const string& var_name) {
+                return current_scope()[var_name];
             }
         };
     } // namespace semantic

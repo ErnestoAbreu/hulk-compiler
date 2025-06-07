@@ -45,7 +45,7 @@ namespace hulk {
                         //todo: handle error, type does not exist
                     }
                     else {
-                        error = type.add_attribute(attribute(field->id, ctx.get_type(field->type)));
+                        error = type.add_attribute(attribute(field->id, field->type));
                     }
                 }
                 if (error) {
@@ -63,7 +63,7 @@ namespace hulk {
                         //todo: handle error, return type does not exist
                     }
                     else
-                        f = method(meth->id, ctx.get_type(meth->return_type));
+                        f = method(meth->id, meth->return_type);
                 }
 
                 for (const auto& param : meth->params) {
@@ -76,7 +76,7 @@ namespace hulk {
                             //todo: handle error, parameter type does not exist
                         }
                         else {
-                            error = f.add_parameter(param.id, ctx.get_type(param.type));
+                            error = f.add_parameter(param.id, param.type);
                         }
                     }
                     if (error) {
@@ -103,10 +103,10 @@ namespace hulk {
                     //todo: handle error, return type does not exist
                     return;
                 }
-                func.return_type = &ctx.get_type(return_type);
+                func.return_type = return_type;
             }
             else {
-                func.return_type = nullptr; // No return type specified
+                func.return_type = ""; // No return type specified
             }
 
             for (const auto& param : params) {
@@ -118,7 +118,7 @@ namespace hulk {
                     if (!ctx.type_exists(param.type)) {
                         // todo: handle error, parameter type does not exist
                     }
-                    error = func.add_parameter(param.id, ctx.get_type(param.type));
+                    error = func.add_parameter(param.id, param.type);
                 }
 
                 if (error) {

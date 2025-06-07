@@ -15,50 +15,33 @@ namespace hulk {
 
         struct attribute {
             string name;
-            type* attr_type;
+            string attr_type;
 
             attribute() = default;
 
-            attribute(const string& attr_name)
-                : name(attr_name), attr_type(nullptr) {
-            }
-
-            attribute(const string& attr_name, type& attr_type)
-                : name(attr_name), attr_type(&attr_type) {
+            attribute(const string& attr_name, const string& attr_type = "")
+                : name(attr_name), attr_type(attr_type) {
             }
         };
 
         struct method {
             string name;
-            type* return_type;
+            string return_type;
             vector<attribute> params;
 
             method() = default;
 
-            method(const string& method_name)
-                : name(method_name), return_type(nullptr) {
-            }
-
-            method(const string& method_name, type& return_type)
-                : name(method_name), return_type(&return_type) {
+            method(const string& method_name, const string& return_type = "")
+                : name(method_name), return_type(return_type) {
             }
 
             // Define a parameter for the method
-            bool add_parameter(const string& param_name, type& param_type) {
+            bool add_parameter(const string& param_name, const string& param_type = "") {
                 for (const auto& param : params)
                     if (param.name == param_name)
                         return false; // Parameter already exists
 
                 params.emplace_back(param_name, param_type);
-                return true;
-            }
-
-            bool add_parameter(const string& param_name) {
-                for (const auto& param : params)
-                    if (param.name == param_name)
-                        return false; // Parameter already exists
-
-                params.emplace_back(param_name);
                 return true;
             }
         };

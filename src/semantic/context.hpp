@@ -82,7 +82,7 @@ namespace hulk {
                     // todo handle internal error;
                 }
                 else
-                    current_scope()[var_name] = attribute(var_name, get_type(type_name));
+                    current_scope()[var_name] = attribute(var_name, type_name);
             }
 
             bool variable_exists(const string& var_name) {

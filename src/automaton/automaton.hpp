@@ -1,9 +1,15 @@
 #ifndef HULK_AUTOMATON_HPP
 #define HULK_AUTOMATON_HPP 1
 
-#include <map>
-#include <set>
+#include <assert.h>
+
+#include <algorithm>
+#include <functional>
+#include <iostream>
+#include <queue>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "../internal/internal_str.hpp"
@@ -12,141 +18,223 @@ namespace hulk {
 
 namespace automaton {
 
-typedef struct state *pstate;
 struct state {
-  int index;
-  bool is_final;
-  std::map<std::string, pstate> transition;
-  std::set<pstate> eof_transition;
-  pstate complement;
+  std::string name;
+  bool terminal = false;
+  std::unordered_map<std::string, std::vector<state*>> transitions;
+  std::unordered_set<state*> epsilon_transitions;
+  std::string tag;
+  std::function<std::string(const std::string&)> formatter;
 
-  state(int _index, bool _is_final = false)
-      : index(_index), is_final(_is_final) {
-    transition.clear();
-    eof_transition.clear();
-    complement = nullptr;
+  state(
+      const std::string& _name, bool _terminal = false,
+      std::function<std::string(const std::string&)> _formatter =
+          [](const std::string& x) { return x; })
+      : name(_name), terminal(_terminal), formatter(_formatter) {}
+
+  void set_formatter(const std::function<std::string(const std::string&)>& f,
+                     std::unordered_set<state*>* vis = nullptr) {
+    std::unordered_set<state*> _vis;
+    if (!vis)
+      vis = &_vis;
+    else if (vis->find(this) != vis->end()) {
+      return;
+    }
+
+    vis->insert(this);
+
+    formatter = f;
+    for (auto& s : transitions) {
+      for (auto& state_ptr : s.second) {
+        state_ptr->set_formatter(f, vis);
+      }
+    }
+
+    for (auto& state_ptr : epsilon_transitions)
+      state_ptr->set_formatter(f, vis);
   }
 
-  void add_transition(std::string s, pstate state) { transition[s] = state; }
-
-  void add_eof_transition(pstate state) { eof_transition.insert(state); }
-
-  pstate go(std::string s) {
-    return (transition.count(s)) ? transition[s] : complement;
+  bool has_transition(const std::string& symbol) const {
+    return transitions.find(symbol) != end(transitions);
   }
 
-  std::vector<pstate> go_eof() {
-    return {begin(eof_transition), end(eof_transition)};
+  state& add_transition(const std::string& symbol, state*& _state) {
+    transitions[symbol].push_back(_state);
+    return *this;
   }
 
-  bool operator<(const state &other) const { return index < other.index; }
-};
-
-struct automaton {
-  bool copy;
-  pstate initial_state;
-  std::vector<pstate> states;
-
-  automaton(bool _copy = false) : copy(_copy) {
-    initial_state = copy ? nullptr : new state(0);
-    if (!copy) states.push_back(initial_state);
+  state& add_epsilon_transition(state*& _state) {
+    epsilon_transitions.insert(_state);
+    return *this;
   }
 
-  void add_transition(pstate from, pstate to, std::string s) {
-    from->add_transition(s, to);
+  bool match(const std::vector<std::string>& str) {
+    auto states = epsilon_closure();
+    for (const auto& symbol : str) {
+      states = move_by_state(symbol, states);
+      states = epsilon_closure_by_state(states);
+    }
+
+    for (auto& s : states) {
+      if (s->terminal) return true;
+    }
+
+    return false;
   }
 
-  void add_eof_transition(pstate from, pstate to) {
-    from->add_eof_transition(to);
+  state* to_dfa(std::function<std::string(const std::string&)> formatter =
+                    [](const std::string& x) { return x; }) {
+    auto closure = epsilon_closure();
+
+    bool has_terminal = false;
+    std::vector<std::string> names;
+    for (const auto& s : closure) {
+      if (s->terminal) has_terminal = true;
+      names.push_back(s->name);
+    }
+
+    std::sort(begin(names), end(names));
+
+    std::string nstate_name = "";
+    for (auto& name : names) {
+      if (!nstate_name.empty()) nstate_name += ", ";
+      nstate_name += name;
+    }
+
+    auto start = new state(nstate_name, has_terminal, formatter);
+
+    std::vector<std::unordered_set<state*>> closures = {closure};
+    std::vector<state*> dfa_states = {start};
+    std::queue<state*> todo;
+    todo.push(start);
+
+    std::unordered_map<std::string, std::unordered_set<state*>> who;
+    who[start->name] = closure;
+
+    while (!todo.empty()) {
+      auto cur = todo.front();
+      todo.pop();
+
+      std::unordered_set<std::string> symbols;
+      for (const auto& s : who[cur->name]) {
+        for (auto& [symbol, _] : s->transitions) {
+          symbols.insert(symbol);
+        }
+      }
+
+      for (auto& symbol : symbols) {
+        auto move = move_by_state(symbol, who[cur->name]);
+        auto nclosure = epsilon_closure_by_state(move);
+
+        int index = -1;
+        for (auto i = 0; i < closures.size(); i++) {
+          if (closures[i] == nclosure) {
+            index = i;
+            break;
+          }
+        }
+
+        if (index == -1) {
+          bool nhas_terminal = false;
+          std::vector<std::string> names;
+          for (auto& s : nclosure) {
+            if (s->terminal) nhas_terminal = true;
+            names.push_back(s->name);
+          }
+
+          std::sort(begin(names), end(names));
+
+          std::string nstate_name = "";
+          for (auto& name : names) {
+            if (!nstate_name.empty()) nstate_name += ", ";
+            nstate_name += name;
+          }
+
+          auto nstate = new state(nstate_name, nhas_terminal, formatter);
+          who[nstate_name] = nclosure;
+          dfa_states.push_back(nstate);
+          closures.push_back(nclosure);
+          todo.push(nstate);
+          cur->add_transition(symbol, nstate);
+        } else {
+          cur->add_transition(symbol, dfa_states[index]);
+        }
+      }
+    }
+
+    return start;
   }
 
-  void add_final_state(pstate state) {
-    state->is_final = true;
+  state* get(const std::string& symbol) {
+    auto it = transitions.find(symbol);
+    assert(it != transitions.end() && it->second.size() == 1);
+    return it->second[0];
   }
 
-  void add_complement(pstate from, pstate to) { from->complement = to; }
+  std::unordered_set<state*> operator[](const std::string& symbol) const {
+    if (symbol.empty()) {
+      return epsilon_transitions;
+    }
+    auto it = transitions.find(symbol);
+    if (it != end(transitions)) {
+      return std::unordered_set<state*>(it->second.begin(), it->second.end());
+    }
+    return {};
+  }
 
-  pstate get_new_state(pstate s = nullptr) {
-    auto result = s != nullptr ? s : new state(size(states));
-    states.push_back(result);
+  static std::unordered_set<state*> move_by_state(
+      const std::string& symbol, const std::unordered_set<state*>& states) {
+    std::unordered_set<state*> result;
+    for (const auto& s : states) {
+      if (s->has_transition(symbol)) {
+        const auto& to = s->transitions.at(symbol);
+        result.insert(to.begin(), to.end());
+      }
+    }
     return result;
   }
 
-  bool match(std::string str) {
-    std::set<std::pair<int, size_t>> seen;
-    auto dfs = [&](auto &&self, pstate state, size_t i) -> bool {
-      if (i == size(str)) return state->is_final;
+  std::unordered_set<state*> epsilon_closure() {
+    return epsilon_closure_by_state({this});
+  }
 
-      if (seen.count({state->index, i})) return false;
-      seen.insert({state->index, i});
-
-      for (auto &eof_state : state->eof_transition) {
-        if (self(self, eof_state, i)) return true;
+  static std::unordered_set<state*> epsilon_closure_by_state(
+      const std::unordered_set<state*>& states) {
+    std::unordered_set<state*> closure = states;
+    size_t last;
+    do {
+      last = closure.size();
+      auto temp = closure;
+      for (const auto& s : temp) {
+        closure.insert(s->epsilon_transitions.begin(),
+                       s->epsilon_transitions.end());
       }
-
-      auto nxt = state->go("" + str[i]);
-
-      if (nxt) return self(self, nxt, i + 1);
-
-      return false;
-    };
-
-    return dfs(dfs, initial_state, 0);
+    } while (last != closure.size());
+    return closure;
   }
 };
 
-automaton copy(automaton aut) {
-  auto result = automaton(true);
-  for (size_t i = 0; i < size(aut.states); i++) result.get_new_state();
-
-  result.initial_state = result.states[aut.initial_state->index];
-
-  for (auto &from : aut.states) {
-    for (auto &eof_state : from->eof_transition) {
-      result.add_eof_transition(result.states[from->index],
-                                result.states[eof_state->index]);
-    }
-
-    for (auto &[s, to] : from->transition) {
-      result.add_transition(result.states[from->index],
-                            result.states[to->index], s);
-    }
-
-    result.states[from->index]->is_final = from->is_final;
-    result.states[from->index]->complement =
-        from->complement ? result.states[from->complement->index] : nullptr;
+std::string multiline_formatter(const std::string& name) {
+  auto names = internal::split(name, ", ");
+  std::string result = "";
+  for (auto &s: names) {
+    if (!result.empty()) result += "\n";
+    result += s;
   }
-
   return result;
 }
 
-automaton join(automaton a, automaton b) {
-  b = copy(b);
-  a.add_eof_transition(a.initial_state, b.initial_state);
-  for (auto &s : b.states) a.get_new_state(s);
-  return a;
-}
-
-automaton concat(automaton a, automaton b) {
-  b = copy(b);
-  for (auto &s : a.states) if (s->is_final) {
-    a.add_eof_transition(s, b.initial_state);
-    s->is_final = false;
+std::string lr0_formatter(const std::string& name) {
+  auto names = internal::split(name, ", ");
+  std::string result = "";
+  for (auto &s: names) {
+    if (!result.empty()) result += "\n";
+    if (s.size() > 4)
+      result += s.substr(0, s.size() - 4);
+    else
+      result += s;
   }
-  for (auto &s : b.states) a.get_new_state(s);
-  return a;
-}
-
-automaton many(automaton a) {
-  for (auto &s: a.states) if (s->is_final) {
-    a.add_eof_transition(s, a.initial_state);
-  }
-  a.initial_state->is_final = true;
-  return a;
-}
-
-automaton to_dfa(automaton a) {
-  // todo
+  return result;
 }
 
 }  // namespace automaton

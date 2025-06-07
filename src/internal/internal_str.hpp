@@ -4,6 +4,7 @@
 #include <bitset>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 namespace hulk {
 
@@ -26,6 +27,14 @@ std::vector<std::string> split(std::string s, std::string sep = " ") {
   }
   if (!current.empty()) result.push_back(current);
   return result;
+}
+
+std::string strip(std::string s, char c = ' ') {
+  for (int step = 0; step < 2; step++) {
+    while (!s.empty() && s.back() == c) s.pop_back();
+    std::reverse(begin(s), end(s));
+  }
+  return s;
 }
 
 }  // namespace internal

@@ -20,7 +20,7 @@ namespace hulk {
         // Abstract Syntax Tree (AST) Node Base Class
 
         struct node {
-            virtual void visit(semantic::context& ctx) const;
+            virtual void context_builder_visit(semantic::context& ctx) const;
 
             virtual string print() const {
                 return "node";
@@ -31,7 +31,7 @@ namespace hulk {
             vector<statement*> statements;
             expression* main;
 
-            void visit(semantic::context& ctx) const override;
+            void context_builder_visit(semantic::context& ctx) const override;
         };
 
         // Statements
@@ -50,7 +50,7 @@ namespace hulk {
             vector<def_field*> fields;
             vector<def_function*> methods;
 
-            void visit(semantic::context& ctx) const override;
+            void context_builder_visit(semantic::context& ctx) const override;
         };
 
         struct def_function : statement {
@@ -59,7 +59,7 @@ namespace hulk {
             string return_type;
             expression* body;
 
-            void visit(semantic::context& ctx) const override;
+            void context_builder_visit(semantic::context& ctx) const override;
         };
 
         struct def_field : statement {

@@ -36,8 +36,13 @@ namespace hulk {
 
             ctx.add_scope();
 
-            auto& type = ctx.get_type(id);
-            ctx.add_variable("self", type.name);
+            for (const auto& parent : parents) {
+                // todo: handle parent scope merging
+            }
+
+            for (const auto& field : fields) {
+                ctx.add_variable("self." + field->id, field->type);
+            }
 
             for (const auto& method : methods) {
                 method->scoped_visit(ctx);
@@ -87,7 +92,7 @@ namespace hulk {
             if (id.find('.') != string::npos) {
                 string name = id.substr(0, id.find('.'));
 
-                if (!ctx.variable_exists(name)) {
+                if (name != "self" && !ctx.variable_exists(name)) {
                     // todo handle error: variable does not exist in this scope
                 }
             }
@@ -158,17 +163,8 @@ namespace hulk {
         }
 
         void variable::scoped_visit(context& ctx) const {
-            if (id.find('.') != string::npos) {
-                string name = id.substr(0, id.find('.'));
-
-                if (!ctx.variable_exists(name)) {
-                    // todo handle error: variable does not exist in this scope
-                }
-            }
-            else {
-                if (!ctx.variable_exists(id)) {
-                    // todo handle error: variable does not exist in this scope
-                }
+            if (!ctx.variable_exists(id)) {
+                // todo handle error: variable does not exist in this scope
             }
         }
     }

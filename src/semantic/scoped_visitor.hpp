@@ -21,8 +21,12 @@ namespace hulk {
         void def_type::scoped_visit(context& ctx) const {
             ctx.add_scope();
 
-            for (const auto& param : params)
+            for (const auto& param : params) {
+                if (!param.type.empty() && !ctx.type_exists(param.type)) {
+                    // todo handle error: type does not exist
+                }
                 ctx.add_variable(param.id);
+            }
 
             for (const auto& field : fields) {
                 field->scoped_visit(ctx);
@@ -45,8 +49,16 @@ namespace hulk {
         void def_function::scoped_visit(context& ctx) const {
             ctx.add_scope();
 
-            for (const auto& param : params)
+            if (!return_type.empty() && !ctx.type_exists(return_type)) {
+                // todo handle error: return type does not exist
+            }
+
+            for (const auto& param : params) {
+                if (!param.type.empty() && !ctx.type_exists(param.type)) {
+                    // todo handle error: type does not exist
+                }
                 ctx.add_variable(param.id);
+            }
 
             if (body)
                 body->scoped_visit(ctx);
@@ -55,6 +67,10 @@ namespace hulk {
         }
 
         void def_field::scoped_visit(context& ctx) const {
+            if (!type.empty() && !ctx.type_exists(type)) {
+                // todo handle error: type does not exist
+            }
+
             if (value)
                 value->scoped_visit(ctx);
         }
@@ -94,6 +110,10 @@ namespace hulk {
 
         void let_expr::scoped_visit(context& ctx) const {
             ctx.add_scope();
+
+            if (!type.empty() && !ctx.type_exists(type)) {
+                // todo handle error: type does not exist
+            }
 
             value->scoped_visit(ctx);
 

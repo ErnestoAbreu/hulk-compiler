@@ -13,6 +13,18 @@ namespace hulk {
         struct attribute;
         struct method;
 
+        struct typed_method {
+            string name;
+            string return_type;
+            vector<string> param_types;
+        };
+
+        struct type_rules {
+            string closed_type;
+            vector<string> must_equal;
+            vector<typed_method> must_have;
+        };
+
         struct attribute {
             string name;
             string attr_type;
@@ -48,12 +60,22 @@ namespace hulk {
 
         struct type {
             string name;
+            vector<attribute> params;
             vector<attribute> fields;
             vector<method> methods;
             vector<string> parents;
 
             type(const string& type_name = "")
                 : name(type_name) {
+            }
+
+            bool add_param(const attribute& param) {
+                for (const auto& p : params)
+                    if (p.name == param.name)
+                        return false; // Parameter already exists
+
+                params.push_back(param);
+                return true;
             }
 
             bool add_attribute(const attribute& attr) {

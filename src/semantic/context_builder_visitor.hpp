@@ -26,6 +26,23 @@ namespace hulk {
             // Get the type from the context
             auto& type = ctx.get_type(id);
 
+            for (const auto& param : params) {
+                bool error = false;
+                if (param.type.empty()) {
+                    error = type.add_param(attribute(param.id));
+                }
+                else {
+                    if (!ctx.type_exists(param.type)) {
+                        // todo: handle error, type does not exist
+                    }
+                    else
+                        error = type.add_param(attribute(param.id, param.type));
+                }
+                if (error) {
+                    // todo: handle error, param already exists
+                }
+            }
+
             for (const auto& parent : parents)
                 if (!ctx.type_exists(parent)) {
                     //todo: handle error, parent type does not exist

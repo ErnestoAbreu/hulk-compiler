@@ -12,7 +12,11 @@ namespace hulk {
         struct context {
             map<string, type> types;
             map<string, method> functions;
+
             vector<map<string, attribute>> scopes;
+            map<string, method> scoped_functions;
+
+            map<string, type_rules> type_rules;
 
             context() = default;
 
@@ -92,6 +96,10 @@ namespace hulk {
 
             attribute& get_variable(const string& var_name) {
                 return current_scope()[var_name];
+            }
+
+            void add_scoped_function(const string& func_name, const method& func) {
+                scoped_functions[func_name] = func;
             }
         };
     } // namespace semantic

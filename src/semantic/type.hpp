@@ -96,6 +96,15 @@ namespace hulk {
                 return true;
             }
 
+            bool has_field(const string& field_name) const {
+                for (const auto& field : fields) {
+                    if (field.name == field_name) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
             bool add_method(const method& m) {
                 for (const auto& method : methods)
                     if (method.name == m.name)
@@ -114,13 +123,12 @@ namespace hulk {
                 return false;
             }
 
-            method* get_method(const string& method_name) {
+            method& get_method(const string& method_name) {
                 for (auto& method : methods) {
                     if (method.name == method_name) {
-                        return &method;
+                        return method;
                     }
                 }
-                return nullptr;
             }
 
         };

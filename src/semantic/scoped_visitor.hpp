@@ -18,6 +18,33 @@ namespace hulk {
 
         /* Statements */
 
+        void def_field::scoped_visit(context& ctx) const {
+            if (!type.empty() && !ctx.type_exists(type)) {
+                // todo handle error: type does not exist
+            }
+            value->scoped_visit(ctx);
+        }
+
+        void def_function::scoped_visit(context& ctx) const {
+            ctx.add_scope();
+
+            if (!return_type.empty() && !ctx.type_exists(return_type)) {
+                // todo handle error: return type does not exist
+            }
+
+            for (const auto& param : params) {
+                if (!param.type.empty() && !ctx.type_exists(param.type)) {
+                    // todo handle error: type does not exist
+                }
+                ctx.add_variable(param.id);
+            }
+
+            if (body)
+                body->scoped_visit(ctx);
+
+            ctx.rollback_scope();
+        }
+
         void def_type::scoped_visit(context& ctx) const {
             ctx.add_scope();
 
@@ -41,7 +68,7 @@ namespace hulk {
             }
 
             for (const auto& field : fields) {
-                ctx.add_variable("self." + field->id, field->type);
+                ctx.add_variable("self", id);
             }
 
             for (const auto& method : methods) {
@@ -49,35 +76,6 @@ namespace hulk {
             }
 
             ctx.rollback_scope();
-        }
-
-        void def_function::scoped_visit(context& ctx) const {
-            ctx.add_scope();
-
-            if (!return_type.empty() && !ctx.type_exists(return_type)) {
-                // todo handle error: return type does not exist
-            }
-
-            for (const auto& param : params) {
-                if (!param.type.empty() && !ctx.type_exists(param.type)) {
-                    // todo handle error: type does not exist
-                }
-                ctx.add_variable(param.id);
-            }
-
-            if (body)
-                body->scoped_visit(ctx);
-
-            ctx.rollback_scope();
-        }
-
-        void def_field::scoped_visit(context& ctx) const {
-            if (!type.empty() && !ctx.type_exists(type)) {
-                // todo handle error: type does not exist
-            }
-
-            if (value)
-                value->scoped_visit(ctx);
         }
 
         /* Expressions */
@@ -91,9 +89,25 @@ namespace hulk {
         void call_expr::scoped_visit(context& ctx) const {
             if (id.find('.') != string::npos) {
                 string name = id.substr(0, id.find('.'));
+                string method = id.substr(id.find('.') + 1);
 
-                if (name != "self" && !ctx.variable_exists(name)) {
+                if (!ctx.variable_exists(name)) {
                     // todo handle error: variable does not exist in this scope
+                }
+                else {
+                    auto var_type = ctx.get_variable(name).attr_type;
+                    if (ctx.type_exists(var_type)) {
+                        auto& type = ctx.get_type(var_type);
+                        if (type.has_method(method)) {
+                            auto& func = type.get_method(method);
+                            if (args.size() != func.params.size()) {
+                                // todo handle error: argument count mismatch
+                            }
+                        }
+                        else {
+                            // todo handle error: method does not exist in this type
+                        }
+                    }
                 }
             }
             else {
@@ -163,11 +177,33 @@ namespace hulk {
         }
 
         void variable::scoped_visit(context& ctx) const {
-            if (!ctx.variable_exists(id)) {
-                // todo handle error: variable does not exist in this scope
+            if (id.find('.') != string::npos) {
+                string name = id.substr(0, id.find('.'));
+                string attr = id.substr(id.find('.') + 1);
+
+                if (!ctx.variable_exists(name)) {
+                    // todo handle error: variable does not exist in this scope
+                }
+                else if (name == "self") {
+                    auto var_type = ctx.get_variable(name).attr_type;
+                    if (ctx.type_exists(var_type)) {
+                        auto& type = ctx.get_type(var_type);
+                        if (!type.has_field(attr)) {
+                            // todo handle error: field does not exist in this type
+                        }
+                    }
+                }
+                else {
+                    // todo handle error: cannot access field of non-self
+                }
+            }
+            else {
+                if (!ctx.variable_exists(id)) {
+                    // todo handle error: variable does not exist in this scope
+                }
             }
         }
-    }
-}
+    } // namespace ast
+} // namespace hulk
 
 #endif

@@ -7,16 +7,15 @@
 namespace hulk {
     namespace ast {
         using context = semantic::context;
-        using attribute = semantic::attribute;
         using method = semantic::method;
 
-        void ast::program::context_builder_visit(context& ctx) const {
+        void program::context_builder_visit(context& ctx) const {
             for (const auto& stmt : statements) {
                 stmt->context_builder_visit(ctx);
             }
         }
 
-        void ast::def_type::context_builder_visit(context& ctx) const {
+        void def_type::context_builder_visit(context& ctx) const {
             // Create the type in the context
             if (!ctx.create_type(id)) {
                 // todo: handle error, type already exists
@@ -29,14 +28,14 @@ namespace hulk {
             for (const auto& param : params) {
                 bool error = false;
                 if (param.type.empty()) {
-                    error = type.add_param(attribute(param.id));
+                    error = type.add_param(param.id);
                 }
                 else {
                     if (!ctx.type_exists(param.type)) {
                         // todo: handle error, type does not exist
                     }
                     else
-                        error = type.add_param(attribute(param.id, param.type));
+                        error = type.add_param(param.id, param.type);
                 }
                 if (error) {
                     // todo: handle error, param already exists
@@ -51,25 +50,25 @@ namespace hulk {
                     type.add_parent(parent);
                 }
 
-            // Add fields and methods to the type
+            // Add fields to the type
             for (const auto& field : fields) {
                 bool error = false;
                 if (field->type.empty()) {
-                    error = type.add_attribute(attribute(field->id));
+                    error = type.add_field(field->id);
                 }
                 else {
                     if (!ctx.type_exists(field->type)) {
                         //todo: handle error, type does not exist
                     }
-                    else {
-                        error = type.add_attribute(attribute(field->id, field->type));
-                    }
+                    else
+                        error = type.add_field(field->id, field->type);
                 }
                 if (error) {
                     //todo: handle error, field already exists
                 }
             }
 
+            // Add methods to the type
             for (const auto& meth : methods) {
                 method f;
                 if (meth->return_type.empty()) {
@@ -86,15 +85,14 @@ namespace hulk {
                 for (const auto& param : meth->params) {
                     bool error = false;
                     if (param.type.empty()) {
-                        error = f.add_parameter(param.id);
+                        error = f.add_param(param.id);
                     }
                     else {
                         if (!ctx.type_exists(param.type)) {
                             //todo: handle error, parameter type does not exist
                         }
-                        else {
-                            error = f.add_parameter(param.id, param.type);
-                        }
+                        else
+                            error = f.add_param(param.id, param.type);
                     }
                     if (error) {
                         //todo: handle error, parameter already exists
@@ -107,7 +105,7 @@ namespace hulk {
             }
         }
 
-        void ast::def_function::context_builder_visit(context& ctx) const {
+        void def_function::context_builder_visit(context& ctx) const {
             if (!ctx.create_function(id)) {
                 // todo: handle error, function already exists
                 return;
@@ -129,13 +127,13 @@ namespace hulk {
             for (const auto& param : params) {
                 bool error = false;
                 if (param.type.empty()) {
-                    error = func.add_parameter(param.id);
+                    error = func.add_param(param.id);
                 }
                 else {
                     if (!ctx.type_exists(param.type)) {
                         // todo: handle error, parameter type does not exist
                     }
-                    error = func.add_parameter(param.id, param.type);
+                    error = func.add_param(param.id, param.type);
                 }
 
                 if (error) {

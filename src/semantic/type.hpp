@@ -48,7 +48,7 @@ namespace hulk {
             }
 
             // Define a parameter for the method
-            bool add_parameter(const string& param_name, const string& param_type = "") {
+            bool add_param(const string& param_name, const string& param_type = "") {
                 for (const auto& param : params)
                     if (param.name == param_name)
                         return false; // Parameter already exists
@@ -69,21 +69,30 @@ namespace hulk {
                 : name(type_name) {
             }
 
-            bool add_param(const attribute& param) {
-                for (const auto& p : params)
-                    if (p.name == param.name)
+            bool add_param(const string& param_name, const string& param_type = "") {
+                for (const auto& param : params)
+                    if (param.name == param_name)
                         return false; // Parameter already exists
 
-                params.push_back(param);
+                params.emplace_back(param_name, param_type);
                 return true;
             }
 
-            bool add_attribute(const attribute& attr) {
+            bool add_parent(const string& parent_name) {
+                for (const auto& parent : parents)
+                    if (parent == parent_name)
+                        return false; // Parent already exists
+
+                parents.push_back(parent_name);
+                return true;
+            }
+
+            bool add_field(const string& field_name, const string& field_type = "") {
                 for (const auto& field : fields)
-                    if (field.name == attr.name)
+                    if (field.name == field_name)
                         return false; // Attribute already exists
 
-                fields.push_back(attr);
+                fields.emplace_back(field_name, field_type);
                 return true;
             }
 
@@ -96,14 +105,24 @@ namespace hulk {
                 return true;
             }
 
-            bool add_parent(const string& parent_name) {
-                for (const auto& parent : parents)
-                    if (parent == parent_name)
-                        return false; // Parent already exists
-
-                parents.push_back(parent_name);
-                return true;
+            bool has_method(const string& method_name) const {
+                for (const auto& method : methods) {
+                    if (method.name == method_name) {
+                        return true;
+                    }
+                }
+                return false;
             }
+
+            method* get_method(const string& method_name) {
+                for (auto& method : methods) {
+                    if (method.name == method_name) {
+                        return &method;
+                    }
+                }
+                return nullptr;
+            }
+
         };
     }
 }

@@ -42,26 +42,26 @@ namespace hulk {
                 }
             }
 
-            for (const auto& parent : parents)
-                if (!ctx.type_exists(parent)) {
-                    //todo: handle error, parent type does not exist
-                }
-                else {
-                    type.add_parent(parent);
-                }
+
+            if (!ctx.type_exists(parent)) {
+                //todo: handle error, parent type does not exist
+            }
+            else {
+                type.add_parent(ctx.get_type(parent));
+            }
 
             // Add fields to the type
             for (const auto& field : fields) {
                 bool error = false;
-                if (field->type.empty()) {
+                if (field->var_type.empty()) {
                     error = type.add_field(field->id);
                 }
                 else {
-                    if (!ctx.type_exists(field->type)) {
+                    if (!ctx.type_exists(field->var_type)) {
                         //todo: handle error, type does not exist
                     }
                     else
-                        error = type.add_field(field->id, field->type);
+                        error = type.add_field(field->id, field->var_type);
                 }
                 if (error) {
                     //todo: handle error, field already exists

@@ -6,7 +6,9 @@
 #include "../semantic/context.hpp"
 using namespace std;
 
+
 namespace hulk {
+    using type = semantic::type;
     namespace ast {
         // Forward declarations
         struct statement;
@@ -26,11 +28,10 @@ namespace hulk {
             void context_builder_visit(semantic::context& ctx) const override;
             void scoped_visit(semantic::context& ctx) const override;
             // void infer(semantic::context& ctx) const;
-            // void type_check(semantic::context& ctx) const;
+            void type_check(semantic::context& ctx) const;
         };
 
         // Statements
-
         struct statement : node {
             virtual void infer(semantic::context& ctx) {}
             virtual void type_check(semantic::context& ctx) const {}
@@ -43,10 +44,11 @@ namespace hulk {
 
         struct def_field : statement {
             string id;
-            string type;
+            string var_type;
             expression* value;
 
             void scoped_visit(semantic::context& ctx) const override;
+            void type_check(semantic::context& ctx) const override;
         };
 
         struct def_function : statement {
@@ -57,33 +59,34 @@ namespace hulk {
 
             void context_builder_visit(semantic::context& ctx) const override;
             void scoped_visit(semantic::context& ctx) const override;
+            void type_check(semantic::context& ctx) const override;
         };
 
         struct def_type : statement {
             string id;
             vector<param> params;
-            vector<string> parents;
+            string parent;
+            vector<expression*> parent_args;
             vector<def_field*> fields;
             vector<def_function*> methods;
 
             void context_builder_visit(semantic::context& ctx) const override;
             void scoped_visit(semantic::context& ctx) const override;
+            void type_check(semantic::context& ctx) const override;
         };
 
-
         // Expressions
-
         struct expression : node {
-            string return_type;
+            type* return_type;
             virtual string infer(semantic::context& ctx, const string& type_name = "") { return ""; }
-            virtual string type_check(semantic::context& ctx) const { return ""; }
+            virtual type* type_check(semantic::context& ctx) { return nullptr; }
         };
 
         struct block_expr : expression {
             vector<expression*> exprs;
 
             void scoped_visit(semantic::context& ctx) const override;
-            // string type_check(semantic::context& ctx) const override;
+            type* type_check(semantic::context& ctx) override;
         };
 
         struct call_expr : expression {
@@ -91,17 +94,17 @@ namespace hulk {
             vector<expression*> args;
 
             void scoped_visit(semantic::context& ctx) const override;
-            // string type_check(semantic::context& ctx) const override;
+            type* type_check(semantic::context& ctx) override;
         };
 
         struct let_expr : expression {
             string id;
-            string type;
+            string var_type;
             expression* value;
             expression* body;
 
             void scoped_visit(semantic::context& ctx) const override;
-            // string type_check(semantic::context& ctx) const override;
+            type* type_check(semantic::context& ctx) override;
         };
 
         struct assign_expr : expression {
@@ -109,6 +112,7 @@ namespace hulk {
             expression* value;
 
             void scoped_visit(semantic::context& ctx) const override;
+            type* type_check(semantic::context& ctx) override;
         };
 
         struct if_expr : expression {
@@ -117,6 +121,7 @@ namespace hulk {
             expression* else_branch; // Optional
 
             void scoped_visit(semantic::context& ctx) const override;
+            type* type_check(semantic::context& ctx) override;
         };
 
         struct while_expr : expression {
@@ -124,6 +129,7 @@ namespace hulk {
             expression* body;
 
             void scoped_visit(semantic::context& ctx) const override;
+            type* type_check(semantic::context& ctx) override;
         };
 
         /* Arithmetic expressions */
@@ -134,6 +140,7 @@ namespace hulk {
             expression* right;
 
             void scoped_visit(semantic::context& ctx) const override;
+            type* type_check(semantic::context& ctx) override;
         };
 
         struct unary_expr : expression {
@@ -141,31 +148,36 @@ namespace hulk {
             expression* expr;
 
             void scoped_visit(semantic::context& ctx) const override;
+            type* type_check(semantic::context& ctx) override;
         };
 
         /* Literals */
-
         struct variable : expression {
             string id;
 
             variable(const string& id) : id(id) {}
 
             void scoped_visit(semantic::context& ctx) const override;
+            type* type_check(semantic::context& ctx) override;
         };
 
         struct number : expression {
             string value;
             number(const string& value) : value(value) {}
+
+            type* type_check(semantic::context& ctx) override;
         };
 
         struct boolean : expression {
             string value;
             boolean(const string& value) : value(value) {}
+            type* type_check(semantic::context& ctx) override;
         };
 
         struct string_ : expression {
             string value;
             string_(const string& value) : value(value) {}
+            type* type_check(semantic::context& ctx) override;
         };
 
         struct literal : expression { // this probably won't be used

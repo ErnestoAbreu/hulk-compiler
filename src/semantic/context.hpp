@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 #include "type.hpp"
 using namespace std;
 
@@ -12,13 +13,26 @@ namespace hulk {
         struct context {
             map<string, type> types;
             map<string, method> functions;
-
             vector<map<string, attribute>> scopes;
-            map<string, method> scoped_functions;
 
-            map<string, type_rules> type_rules;
+            set<string> number_ops = { "+", "-", "*", "/", "%", "^" }; //  number <op> number => number | <op>number => number
+            set<string> boolean_ops = { "&&", "||", "!" }; // boolean <op> boolean => boolean | <op>boolean => boolean
+            set<string> comparison_ops = { "<", ">", "<=", ">=" }; // number <op> number => boolean
+            set<string> equality_ops = { "==", "!=" }; // any <op> any => boolean
+            set<string> string_ops = { "@", "@@" }; // string <op> string => string 
 
-            context() = default;
+            context() {
+                // Initialize built-in types
+                create_type("Number");
+                create_type("Boolean");
+                create_type("String");
+                create_type("Object");
+                create_type("?undefined");
+
+                // Initialize built-in functions
+                create_function("print");
+                create_function("input");
+            }
 
             bool create_type(const string& type_name) {
                 if (types.find(type_name) != types.end()) {
@@ -35,6 +49,11 @@ namespace hulk {
             // Use type_exists to check if the type exists before getting it
             type& get_type(const string& type_name) {
                 return types[type_name];
+            }
+
+            type* get_lca_type(const type* t1, const type* t2) {
+                // todo
+                return nullptr; // No common ancestor found
             }
 
             bool create_function(const string& func_name) {
@@ -96,10 +115,6 @@ namespace hulk {
 
             attribute& get_variable(const string& var_name) {
                 return current_scope()[var_name];
-            }
-
-            void add_scoped_function(const string& func_name, const method& func) {
-                scoped_functions[func_name] = func;
             }
         };
     } // namespace semantic

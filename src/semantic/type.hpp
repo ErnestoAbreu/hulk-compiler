@@ -63,10 +63,27 @@ namespace hulk {
             vector<attribute> params;
             vector<attribute> fields;
             vector<method> methods;
-            vector<string> parents;
+            vector<type> parents;
 
             type(const string& type_name = "")
                 : name(type_name) {
+            }
+
+            bool operator==(const type& other) const {
+                return name == other.name;
+            }
+
+            bool operator!=(const type& other) const {
+                return !(*this == other);
+            }
+
+            bool operator<=(const type& other) const {
+                if (*this == other) return true;
+                for (const auto& parent : parents) {
+                    if (parent <= other)
+                        return true;
+                }
+                return false;
             }
 
             bool add_param(const string& param_name, const string& param_type = "") {
@@ -78,12 +95,12 @@ namespace hulk {
                 return true;
             }
 
-            bool add_parent(const string& parent_name) {
+            bool add_parent(const type& parent_type) {
                 for (const auto& parent : parents)
-                    if (parent == parent_name)
+                    if (parent == parent_type)
                         return false; // Parent already exists
 
-                parents.push_back(parent_name);
+                parents.push_back(parent_type);
                 return true;
             }
 
@@ -103,6 +120,16 @@ namespace hulk {
                     }
                 }
                 return false;
+            }
+
+            attribute& get_field(const string& field_name) {
+                for (auto& field : fields) {
+                    if (field.name == field_name) {
+                        return field;
+                    }
+                }
+                // warn: this is dangerous, make sure to check with has_field first
+                return *(new attribute());
             }
 
             bool add_method(const method& m) {
@@ -129,6 +156,8 @@ namespace hulk {
                         return method;
                     }
                 }
+                // warn: this is dangerous, make sure to check with has_method first
+                return *(new method());
             }
 
         };

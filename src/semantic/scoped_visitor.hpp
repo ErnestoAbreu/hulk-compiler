@@ -19,7 +19,7 @@ namespace hulk {
         /* Statements */
 
         void def_field::scoped_visit(context& ctx) const {
-            if (!type.empty() && !ctx.type_exists(type)) {
+            if (!var_type.empty() && !ctx.type_exists(var_type)) {
                 // todo handle error: type does not exist
             }
             value->scoped_visit(ctx);
@@ -63,9 +63,7 @@ namespace hulk {
 
             ctx.add_scope();
 
-            for (const auto& parent : parents) {
-                // todo: handle parent scope merging
-            }
+            // todo: handle parent scope merging
 
             for (const auto& field : fields) {
                 ctx.add_variable("self", id);
@@ -130,7 +128,7 @@ namespace hulk {
         void let_expr::scoped_visit(context& ctx) const {
             ctx.add_scope();
 
-            if (!type.empty() && !ctx.type_exists(type)) {
+            if (!var_type.empty() && !ctx.type_exists(var_type)) {
                 // todo handle error: type does not exist
             }
 
@@ -144,11 +142,33 @@ namespace hulk {
         }
 
         void assign_expr::scoped_visit(context& ctx) const {
-            if (!ctx.variable_exists(id)) {
-                // todo handle error: variable does not exist in this scope
+            if (id.find('.') != string::npos) {
+                string name = id.substr(0, id.find('.'));
+                string attr = id.substr(id.find('.') + 1);
+
+                if (!ctx.variable_exists(name)) {
+                    // todo handle error: variable does not exist in this scope
+                }
+                else if (name == "self") {
+                    auto var_type = ctx.get_variable(name).attr_type;
+                    if (ctx.type_exists(var_type)) {
+                        auto& type = ctx.get_type(var_type);
+                        if (!type.has_field(attr)) {
+                            // todo handle error: field does not exist in this type
+                        }
+                    }
+                }
+                else {
+                    // todo handle error: cannot access field of non-self
+                }
             }
-            if (id == "self") {
-                // todo handle error: cannot assign to self
+            else {
+                if (!ctx.variable_exists(id)) {
+                    // todo handle error: variable does not exist in this scope
+                }
+                if (id == "self") {
+                    // todo handle error: cannot assign to self
+                }
             }
             value->scoped_visit(ctx);
         }

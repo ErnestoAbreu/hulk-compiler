@@ -15,6 +15,9 @@ namespace hulk {
             map<string, method> functions;
             vector<map<string, attribute>> scopes;
 
+            vector<string> semantic_errors;
+            bool repeat_infer;
+
             set<string> number_ops = { "+", "-", "*", "/", "%", "^" }; //  number <op> number => number | <op>number => number
             set<string> boolean_ops = { "&&", "||", "!" }; // boolean <op> boolean => boolean | <op>boolean => boolean
             set<string> comparison_ops = { "<", ">", "<=", ">=" }; // number <op> number => boolean

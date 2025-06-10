@@ -13,18 +13,6 @@ namespace hulk {
         struct attribute;
         struct method;
 
-        struct typed_method {
-            string name;
-            string return_type;
-            vector<string> param_types;
-        };
-
-        struct type_rules {
-            string closed_type;
-            vector<string> must_equal;
-            vector<typed_method> must_have;
-        };
-
         struct attribute {
             string name;
             string attr_type;
@@ -56,6 +44,16 @@ namespace hulk {
                 params.emplace_back(param_name, param_type);
                 return true;
             }
+
+            attribute& get_param(const string& param_name) {
+                for (auto& param : params) {
+                    if (param.name == param_name) {
+                        return param;
+                    }
+                }
+                // warn: this is dangerous
+                return *(new attribute());
+            }
         };
 
         struct type {
@@ -63,7 +61,7 @@ namespace hulk {
             vector<attribute> params;
             vector<attribute> fields;
             vector<method> methods;
-            vector<type> parents;
+            type* parent;
 
             type(const string& type_name = "")
                 : name(type_name) {
@@ -79,10 +77,9 @@ namespace hulk {
 
             bool operator<=(const type& other) const {
                 if (*this == other) return true;
-                for (const auto& parent : parents) {
-                    if (parent <= other)
-                        return true;
-                }
+                if (*parent <= other)
+                    return true;
+
                 return false;
             }
 
@@ -95,12 +92,13 @@ namespace hulk {
                 return true;
             }
 
-            bool add_parent(const type& parent_type) {
-                for (const auto& parent : parents)
-                    if (parent == parent_type)
-                        return false; // Parent already exists
+            bool add_parent(type& parent_type) {
+                if (parent) {
+                    // Parent already exists, cannot add another
+                    return false;
+                }
 
-                parents.push_back(parent_type);
+                parent = &parent_type;
                 return true;
             }
 

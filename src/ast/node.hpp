@@ -18,6 +18,7 @@ namespace hulk {
         struct node {
             virtual void context_builder_visit(semantic::context& ctx) const {}
             virtual void scoped_visit(semantic::context& ctx) const {}
+            virtual string infer(semantic::context& ctx, const string& shouldbe_type = "") {}
             virtual string print() const { return "node"; }
         };
 
@@ -27,13 +28,12 @@ namespace hulk {
 
             void context_builder_visit(semantic::context& ctx) const override;
             void scoped_visit(semantic::context& ctx) const override;
-            // void infer(semantic::context& ctx) const;
+            string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
             void type_check(semantic::context& ctx) const;
         };
 
         // Statements
         struct statement : node {
-            virtual void infer(semantic::context& ctx) {}
             virtual void type_check(semantic::context& ctx) const {}
         };
 
@@ -48,6 +48,7 @@ namespace hulk {
             expression* value;
 
             void scoped_visit(semantic::context& ctx) const override;
+            string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
             void type_check(semantic::context& ctx) const override;
         };
 
@@ -59,6 +60,7 @@ namespace hulk {
 
             void context_builder_visit(semantic::context& ctx) const override;
             void scoped_visit(semantic::context& ctx) const override;
+            string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
             void type_check(semantic::context& ctx) const override;
         };
 
@@ -72,13 +74,14 @@ namespace hulk {
 
             void context_builder_visit(semantic::context& ctx) const override;
             void scoped_visit(semantic::context& ctx) const override;
+            string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
             void type_check(semantic::context& ctx) const override;
         };
 
         // Expressions
         struct expression : node {
             type* return_type;
-            virtual string infer(semantic::context& ctx, const string& type_name = "") { return ""; }
+
             virtual type* type_check(semantic::context& ctx) { return nullptr; }
         };
 
@@ -86,6 +89,7 @@ namespace hulk {
             vector<expression*> exprs;
 
             void scoped_visit(semantic::context& ctx) const override;
+            string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
             type* type_check(semantic::context& ctx) override;
         };
 
@@ -94,6 +98,7 @@ namespace hulk {
             vector<expression*> args;
 
             void scoped_visit(semantic::context& ctx) const override;
+            string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
             type* type_check(semantic::context& ctx) override;
         };
 
@@ -104,6 +109,7 @@ namespace hulk {
             expression* body;
 
             void scoped_visit(semantic::context& ctx) const override;
+            string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
             type* type_check(semantic::context& ctx) override;
         };
 
@@ -112,6 +118,7 @@ namespace hulk {
             expression* value;
 
             void scoped_visit(semantic::context& ctx) const override;
+            string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
             type* type_check(semantic::context& ctx) override;
         };
 
@@ -121,6 +128,7 @@ namespace hulk {
             expression* else_branch; // Optional
 
             void scoped_visit(semantic::context& ctx) const override;
+            string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
             type* type_check(semantic::context& ctx) override;
         };
 
@@ -129,6 +137,7 @@ namespace hulk {
             expression* body;
 
             void scoped_visit(semantic::context& ctx) const override;
+            string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
             type* type_check(semantic::context& ctx) override;
         };
 
@@ -140,6 +149,7 @@ namespace hulk {
             expression* right;
 
             void scoped_visit(semantic::context& ctx) const override;
+            string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
             type* type_check(semantic::context& ctx) override;
         };
 
@@ -148,6 +158,7 @@ namespace hulk {
             expression* expr;
 
             void scoped_visit(semantic::context& ctx) const override;
+            string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
             type* type_check(semantic::context& ctx) override;
         };
 
@@ -158,26 +169,35 @@ namespace hulk {
             variable(const string& id) : id(id) {}
 
             void scoped_visit(semantic::context& ctx) const override;
+            string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
             type* type_check(semantic::context& ctx) override;
         };
 
         struct number : expression {
             string value;
+
             number(const string& value) : value(value) {}
 
             type* type_check(semantic::context& ctx) override;
+            string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
         };
 
         struct boolean : expression {
             string value;
+
             boolean(const string& value) : value(value) {}
+
             type* type_check(semantic::context& ctx) override;
+            string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
         };
 
         struct string_ : expression {
             string value;
+
             string_(const string& value) : value(value) {}
+
             type* type_check(semantic::context& ctx) override;
+            string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
         };
 
         struct literal : expression { // this probably won't be used

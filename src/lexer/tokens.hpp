@@ -235,7 +235,13 @@ using literal = std::variant<std::nullptr_t, std::string, double, bool>;
 
 // Token simple con: Type, Value, Line y Column
 struct token {
-  explicit token(const token_type _type, std::string _lexeme,
+  token_type type;
+  std::string lexeme;
+  literal value;
+  unsigned int line, column;
+  
+  token() {}
+  token(const token_type _type, std::string _lexeme,
                  const literal &_value, int _line, int _column)
       : type(_type),
         lexeme(_lexeme),
@@ -245,7 +251,7 @@ struct token {
 
   token_type get_type() const { return type; }
 
-  std::pair<unsigned int, unsigned int> location() const {
+  std::pair<unsigned int, unsigned int> get_location() const {
     return {line, column};
   }
 
@@ -257,12 +263,6 @@ struct token {
            "[line = " + std::to_string(line) +
            ", column = " + std::to_string(column) + "]";
   }
-
- private:
-  token_type type;
-  std::string lexeme;
-  literal value;
-  unsigned int line, column;
 };
 
 // Pares de <regex, token_type> orden importante

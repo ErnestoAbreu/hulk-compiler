@@ -2,6 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "all"
 
@@ -31,6 +32,20 @@ int main() {
   const auto& tokens = lexer::lex(source_code);
 
   for (auto &t: tokens) {
-    std::cout << t.to_string() << "\n";
+    std::cerr << t.to_string() << "\n";
   }
+
+  auto parser = parser::parser(tokens);
+  const auto& ast = parser.parse();
+
+  if (internal::error_found) return -1;
+
+  for (auto &t: ast) {
+    if (std::holds_alternative<ast::expression_stmt_ptr>(t)) {
+      std::cerr << "expr statement" << "\n";
+    } else if (std::holds_alternative<ast::function_stmt_ptr>(t)) {
+      std::cerr << "function statement" << "\n";
+    }
+  }
+  std::cerr << ast.size() << "\n";
 }

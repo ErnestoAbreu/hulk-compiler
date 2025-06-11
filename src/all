@@ -1,11 +1,11 @@
-// internal_all
-
+#include "internal/internal_error"
 #include "internal/internal_overloaded"
 #include "internal/internal_uncopyable"
 #include "internal/internal_util"
 
-// lexer_all
-
 #include "lexer/lexer"
 #include "lexer/regex_engine"
 #include "lexer/tokens"
+
+#include "ast/ast"
+#include "parser/parser"

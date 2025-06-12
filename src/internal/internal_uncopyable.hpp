@@ -11,7 +11,7 @@ struct uncopyable {
 
  protected:
   uncopyable() = default;
-  ~uncopyable() = default;
+  virtual ~uncopyable() = default;
 };
 
 }  // namespace internal

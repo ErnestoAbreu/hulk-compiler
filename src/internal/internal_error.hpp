@@ -13,20 +13,20 @@ namespace internal {
   static bool error_found = false;
   static bool runtime_error_found = false;
 
-  static void print(const unsigned int line, const std::string where, const std::string message) {
-    std::cerr << "[" << line << "] Error" << where << ": " << message << "\n";
+  static void print(const unsigned int line, const unsigned int column, const std::string where, const std::string message) {
+    std::cerr << "[" << line << ", " << column << "] Error" << where << ": " << message << "\n";
     error_found = true;
   }
 
-  static void error(const unsigned int line, const std::string message) {
-    print(line, "", message);
+  static void error(const unsigned int line, const unsigned int column, const std::string message) {
+    print(line, column, "", message);
   }
 
   static void error(const lexer::token &token, const std::string message) {
     if (token.get_type() == lexer::token_type::END_OF_FILE) {
-      print(token.get_location().first, " at end", message);
+      print(token.get_location().first, token.get_location().second, " at end", message);
     } else {
-      print(token.get_location().first, " at '" + std::string(token.get_lexeme()) + "'", message);
+      print(token.get_location().first, token.get_location().second, " at '" + std::string(token.get_lexeme()) + "'", message);
     }
   }
   

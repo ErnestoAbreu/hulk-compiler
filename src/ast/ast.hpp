@@ -22,8 +22,10 @@ struct literal_expr;
 struct unary_expr;
 struct var_expr;
 struct assign_expr;
+struct declaration_expr;
 struct let_expr;
 struct while_expr;
+struct for_expr;
 struct if_expr;
 struct block_expr;
 struct new_expr;
@@ -36,8 +38,10 @@ using literal_expr_ptr = std::unique_ptr<literal_expr>;
 using unary_expr_ptr = std::unique_ptr<unary_expr>;
 using var_expr_ptr = std::unique_ptr<var_expr>;
 using assign_expr_ptr = std::unique_ptr<assign_expr>;
+using declaration_expr_ptr = std::unique_ptr<declaration_expr>;
 using let_expr_ptr = std::unique_ptr<let_expr>;
 using while_expr_ptr = std::unique_ptr<while_expr>;
+using for_expr_ptr = std::unique_ptr<for_expr>;
 using var_expr_ptr = std::unique_ptr<var_expr>;
 using if_expr_ptr = std::unique_ptr<if_expr>;
 using block_expr_ptr = std::unique_ptr<block_expr>;
@@ -102,10 +106,11 @@ struct call_expr : public expr {
 };
 
 struct let_expr : public expr {
-  std::vector<assign_expr_ptr> assignments;
+  std::vector<declaration_expr_ptr> assignments;
   expr_ptr body;
 
-  explicit let_expr(std::vector<assign_expr_ptr> _assignments, expr_ptr _body)
+  explicit let_expr(std::vector<declaration_expr_ptr> _assignments,
+                    expr_ptr _body)
       : assignments(std::move(_assignments)), body(std::move(_body)) {}
 };
 
@@ -116,6 +121,16 @@ struct assign_expr : public expr {
 
   explicit assign_expr(const lexer::token& _name, const lexer::token& _type,
                        expr_ptr _value)
+      : name(_name), type(_type), value(std::move(_value)) {}
+};
+
+struct declaration_expr : public expr {
+  lexer::token name;
+  lexer::token type;
+  expr_ptr value;
+
+  explicit declaration_expr(const lexer::token& _name,
+                            const lexer::token& _type, expr_ptr _value)
       : name(_name), type(_type), value(std::move(_value)) {}
 };
 
@@ -157,6 +172,14 @@ struct for_expr : public expr {
         body(std::move(_body)) {}
 };
 
+struct var_expr : public expr {
+  std::optional<expr_ptr> object;
+  lexer::token name;
+  lexer::token type;
+  explicit var_expr(std::optional<expr_ptr> _object, const lexer::token& _name, const lexer::token &_type)
+      : object(std::move(_object)), name(_name), type(_type) {}
+};
+
 // Statements
 
 // Forwards declarations
@@ -164,13 +187,16 @@ struct stmt;
 struct expression_stmt;
 struct function_stmt;
 struct class_stmt;
+struct protocol_stmt;
 struct field_stmt;
 struct super_item;
 
 // Define smart pointers for statements
 using stmt_ptr = std::shared_ptr<stmt>;
+using expression_stmt_ptr = std::shared_ptr<expression_stmt>;
 using function_stmt_ptr = std::shared_ptr<function_stmt>;
 using class_stmt_ptr = std::shared_ptr<class_stmt>;
+using protocol_stmt_ptr = std::shared_ptr<protocol_stmt>;
 using field_stmt_ptr = std::shared_ptr<field_stmt>;
 using super_item_ptr = std::shared_ptr<super_item>;
 
@@ -239,14 +265,20 @@ struct class_stmt : public stmt {
 struct protocol_stmt : public stmt {
   lexer::token name;
   std::vector<function_stmt_ptr> methods;
-  std::optional<lexer::token> super_protocol;
+  lexer::token super_protocol;
 
-  explicit protocol_stmt(
-      const lexer::token& _name, std::vector<function_stmt_ptr> _methods,
-      std::optional<lexer::token> _super_protocol = std::nullopt)
+  explicit protocol_stmt(const lexer::token& _name,
+                         std::vector<function_stmt_ptr> _methods,
+                         lexer::token _super_protocol)
       : name(_name),
         methods(std::move(_methods)),
-        super_protocol(std::move(_super_protocol)) {}
+        super_protocol(_super_protocol) {}
+};
+
+struct expression_stmt : public stmt {
+  expr_ptr expression;
+  explicit expression_stmt(expr_ptr _expression)
+      : expression(std::move(_expression)) {}
 };
 
 // Program

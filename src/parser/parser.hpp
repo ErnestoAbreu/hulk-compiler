@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "../ast/ast"
+#include "../ast/enums"
 #include "../internal/internal_error"
 #include "../lexer/tokens"
 
@@ -24,17 +25,38 @@ struct parser {
   explicit parser(const std::vector<lexer::token> &_tokens) : tokens(_tokens) {}
 
   ast::program parse() {
-    auto program = ast::program();
+    std::vector<ast::stmt_ptr> decl_list;
+    ast::expr_ptr main_expr;
     try {
+      bool found_expr = false;
       while (!is_at_end()) {
         if (auto decl = declaration(); decl.has_value()) {
-          program.push_back(std::move(decl.value()));
+          decl_list.push_back(std::move(decl.value()));
+        }
+
+        if (match(TT::SEMICOLON))
+          ;
+      
+        if (!decl_list.empty()) {
+          auto stmt = decl_list.back();
+          if (ast::expression_stmt *t = dynamic_cast<ast::expression_stmt *>(stmt.get())) {
+            if (found_expr) {
+              error(previous(), "A program in HULK can consist of just one global expression.");
+              break;
+            }
+            
+            main_expr = std::move(t->expression);
+            decl_list.pop_back();
+            found_expr = true;
+          }
         }
       }
+
+      
     } catch (const std::invalid_argument &e) {
       std::cout << "error: " << e.what() << std::endl;
     }
-    return program;
+    return ast::program(std::move(decl_list), std::move(main_expr));
   }
 
  private:
@@ -44,51 +66,85 @@ struct parser {
 
   using TT = lexer::token_type;
 
-  using parserFn = ast::expr (parser::*)();
+  using parserFn = ast::expr_ptr (parser::*)();
 
-  std::optional<ast::stmt> declaration() {
+  std::optional<ast::stmt_ptr> declaration() {
     try {
-      if (match(TT::KW_TYPE)) return class_declaration();
       if (match(TT::KW_FUNCTION)) return function(ast::function_type::FUNCTION);
+      if (match(TT::KW_TYPE)) return class_declaration();
+      if (match(TT::KW_PROTOCOL)) return protocol_declaration();
 
-      return std::make_optional<ast::stmt>(statement());
+      return statement();
     } catch (parse_error &) {
       sync();
-      return std::make_optional<ast::stmt>();
+      return std::make_optional<ast::stmt_ptr>();
     }
   }
 
+  lexer::token opt_type(bool is_optional = true) {
+    lexer::token result;
+    if (match(TT::COLON)) {
+      result = consume(TT::IDENTIFIER, "Expected a type after ':' in definition.");
+    } else if (!is_optional) {
+      error(peek(), "Expected type.");
+    }
+    return result;
+  }
+
+  ast::protocol_stmt_ptr protocol_declaration() {
+    auto name = consume(TT::IDENTIFIER, "Expected protocol name.");
+
+    lexer::token super_protocol;
+    if (match(TT::KW_EXTENDS)) {
+      super_protocol =
+          consume(TT::IDENTIFIER, "Expected super protocol extends name.");
+    }
+
+    consume(TT::LBRACE, "Expected '{' before protocol signatures.");
+
+    std::vector<ast::function_stmt_ptr> methods;
+    while (!check(TT::RBRACE) && !is_at_end()) {
+      auto name = consume(TT::IDENTIFIER, "Expected method name.");
+
+      consume(TT::LPAREN, "Expected '(' before parameters.");
+
+      std::vector<ast::parameter> parameters;
+      if (!check(TT::RPAREN)) {
+        do {
+          auto param_name = consume(TT::IDENTIFIER, "Expected parameter name.");
+          auto param_type = opt_type(false);
+          parameters.push_back(ast::parameter(param_name, param_type));
+        } while (match(TT::COMMA));
+      }
+
+      consume(TT::RPAREN, "Expected ')' after parameters.");
+
+      auto return_type = opt_type(false);
+      methods.push_back(std::make_shared<ast::function_stmt>(
+          name, ast::function_type::METHOD, std::move(parameters), nullptr,
+          return_type));
+
+      consume(TT::SEMICOLON, "Expected ';' after protocol method declaration.");
+    }
+
+    consume(TT::RBRACE, "Expected '}' after protocol signatures.");
+    return std::make_shared<ast::protocol_stmt>(name, std::move(methods),
+                                                super_protocol);
+  }
+
   ast::class_stmt_ptr class_declaration() {
-    auto name = consume(TT::IDENTIFIER, "Expected class name.");
+    auto name = consume(TT::IDENTIFIER, "Expected type name.");
 
     std::vector<ast::parameter> parameters;
     if (match(TT::LPAREN)) {
-      consume(TT::LPAREN, "Expected '(' after class name.");
+      if (!check(TT::RPAREN)) {
+        do {
+          lexer::token param_name =
+              consume(TT::IDENTIFIER, "Expected parameter name.");
+          lexer::token param_type = opt_type();
 
-      while (!check(TT::RPAREN)) {
-        lexer::token param_name =
-            consume(TT::IDENTIFIER, "Expected parameter name.");
-
-        lexer::token param_type(TT::UNKNOWN, "", "", param_name.line,
-                                param_name.column);
-        if (match(TT::COLON)) {
-          bool found = false;
-          for (auto t : std::vector{TT::T_STRING, TT::T_BOOLEAN, TT::T_OBJECT,
-                                    TT::T_CHAR, TT::T_NULL, TT::T_NUMBER}) {
-            if (check(t)) {
-              param_type = consume(t, "");
-              found = true;
-              break;
-            }
-          }
-
-          if (!found) {
-            error(param_type,
-                  "Expected a type after ':' in parameter definition.");
-          }
-        }
-
-        parameters.push_back({param_name, param_type});
+          parameters.push_back(ast::parameter(param_name, param_type));
+        } while (match(TT::COMMA));
       }
 
       consume(TT::RPAREN, "Expected ')' after parameters");
@@ -96,11 +152,11 @@ struct parser {
 
     std::optional<ast::super_item_ptr> super_class;
     if (match(TT::KW_INHERITS)) {
-      consume(TT::IDENTIFIER, "Expected super_class name.");
-      auto super_name = previous();
+      lexer::token super_name =
+          consume(TT::IDENTIFIER, "Expected super_class name.");
 
-      std::vector<ast::expr> args;
-      if (match(TT::RPAREN)) {
+      std::vector<ast::expr_ptr> args;
+      if (match(TT::LPAREN)) {
         do {
           auto expr = expression();
           args.push_back(std::move(expr));
@@ -113,7 +169,7 @@ struct parser {
           std::make_unique<ast::super_item>(super_name, std::move(args));
     }
 
-    consume(TT::LBRACE, "Expected '{' before class body.");
+    consume(TT::LBRACE, "Expected '{' before type body.");
 
     std::vector<ast::field_stmt_ptr> fields;
     std::vector<ast::function_stmt_ptr> methods;
@@ -127,34 +183,31 @@ struct parser {
       }
     }
 
-    consume(TT::RBRACE, "Expected '}' after class body.");
+    consume(TT::RBRACE, "Expected '}' after type body.");
 
     return std::make_shared<ast::class_stmt>(
         name, std::move(super_class), std::move(fields), std::move(methods));
   }
 
   ast::field_stmt_ptr field_declaration(const lexer::token name) {
-    ast::expr init = match(TT::OP_ASSIGN)
-                         ? expression()
-                         : std::make_unique<ast::literal_expr>(nullptr);
-    consume(TT::SEMICOLON, "Expected ';' after variable declaration.");
-    return std::make_shared<ast::field_stmt>(name, std::move(init));
+    lexer::token type = opt_type();
+    ast::expr_ptr init = match(TT::OP_ASSIGN)
+                             ? expression()
+                             : std::make_unique<ast::literal_expr>(nullptr);
+    consume(TT::SEMICOLON, "Expected ';' after field declaration.");
+    return std::make_shared<ast::field_stmt>(name, type, std::move(init));
   }
 
   ast::while_expr_ptr while_expression() {
     consume(TT::LPAREN, "Expected '(' after while.");
-    ast::expr condition = expression();
+    ast::expr_ptr condition = expression();
     consume(TT::RPAREN, "Expected ')' after condition.");
-    ast::expr body = expression();
+    ast::expr_ptr body = expression();
     return std::make_unique<ast::while_expr>(std::move(condition),
                                              std::move(body));
   }
 
-  ast::stmt statement() { return expression_statement(); }
-
-  ast::stmt for_statement() {  // todo
-    return ast::stmt();
-  }
+  ast::stmt_ptr statement() { return expression_statement(); }
 
   ast::if_expr_ptr if_expression() {
     consume(TT::LPAREN, "Expected '(' after 'if'.");
@@ -162,18 +215,19 @@ struct parser {
     consume(TT::RPAREN, "Expected ')' after if condition.");
 
     auto then_branch = expression();
-    std::vector<std::pair<ast::expr, ast::expr>> elif_branchs;
+
+    std::vector<std::pair<ast::expr_ptr, ast::expr_ptr>> elif_branchs;
     while (match(TT::KW_ELIF)) {
       consume(TT::LPAREN, "Expected '(' after 'elif'.");
       auto condition = expression();
       consume(TT::RPAREN, "Expected ')' after elif condition");
 
-      ast::expr cur_then_branch = expression();
+      ast::expr_ptr cur_then_branch = expression();
       elif_branchs.emplace_back(std::move(condition),
                                 std::move(cur_then_branch));
     }
 
-    std::optional<ast::expr> else_branch = {};
+    std::optional<ast::expr_ptr> else_branch = {};
     if (match(TT::KW_ELSE)) {
       else_branch = expression();
     }
@@ -184,8 +238,7 @@ struct parser {
   }
 
   ast::expression_stmt_ptr expression_statement() {
-    ast::expr expr = expression();
-    // consume(TT::SEMICOLON, "Expected ';' after expression");
+    ast::expr_ptr expr = expression();
     return std::make_shared<ast::expression_stmt>(std::move(expr));
   }
 
@@ -194,8 +247,9 @@ struct parser {
         type == ast::function_type::FUNCTION ? "function" : "method";
 
     lexer::token name = previous();
-    if (kind == "function")
+    if (kind == "function") {
       name = consume(TT::IDENTIFIER, "Expected " + kind + " name.");
+    }
 
     consume(TT::LPAREN, "Expected '(' after " + kind + " name.");
 
@@ -204,70 +258,44 @@ struct parser {
       do {
         lexer::token param_name =
             consume(TT::IDENTIFIER, "Expected parameter name.");
+        lexer::token param_type = opt_type();
 
-        lexer::token param_type(TT::UNKNOWN, "", "", param_name.line,
-                                param_name.column);
-        if (match(TT::COLON)) {
-          bool found = false;
-          for (auto t : std::vector{TT::T_STRING, TT::T_BOOLEAN, TT::T_OBJECT,
-                                    TT::T_CHAR, TT::T_NULL, TT::T_NUMBER}) {
-            if (check(t)) {
-              param_type = consume(t, "");
-              found = true;
-              break;
-            }
-          }
-
-          if (!found) {
-            error(param_type,
-                  "Expected a type after ':' in parameter definition.");
-          }
-        }
-
-        parameters.push_back({param_name, param_type});
-      } while (match(TT::COMMA));
+        parameters.push_back(ast::parameter(param_name, param_type));
+      } while (match(TT::COMMA) && !is_at_end());
     }
-
-    // for (auto &p: parameters) {
-    //   std::cerr << p.name.to_string() << " " << p.type.to_string() << "\n";
-    // }
 
     consume(TT::RPAREN, "Expected ')' after parameters.");
 
-    ast::expr body;
-    bool is_inline_fun = false;
+    lexer::token return_type = opt_type();
 
-    if (match(TT::ARROW)) {  // parse an inline fun
-      is_inline_fun = true;
-    } else {  // should be a full-form fun
-      consume(TT::LBRACE, "Expected '{' before full-form" + kind + " body.");
-    }
+    bool is_inline_fun = match(TT::ARROW);
 
-    body = expression();
-
+    ast::expr_ptr body;
     if (is_inline_fun) {
+      body = expression();
       consume(TT::SEMICOLON, "Expected ';' after inline " + kind + " body.");
     } else {
-      consume(TT::RBRACE, "Expected '}' after full-form " + kind + " body.");
+      consume(TT::LBRACE, "Expected '{' before full-form " + kind + "body.");
+      body = block_expression();
     }
-    
 
     return std::make_shared<ast::function_stmt>(name, type, parameters,
-                                                std::move(body));
+                                                std::move(body), return_type);
   }
 
-  ast::block_expr_ptr block() {
-    std::vector<ast::expr> expressions;
+  ast::block_expr_ptr block_expression() {
+    std::vector<ast::expr_ptr> expressions;
     while (!check(TT::RBRACE) && !is_at_end()) {
       auto expr = expression();
       expressions.push_back(std::move(expr));
+      consume(TT::SEMICOLON, "Expected ';' after expressions in block.");
     }
     consume(TT::RBRACE, "Expected '}' after block.");
     return std::make_unique<ast::block_expr>(std::move(expressions));
   }
 
-  ast::expr parse_binary_expr(
-      const std::initializer_list<lexer::token_type> &types, ast::expr expr,
+  ast::expr_ptr parse_binary_expr(
+      const std::initializer_list<lexer::token_type> &types, ast::expr_ptr expr,
       const parserFn &f) {
     while (match(types)) {
       auto token = previous();
@@ -278,54 +306,61 @@ struct parser {
     return expr;
   }
 
-  ast::expr expression() {
-    if (match(TT::KW_WHILE)) while_expression();
+  ast::expr_ptr expression() {
+    if (match(TT::KW_LET)) return let_expression();
     if (match(TT::KW_IF)) return if_expression();
-    if (match(TT::LBRACE)) return block();
-    return assignment();
-  }
-
-  ast::expr let() {
-    if (match(TT::KW_LET)) {
-      std::vector<ast::assign_expr_ptr> decl;
-      do {
-        const lexer::token name =
-            consume(TT::IDENTIFIER, "Expected variable name.");
-        
-        ast::expr init = match(TT::OP_ASSIGN)
-                             ? expression()
-                             : std::make_unique<ast::literal_expr>(nullptr);
-
-        decl.push_back(
-            std::make_unique<ast::assign_expr>(name, std::move(init)));
-      } while (match(TT::COMMA));
-
-      consume(TT::KW_IN,
-              "Expected 'in' after variable declarations in let-in.");
-
-      ast::expr value = expression();
-  
-      return std::make_unique<ast::let_expr>(std::move(decl), std::move(value));
-    }
+    if (match(TT::KW_WHILE)) return while_expression();
+    if (match(TT::LBRACE)) return block_expression();
+    if (match(TT::KW_FOR)) return for_expression();
 
     return assignment();
   }
 
-  ast::expr assignment() {
-    auto expr = or_();
-    if (match({TT::OP_ASSIGN, TT::OP_DESTRUCT_ASSIGN})) {
+  ast::for_expr_ptr for_expression() {
+    consume(TT::LPAREN, "Expected '(' after for.");
+    auto name = consume(TT::IDENTIFIER, "Expected variable name.");
+    auto type = opt_type();
+    consume(TT::KW_IN, "Expected 'in' after variable declaration.");
+    ast::expr_ptr iter = expression();
+    consume(TT::RPAREN, "Expected ')' after iterator expression.");
+    ast::expr_ptr body = expression();
+    return std::make_unique<ast::for_expr>(name, type, std::move(iter),
+                                           std::move(body));
+  }
+
+  ast::let_expr_ptr let_expression() {
+    std::vector<ast::declaration_expr_ptr> decl;
+    do {
+      const lexer::token name =
+          consume(TT::IDENTIFIER, "Expected variable name.");
+      auto type = opt_type();
+
+      ast::expr_ptr init = match(TT::OP_ASSIGN)
+                               ? expression()
+                               : std::make_unique<ast::literal_expr>(nullptr);
+
+      decl.push_back(
+          std::make_unique<ast::declaration_expr>(name, type, std::move(init)));
+    } while (match(TT::COMMA));
+
+    consume(TT::KW_IN, "Expected 'in' after variable declarations in let-in.");
+
+    ast::expr_ptr body = expression();
+
+    return std::make_unique<ast::let_expr>(std::move(decl), std::move(body));
+  }
+
+  ast::expr_ptr assignment() {
+    auto expr = or_expr();
+    if (match({TT::OP_DESTRUCT_ASSIGN, TT::OP_DIV_ASSIGN, TT::OP_MOD_ASSIGN,
+               TT::OP_MULT_ASSIGN, TT::OP_PLUS_ASSIGN, TT::OP_MINUS_ASSIGN})) {
       const auto equals = previous();
       auto value = assignment();
 
-      if (std::holds_alternative<ast::var_expr_ptr>(expr)) {
-        const auto name = std::get<ast::var_expr_ptr>(expr)->name;
-        return std::make_unique<ast::assign_expr>(name, std::move(value));
-      }
-
-      if (std::holds_alternative<ast::get_expr_ptr>(expr)) {
-        const auto &get_expr = std::get<ast::get_expr_ptr>(expr);
-        return std::make_unique<ast::set_expr>(
-            std::move(get_expr->object), get_expr->name, std::move(value));
+      if (ast::var_expr *t = dynamic_cast<ast::var_expr *>(expr.get())) {
+        lexer::token name = t->name;
+        lexer::token type = t->type;
+        return std::make_unique<ast::assign_expr>(name, type, std::move(value));
       }
 
       error(equals, "Invalid assignment target.");
@@ -333,52 +368,56 @@ struct parser {
     return expr;
   }
 
-  ast::expr or_() {
-    auto expr = and_();
+  ast::expr_ptr or_expr() {
+    ast::expr_ptr expr = and_expr();
     while (match(TT::OP_OR)) {
-      auto right = and_();
-      expr = std::make_unique<ast::logical_expr>(
-          std::move(expr), ast::logical_op::OR, std::move(right));
+      auto token = previous();
+      auto right = and_expr();
+
+      expr = std::make_unique<ast::binary_expr>(
+          std::move(expr), token, ast::binary_op::OR, std::move(right));
     }
     return expr;
   }
 
-  ast::expr and_() {
+  ast::expr_ptr and_expr() {
     auto expr = equality();
     while (match(TT::OP_AND)) {
+      auto token = previous();
       auto right = equality();
-      expr = std::make_unique<ast::logical_expr>(
-          std::move(expr), ast::logical_op::AND, std::move(right));
+      expr = std::make_unique<ast::binary_expr>(
+          std::move(expr), token, ast::binary_op::AND, std::move(right));
     }
     return expr;
   }
 
-  ast::expr equality() {
+  ast::expr_ptr equality() {
     return parse_binary_expr({TT::OP_NOT_EQUAL, TT::OP_EQUAL}, comparison(),
                              &parser::comparison);
   }
 
-  ast::expr comparison() {
+  ast::expr_ptr comparison() {
     return parse_binary_expr(
         {TT::OP_GREATER, TT::OP_GREATER_EQ, TT::OP_LESS, TT::OP_LESS_EQ},
         term(), &parser::term);
   }
 
-  ast::expr term() {
+  ast::expr_ptr term() {
     return parse_binary_expr({TT::OP_MINUS, TT::OP_PLUS}, factor(),
                              &parser::factor);
   }
 
-  ast::expr factor() {
+  ast::expr_ptr factor() {
     return parse_binary_expr(
-        {TT::OP_DIVIDE, TT::OP_MULTIPLY, TT::OP_EXPONENT, TT::OP_CONCAT},
+        {TT::OP_DIVIDE, TT::OP_MODULE, TT::OP_MULTIPLY, TT::OP_EXPONENT,
+         TT::OP_CONCAT, TT::OP_DOBLE_CONCAT},
         unary(), &parser::unary);
   }
 
-  ast::expr unary() {
+  ast::expr_ptr unary() {
     if (match({TT::OP_NOT, TT::OP_MINUS})) {
       const auto token = previous();
-      ast::expr right = unary();
+      ast::expr_ptr right = unary();
       return std::make_unique<ast::unary_expr>(
           token, static_cast<ast::unary_op>(token.get_type()),
           std::move(right));
@@ -386,23 +425,24 @@ struct parser {
     return call();
   }
 
-  ast::expr call() {
-    ast::expr expr = primary();
+  ast::expr_ptr call() {
+    ast::expr_ptr expr = primary();
     while (true) {
       if (match(TT::LPAREN)) {
         expr = finish_call(expr);
       } else if (match(TT::DOT)) {
         lexer::token name =
             consume(TT::IDENTIFIER, "Expected property name after '.'.");
-        expr = std::make_unique<ast::get_expr>(std::move(expr), name);
+        lexer::token type;
+        expr = std::make_unique<ast::var_expr>(std::move(expr), name, type);
       } else
         break;
     }
     return expr;
   }
 
-  ast::expr finish_call(ast::expr &callee) {
-    std::vector<ast::expr> arguments;
+  ast::expr_ptr finish_call(ast::expr_ptr &callee) {
+    std::vector<ast::expr_ptr> arguments;
 
     if (!check(TT::RPAREN)) {
       do {
@@ -416,7 +456,7 @@ struct parser {
                                             std::move(arguments));
   }
 
-  ast::expr primary() {
+  ast::expr_ptr primary() {
     if (match(TT::FALSE)) return std::make_unique<ast::literal_expr>(false);
     if (match(TT::TRUE)) return std::make_unique<ast::literal_expr>(true);
     if (match(TT::T_NULL)) return std::make_unique<ast::literal_expr>(nullptr);
@@ -426,15 +466,36 @@ struct parser {
     }
 
     if (match(TT::IDENTIFIER)) {
-      return std::make_unique<ast::var_expr>(previous());
+      std::optional<ast::expr_ptr> object;
+      auto name = previous();
+      auto type = opt_type();
+      return std::make_unique<ast::var_expr>(std::move(object), name, type);
     }
 
     if (match(TT::LPAREN)) {
       auto expr = expression();
       consume(TT::RPAREN, "Expected ')' after expression.");
-      return std::make_unique<ast::grouping_expr>(std::move(expr));
+      return expr;
     }
-    
+
+    if (match(TT::KW_NEW)) {
+      auto name = consume(TT::IDENTIFIER, "Expected type name.");
+
+      consume(TT::LPAREN, "Expected '(' after type name.");
+
+      std::vector<ast::expr_ptr> args;
+      if (!check(TT::RPAREN)) {
+        do {
+          auto expr = expression();
+          args.push_back(std::move(expr));
+        } while (match(TT::COMMA));
+      }
+      
+      consume(TT::RPAREN, "Expected ')' after superclass arguments.");
+
+      return std::make_unique<ast::new_expr>(name, std::move(args));
+    }
+
     throw error(peek(), "Expected expression.");
   }
 

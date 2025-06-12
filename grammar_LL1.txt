@@ -1,26 +1,35 @@
 program -> decl_list expr opt_semicolon EOF
 
 decl_list -> decl decl_list
-          | e
+           | e
 
 decl -> function_decl_inline function_decl_fullform type_decl protocol_decl
 
-function_decl_inline -> "function" IDENTIFIER "(" params_list ")" "=>" expr ";"
+function_decl_inline -> "function" IDENTIFIER "(" params_list ")" opt_type "=>" expr ";"
 
-function_decl_fullform -> "function" IDENTIFIER "(" params_list ")" block_expr
+function_decl_fullform -> "function" IDENTIFIER "(" params_list ")" opt_type block_expr
 
-type_decl -> "type" IDENTIFIER opt_type_params op_inherits block_expr
+type_decl -> "type" IDENTIFIER opt_type_params op_inherits opt_inherits_args type_body
+
+type_body -> opt_type_fields opt_type_methods
+
+opt_type_fields -> IDENTIFIER opt_type "=" expr ";"
+
+opt_type_methods -> IDENTIFIER "(" params_list ")" opt_type "=>" expr ";"
+                   | IDENTIFIER "(" params_list ")" opt_type block_expr
 
 protocol_decl -> "protocol" IDENTIFIER opt_protocol_extends "{" protocol_methods "}"
 
 params_list -> IDENTIFIER opt_type ("," IDENTIFIER opt_type)*
 
-opt_type_params -> "(" IDENTIFIER opt_type ("," IDENTIFIER opt_type)* ")"
+opt_type_params -> "(" IDENTIFIER opt_type ("," IDENTIFIER opt)* ")"
+
+opt_inherits_args -> "(" expr ("," expr)* ")"
 
 opt_inherits -> "inherits" IDENTIFIER "(" args ")"
               | e
 
-opt_protocol_extends -> "extends" IDENTIFIER ("," IDENTIFIER)*
+opt_protocol_extends -> "extends" IDENTIFIER
 
 protocol_methods -> IDENTIFIER "(" protocol_params ")" ":" TYPE ";" protocol_methods
 

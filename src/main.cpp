@@ -31,21 +31,22 @@ int main() {
 
   const auto& tokens = lexer::lex(source_code);
 
-  for (auto &t: tokens) {
-    std::cerr << t.to_string() << "\n";
-  }
+  // for (auto &t: tokens) {
+  //   std::cerr << t.to_string() << "\n";
+  // }
 
   auto parser = parser::parser(tokens);
   const auto& ast = parser.parse();
-
+  
   if (internal::error_found) return -1;
 
-  for (auto &t: ast) {
-    if (std::holds_alternative<ast::expression_stmt_ptr>(t)) {
-      std::cerr << "expr statement" << "\n";
-    } else if (std::holds_alternative<ast::function_stmt_ptr>(t)) {
-      std::cerr << "function statement" << "\n";
-    }
+  std::cerr << "PARSED" << "\n";
+
+  std::cerr << ast.statements.size() << " declaration(s) found" << "\n";
+
+  if (ast.main.get()) {
+    std::cerr << "Expression found" << "\n";
   }
-  std::cerr << ast.size() << "\n";
+
+  return 0;
 }

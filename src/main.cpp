@@ -31,9 +31,9 @@ int main() {
 
   const auto& tokens = lexer::lex(source_code);
 
-  // for (auto &t: tokens) {
-  //   std::cerr << t.to_string() << "\n";
-  // }
+  for (auto &t: tokens) {
+    std::cerr << t.to_string() << "\n";
+  }
 
   auto parser = parser::parser(tokens);
   const auto& ast = parser.parse();

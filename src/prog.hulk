@@ -1,1 +1,3 @@
-print(42);
+protocol Equatable extends Hashable {
+    equals(other: Object): Boolean;
+}

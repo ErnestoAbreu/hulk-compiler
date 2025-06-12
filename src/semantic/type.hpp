@@ -1,5 +1,5 @@
 #ifndef HULK_SEMANTIC_TYPE_HPP
-#define HULK_SEMANTIC_TYPE_HPP
+#define HULK_SEMANTIC_TYPE_HPP 1
 
 #include <string>
 #include <vector>
@@ -9,9 +9,61 @@ namespace hulk {
     namespace semantic {
 
         // Forward declarations
+        struct protocol;
         struct type;
         struct attribute;
         struct method;
+
+        using type_ptr = shared_ptr<type>;
+        using protocol_ptr = shared_ptr<protocol>;
+
+        struct protocol {
+            string name;
+            vector<method> methods;
+            protocol_ptr parent;
+
+            protocol(const string& protocol_name = "")
+                : name(protocol_name) {
+            }
+
+            bool add_method(const method& m) {
+                for (const auto& method : methods)
+                    if (method.name == m.name)
+                        return false; // Method already exists
+
+                methods.push_back(m);
+                return true;
+            }
+
+            bool has_method(const string& method_name) const {
+                for (const auto& method : methods) {
+                    if (method.name == method_name) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            method& get_method(const string& method_name) {
+                for (auto& method : methods) {
+                    if (method.name == method_name) {
+                        return method;
+                    }
+                }
+                // warn: this is dangerous, make sure to check with has_method first
+                return *(new method());
+            }
+
+            bool add_parent(protocol_ptr parent_protocol) {
+                if (parent) {
+                    // Parent already exists, cannot add another
+                    return false;
+                }
+
+                parent = parent_protocol;
+                return true;
+            }
+        };
 
         struct attribute {
             string name;
@@ -61,7 +113,7 @@ namespace hulk {
             vector<attribute> params;
             vector<attribute> fields;
             vector<method> methods;
-            type* parent;
+            type_ptr parent;
 
             type(const string& type_name = "")
                 : name(type_name) {
@@ -92,13 +144,13 @@ namespace hulk {
                 return true;
             }
 
-            bool add_parent(type& parent_type) {
+            bool add_parent(type_ptr parent_type) {
                 if (parent) {
                     // Parent already exists, cannot add another
                     return false;
                 }
 
-                parent = &parent_type;
+                parent = parent_type;
                 return true;
             }
 

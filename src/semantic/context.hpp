@@ -1,5 +1,5 @@
 #ifndef HULK_SEMANTIC_CONTEXT_HPP
-#define HULK_SEMANTIC_CONTEXT_HPP
+#define HULK_SEMANTIC_CONTEXT_HPP 1
 
 #include <string>
 #include <vector>
@@ -11,8 +11,10 @@ using namespace std;
 namespace hulk {
     namespace semantic {
         struct context {
+            map<string, protocol> protocols;
             map<string, type> types;
             map<string, method> functions;
+            
             vector<map<string, attribute>> scopes;
 
             vector<string> semantic_errors;
@@ -24,17 +26,22 @@ namespace hulk {
             set<string> equality_ops = { "==", "!=" }; // any <op> any => boolean
             set<string> string_ops = { "@", "@@" }; // string <op> string => string 
 
-            context() {
-                // Initialize built-in types
-                create_type("Number");
-                create_type("Boolean");
-                create_type("String");
-                create_type("Object");
-                create_type("?undefined");
+            context() = default;
 
-                // Initialize built-in functions
-                create_function("print");
-                create_function("input");
+            bool create_protocol(const string& protocol_name) {
+                if (protocols.find(protocol_name) != protocols.end()) {
+                    return false; // Protocol already exists
+                }
+                protocols[protocol_name] = protocol(protocol_name);
+                return true;
+            }
+
+            bool protocol_exists(const string& protocol_name) const {
+                return protocols.find(protocol_name) != protocols.end();
+            }
+
+            protocol& get_protocol(const string& protocol_name) {
+                return protocols[protocol_name];
             }
 
             bool create_type(const string& type_name) {

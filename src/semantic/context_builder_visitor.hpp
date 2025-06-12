@@ -45,7 +45,7 @@ namespace hulk {
                 else {
                     if (!ctx.type_exists(meth->return_type.lexeme)) {
                         internal::semantic_error(meth->return_type.line, meth->return_type.column,
-                            "return type '" + meth->return_type.lexeme + "' does not exist for method '" + meth->name.lexeme + "' in protocol '" + name.lexeme + "'.");
+                            "return type '" + meth->return_type.lexeme + "' does not exist in method '" + meth->name.lexeme + "' in protocol '" + name.lexeme + "'.");
                     }
                     else {
                         f = method(meth->name.lexeme, meth->return_type.lexeme);
@@ -61,7 +61,7 @@ namespace hulk {
                     else {
                         if (!ctx.type_exists(param.type.lexeme)) {
                             internal::semantic_error(param.type.line, param.type.column,
-                                "parameter type '" + param.type.lexeme + "' does not exist for parameter '" + param.name.lexeme + "' in method '" + meth->name.lexeme + "' in protocol '" + name.lexeme + "'.");
+                                "parameter type '" + param.type.lexeme + "' does not exist in parameter '" + param.name.lexeme + "' in method '" + meth->name.lexeme + "' in protocol '" + name.lexeme + "'.");
                         }
                         else {
                             error = f.add_param(param.name.lexeme, param.type.lexeme);
@@ -84,7 +84,8 @@ namespace hulk {
         void class_stmt::context_builder_visit(context& ctx) const {
             // Create the type in the context
             if (!ctx.create_type(name.lexeme)) {
-                // todo: handle error, type already exists
+                internal::semantic_error(name.line, name.column,
+                    "Type '" + name.lexeme + "' already exists.");
                 return;
             }
 
@@ -98,19 +99,22 @@ namespace hulk {
                 }
                 else {
                     if (!ctx.type_exists(param.type.lexeme)) {
-                        // todo: handle error, type does not exist
+                        internal::semantic_error(param.type.line, param.type.column,
+                            "Type '" + param.type.lexeme + "' does not exist in parameter '" + param.name.lexeme + "' in class '" + name.lexeme + "'.");
                     }
                     else
                         error = type.add_param(param.name.lexeme, param.type.lexeme);
                 }
                 if (error) {
-                    // todo: handle error, param already exists
+                    internal::semantic_error(param.name.line, param.name.column,
+                        "parameter '" + param.name.lexeme + "' already exists in class '" + name.lexeme + "'.");
                 }
             }
 
             if (super_class.has_value()) {
                 if (!ctx.type_exists(super_class->get()->name.lexeme)) {
-                    //todo: handle error, parent type does not exist
+                    internal::semantic_error(super_class->get()->name.line, super_class->get()->name.column,
+                        "parent type '" + super_class->get()->name.lexeme + "' does not exist, in class '" + name.lexeme + "'.");
                 }
                 else {
                     type_ptr super_type = std::make_shared<semantic::type>(ctx.get_type(super_class->get()->name.lexeme));
@@ -126,13 +130,15 @@ namespace hulk {
                 }
                 else {
                     if (!ctx.type_exists(field->type.lexeme)) {
-                        //todo: handle error, type does not exist
+                        internal::semantic_error(field->type.line, field->type.column,
+                            "Type '" + field->type.lexeme + "' does not exist in field '" + field->name.lexeme + "' in class '" + name.lexeme + "'.");
                     }
                     else
                         error = type.add_field(field->name.lexeme, field->type.lexeme);
                 }
                 if (error) {
-                    //todo: handle error, field already exists
+                    internal::semantic_error(field->name.line, field->name.column,
+                        "field '" + field->name.lexeme + "' already exists in class '" + name.lexeme + "'.");
                 }
             }
 
@@ -144,7 +150,8 @@ namespace hulk {
                 }
                 else {
                     if (!ctx.type_exists(meth->return_type.lexeme)) {
-                        //todo: handle error, return type does not exist
+                        internal::semantic_error(meth->return_type.line, meth->return_type.column,
+                            "return type '" + meth->return_type.lexeme + "' does not exist in method '" + meth->name.lexeme + "' in class '" + name.lexeme + "'.");
                     }
                     else
                         f = method(meth->name.lexeme, meth->return_type.lexeme);
@@ -157,25 +164,28 @@ namespace hulk {
                     }
                     else {
                         if (!ctx.type_exists(param.type.lexeme)) {
-                            //todo: handle error, parameter type does not exist
+                            internal::semantic_error(param.type.line, param.type.column,
+                                "parameter type '" + param.type.lexeme + "' does not exist in parameter '" + param.name.lexeme + "' in method '" + meth->name.lexeme + "' in class '" + name.lexeme + "'.");
                         }
                         else
                             error = f.add_param(param.name.lexeme, param.type.lexeme);
                     }
                     if (error) {
-                        //todo: handle error, parameter already exists
+                        internal::semantic_error(param.name.line, param.name.column,
+                            "parameter '" + param.name.lexeme + "' already exists in method '" + meth->name.lexeme + "' in class '" + name.lexeme + "'.");
                     }
                 }
 
                 if (!type.add_method(f)) {
-                    //todo: handle error, method already exists
+                    internal::semantic_error(meth->name.line, meth->name.column,
+                        "method '" + meth->name.lexeme + "' already exists in class '" + name.lexeme + "'.");
                 }
             }
         }
 
         void function_stmt::context_builder_visit(context& ctx) const {
             if (!ctx.create_function(name.lexeme)) {
-                // todo: handle error, function already exists
+                internal::semantic_error(name.line, name.column, "Function '" + name.lexeme + "' already exists.");
                 return;
             }
 
@@ -183,7 +193,8 @@ namespace hulk {
 
             if (!return_type.lexeme.empty()) {
                 if (!ctx.type_exists(return_type.lexeme)) {
-                    //todo: handle error, return type does not exist
+                    internal::semantic_error(return_type.line, return_type.column,
+                        "return type '" + return_type.lexeme + "' does not exist in function '" + name.lexeme + "'.");
                 }
                 else
                     func.return_type = return_type.lexeme;
@@ -199,14 +210,16 @@ namespace hulk {
                 }
                 else {
                     if (!ctx.type_exists(param.type.lexeme)) {
-                        // todo: handle error, parameter type does not exist
+                        internal::semantic_error(param.type.line, param.type.column,
+                            "parameter type '" + param.type.lexeme + "' does not exist in parameter '" + param.name.lexeme + "' in function '" + name.lexeme + "'.");
                     }
                     else
                         error = func.add_param(param.name.lexeme, param.type.lexeme);
                 }
 
                 if (error) {
-                    // todo: handle error, parameter already exists
+                    internal::semantic_error(param.name.line, param.name.column,
+                        "parameter '" + param.name.lexeme + "' already exists in function '" + name.lexeme + "'.");
                 }
             }
         }

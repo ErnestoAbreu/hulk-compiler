@@ -17,7 +17,50 @@ namespace hulk {
         using type_ptr = shared_ptr<type>;
         using protocol_ptr = shared_ptr<protocol>;
 
-        struct protocol {
+        struct attribute {
+            string name;
+            string attr_type;
+
+            attribute() = default;
+
+            attribute(const string& attr_name, const string& attr_type = "")
+                : name(attr_name), attr_type(attr_type) {
+            }
+        };
+
+        struct method {
+            string name;
+            string return_type;
+            vector<attribute> params;
+
+            method() = default;
+
+            method(const string& method_name, const string& return_type = "")
+                : name(method_name), return_type(return_type) {
+            }
+
+            // Define a parameter for the method
+            bool add_param(const string& param_name, const string& param_type = "") {
+                for (const auto& param : params)
+                    if (param.name == param_name)
+                        return false; // Parameter already exists
+
+                params.emplace_back(param_name, param_type);
+                return true;
+            }
+
+            attribute& get_param(const string& param_name) {
+                for (auto& param : params) {
+                    if (param.name == param_name) {
+                        return param;
+                    }
+                }
+                // warn: this is dangerous
+                return *(new attribute());
+            }
+        };
+
+         struct protocol {
             string name;
             vector<method> methods;
             protocol_ptr parent;
@@ -62,49 +105,6 @@ namespace hulk {
 
                 parent = parent_protocol;
                 return true;
-            }
-        };
-
-        struct attribute {
-            string name;
-            string attr_type;
-
-            attribute() = default;
-
-            attribute(const string& attr_name, const string& attr_type = "")
-                : name(attr_name), attr_type(attr_type) {
-            }
-        };
-
-        struct method {
-            string name;
-            string return_type;
-            vector<attribute> params;
-
-            method() = default;
-
-            method(const string& method_name, const string& return_type = "")
-                : name(method_name), return_type(return_type) {
-            }
-
-            // Define a parameter for the method
-            bool add_param(const string& param_name, const string& param_type = "") {
-                for (const auto& param : params)
-                    if (param.name == param_name)
-                        return false; // Parameter already exists
-
-                params.emplace_back(param_name, param_type);
-                return true;
-            }
-
-            attribute& get_param(const string& param_name) {
-                for (auto& param : params) {
-                    if (param.name == param_name) {
-                        return param;
-                    }
-                }
-                // warn: this is dangerous
-                return *(new attribute());
             }
         };
 

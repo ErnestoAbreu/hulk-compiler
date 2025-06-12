@@ -1,8 +1,8 @@
 #ifndef CONTEXT_BUILDER_VISITOR_HPP
 #define CONTEXT_BUILDER_VISITOR_HPP 1
 
-#include "context.hpp"
-#include "../ast/ast"
+#include "../context"
+#include "../../ast/ast"
 
 namespace hulk {
     namespace ast {

@@ -48,7 +48,9 @@ namespace hulk {
     using block_expr_ptr = std::unique_ptr<block_expr>;
     using new_expr_ptr = std::unique_ptr<new_expr>;
 
-    struct expr : private internal::uncopyable {};
+    struct expr : private internal::uncopyable {
+      virtual void scoped_visit(semantic::context& ctx) const {}
+    };
 
     struct block_expr : public expr {
       std::vector<expr_ptr> expressions;
@@ -56,6 +58,8 @@ namespace hulk {
       explicit block_expr(std::vector<expr_ptr> _expressions)
         : expressions(std::move(_expressions)) {
       }
+
+      void scoped_visit(semantic::context& ctx) const override;
     };
 
     struct binary_expr : public expr {
@@ -71,6 +75,8 @@ namespace hulk {
         op(_op),
         right(std::move(_right)) {
       }
+
+      void scoped_visit(semantic::context& ctx) const override;
     };
 
     struct unary_expr : public expr {
@@ -82,9 +88,12 @@ namespace hulk {
         expr_ptr _expression)
         : token(_token), op(_op), expression(std::move(_expression)) {
       }
+
+      void scoped_visit(semantic::context& ctx) const override;
     };
     struct literal_expr : public expr {
       lexer::literal value;
+
       explicit literal_expr(const lexer::literal& _value) : value(_value) {}
     };
 
@@ -96,19 +105,21 @@ namespace hulk {
         std::vector<expr_ptr> _arguments)
         : type_name(_type_name), arguments(std::move(_arguments)) {
       }
+
+      void scoped_visit(semantic::context& ctx) const override;
     };
 
     struct call_expr : public expr {
-      expr_ptr calle;
-      lexer::token keyword;
+      optional<expr_ptr> object;
+      lexer::token calle;
       std::vector<expr_ptr> arguments;
 
-      explicit call_expr(expr_ptr _calle, const lexer::token& _keyword,
+      explicit call_expr(optional<expr_ptr> _object, const lexer::token& _calle,
         std::vector<expr_ptr> _arguments)
-        : calle(std::move(_calle)),
-        keyword(_keyword),
-        arguments(std::move(_arguments)) {
+        : object(std::move(_object)), calle(_calle), arguments(std::move(_arguments)) {
       }
+
+      void scoped_visit(semantic::context& ctx) const override;
     };
 
     struct let_expr : public expr {
@@ -119,17 +130,21 @@ namespace hulk {
         expr_ptr _body)
         : assignments(std::move(_assignments)), body(std::move(_body)) {
       }
+
+      void scoped_visit(semantic::context& ctx) const override;
     };
 
     struct assign_expr : public expr {
-      lexer::token name;
+      expr_ptr variable;
       lexer::token type;
       expr_ptr value;
 
-      explicit assign_expr(const lexer::token& _name, const lexer::token& _type,
+      explicit assign_expr(expr_ptr _variable, const lexer::token& _type,
         expr_ptr _value)
-        : name(_name), type(_type), value(std::move(_value)) {
+        : variable(std::move(_variable)), type(_type), value(std::move(_value)) {
       }
+
+      void scoped_visit(semantic::context& ctx) const override;
     };
 
     struct declaration_expr : public expr {
@@ -141,6 +156,8 @@ namespace hulk {
         const lexer::token& _type, expr_ptr _value)
         : name(_name), type(_type), value(std::move(_value)) {
       }
+
+      void scoped_visit(semantic::context& ctx) const override;
     };
 
     struct if_expr : public expr {
@@ -157,6 +174,8 @@ namespace hulk {
         elif_branchs(std::move(_elif_branchs)),
         else_branch(std::move(_else_branch)) {
       }
+
+      void scoped_visit(semantic::context& ctx) const override;
     };
 
     struct while_expr : public expr {
@@ -166,6 +185,8 @@ namespace hulk {
       explicit while_expr(expr_ptr _condition, expr_ptr _body)
         : condition(std::move(_condition)), body(std::move(_body)) {
       }
+
+      void scoped_visit(semantic::context& ctx) const override;
     };
 
     struct for_expr : public expr {
@@ -182,15 +203,20 @@ namespace hulk {
         iterable(std::move(_iterable)),
         body(std::move(_body)) {
       }
+
+      void scoped_visit(semantic::context& ctx) const override;
     };
 
     struct var_expr : public expr {
       std::optional<expr_ptr> object;
       lexer::token name;
       lexer::token type;
+
       explicit var_expr(std::optional<expr_ptr> _object, const lexer::token& _name, const lexer::token& _type)
         : object(std::move(_object)), name(_name), type(_type) {
       }
+
+      void scoped_visit(semantic::context& ctx) const override;
     };
 
     // Statements
@@ -247,6 +273,7 @@ namespace hulk {
       }
 
       void context_builder_visit(semantic::context& ctx) const override;
+      void scoped_visit(semantic::context& ctx) const override;
     };
 
     struct field_stmt : public stmt {
@@ -258,6 +285,8 @@ namespace hulk {
         expr_ptr _initializer)
         : name(_name), type(_type), initializer(std::move(_initializer)) {
       }
+
+      void scoped_visit(semantic::context& ctx) const override;
     };
 
     struct super_item : private internal::uncopyable {
@@ -287,6 +316,7 @@ namespace hulk {
       }
 
       void context_builder_visit(semantic::context& ctx) const override;
+      void scoped_visit(semantic::context& ctx) const override;
     };
 
     struct protocol_stmt : public stmt {
@@ -322,6 +352,8 @@ namespace hulk {
       }
 
       void context_builder_visit(semantic::context& ctx) const;
+      void scoped_visit(semantic::context& ctx) const;
+      std::string infer(semantic::context& ctx, const std::string& shouldbe_type = "");
     };
 
   }  // namespace ast

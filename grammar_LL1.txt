@@ -1,0 +1,93 @@
+program -> decl_list expr opt_semicolon EOF
+
+decl_list -> decl decl_list
+          | e
+
+decl -> function_decl_inline function_decl_fullform type_decl protocol_decl
+
+function_decl_inline -> "function" IDENTIFIER "(" params_list ")" "=>" expr ";"
+
+function_decl_fullform -> "function" IDENTIFIER "(" params_list ")" block_expr
+
+type_decl -> "type" IDENTIFIER opt_type_params op_inherits block_expr
+
+protocol_decl -> "protocol" IDENTIFIER opt_protocol_extends "{" protocol_methods "}"
+
+params_list -> IDENTIFIER opt_type ("," IDENTIFIER opt_type)*
+
+opt_type_params -> "(" IDENTIFIER opt_type ("," IDENTIFIER opt_type)* ")"
+
+opt_inherits -> "inherits" IDENTIFIER "(" args ")"
+              | e
+
+opt_protocol_extends -> "extends" IDENTIFIER ("," IDENTIFIER)*
+
+protocol_methods -> IDENTIFIER "(" protocol_params ")" ":" TYPE ";" protocol_methods
+
+protocol_params -> IDENTIFIER ":" TYPE ("," IDENTIFIER ":" TYPE)*
+
+args -> expr ("," expr)*
+      | e
+
+stmt_list -> expr ";" stmt_list
+          | decl stmt_list
+
+opt_semicolon -> ";"
+              | e
+              
+expr -> let_expr if_expr while_expr for_expr block_expr assignment
+
+let_expr -> "let" declaration_expr "in" expr
+
+declaration_expr -> IDENTIFIER opt_type "=" expr
+
+block_expr -> "{" expr_list "}"
+
+if_expr -> "if" "(" expr ")" expr elif_list opt_else
+
+elif_list -> "elif" "(" expr ")" expr elif_list
+          | e
+
+opt_else -> "else" expr
+          | e
+
+while_expr -> "while" "(" expr ")" expr
+
+for_expr -> "for" "(" IDENTIFIER "in" expr ")" expr
+
+assignment -> or_expr (":=" assignment)
+
+or_expr -> and_expr ("|" and_expr)
+
+and_expr -> equality ("&" equality)
+
+concat -> add ("@" add)*
+
+add -> mul (("+" | "-") mul)*
+
+mul -> power (("*" | "/") power)*
+
+power -> unary ("^" power)?
+
+unary -> ("!" | "-") unary
+      | primary
+
+primary -> NUMBER
+        | STRING
+        | ("true" | "false")
+        | IDENTIFIER call_or_member *
+        | "(" expr ")"
+        | new_expr 
+        | block_expr
+
+new_expr -> "new" IDENTIFIER "(" args ")"
+
+call_or_member -> "(" args ")"
+                | "." IDENTIFIER
+
+opt_type -> ":" TYPE
+          | e
+
+expr_list -> expr ";" expr_list
+          | e
+

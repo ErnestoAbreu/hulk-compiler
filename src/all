@@ -1,3 +1,6 @@
+#include "ast/ast"
+#include "ast/enums"
+
 #include "internal/internal_error"
 #include "internal/internal_overloaded"
 #include "internal/internal_uncopyable"
@@ -7,5 +10,4 @@
 #include "lexer/regex_engine"
 #include "lexer/tokens"
 
-#include "ast/ast"
 #include "parser/parser"

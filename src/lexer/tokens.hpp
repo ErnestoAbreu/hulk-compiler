@@ -48,7 +48,7 @@ enum token_type {
   KW_BASE,  // base : se refiere a la implementación del padre (o el antepasado
             // más cercano que tiene una implementación)
   KW_PROTOCOL,  // protocol : interfaces de toda la vida
-  KW_EXTECNDS,  // extends : para decir que un protocolo implementa otro
+  KW_EXTENDS,  // extends : para decir que un protocolo implementa otro
                 // protocolo
 
   // Operadores aritméticos
@@ -163,7 +163,7 @@ const std::unordered_map<token_type, std::string> mapping = {
     TOKEN_ENTRY(KW_SELF),
     TOKEN_ENTRY(KW_BASE),
     TOKEN_ENTRY(KW_PROTOCOL),
-    TOKEN_ENTRY(KW_EXTECNDS),
+    TOKEN_ENTRY(KW_EXTENDS),
 
     TOKEN_ENTRY(OP_PLUS),
     TOKEN_ENTRY(OP_MINUS),
@@ -292,18 +292,18 @@ static const std::vector<std::pair<std::string, token_type>> regexs_tokens = {
     {"type", token_type::KW_TYPE},
     {"new", token_type::KW_NEW},
     {"inherits", token_type::KW_INHERITS},
-    {"self", token_type::KW_SELF},
-    {"base", token_type::KW_BASE},
+    // {"self", token_type::KW_SELF},
+    // {"base", token_type::KW_BASE},
     {"protocol", token_type::KW_PROTOCOL},
-    {"extends", token_type::KW_EXTECNDS},
+    {"extends", token_type::KW_EXTENDS},
 
     {"true", token_type::TRUE},
     {"false", token_type::FALSE},
-    {"Object", token_type::T_OBJECT},
-    {"Number", token_type::T_NUMBER},
-    {"Boolean", token_type::T_BOOLEAN},
-    {"String", token_type::T_STRING},
-    {"Char", token_type::T_CHAR},
+    // {"Object", token_type::T_OBJECT},
+    // {"Number", token_type::T_NUMBER},
+    // {"Boolean", token_type::T_BOOLEAN},
+    // {"String", token_type::T_STRING},
+    // {"Char", token_type::T_CHAR},
 
     {"is", token_type::OP_IS},
     {"as", token_type::OP_AS},

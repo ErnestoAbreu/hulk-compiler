@@ -48,5 +48,8 @@ int main() {
     std::cerr << "Expression found" << "\n";
   }
 
+  if(semantic::analyze(ast))
+    return -1;
+
   return 0;
 }

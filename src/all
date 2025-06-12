@@ -11,3 +11,5 @@
 #include "lexer/tokens"
 
 #include "parser/parser"
+
+#include "semantic/semantic"

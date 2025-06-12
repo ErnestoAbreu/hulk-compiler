@@ -20,14 +20,14 @@ namespace hulk {
         void protocol_stmt::context_builder_visit(context& ctx) const {
             // Create the protocol in the context
             if (!ctx.create_protocol(name.lexeme)) {
-                //todo: handle error, protocol already exists
+                internal::semantic_error(name.line, name.column, "Protocol '" + name.lexeme + "' already exists.");
                 return;
             }
 
             auto& protocol = ctx.get_protocol(name.lexeme);
             if (!super_protocol.lexeme.empty()) {
                 if (!ctx.protocol_exists(super_protocol.lexeme)) {
-                    // todo: handle error, super protocol does not exist
+                    internal::semantic_error(super_protocol.line, super_protocol.column, "Protocol '" + super_protocol.lexeme + "' does not exist.");
                 }
                 else {
                     protocol_ptr super_proto = std::make_shared<semantic::protocol>(ctx.get_protocol(super_protocol.lexeme));
@@ -39,11 +39,13 @@ namespace hulk {
             for (const auto& meth : methods) {
                 method f;
                 if (meth->return_type.lexeme.empty()) {
-                    // todo: handle error, return type not specified
+                    internal::semantic_error(meth->return_type.line, meth->return_type.column,
+                        "return type not specified for method '" + meth->name.lexeme + "' in protocol '" + name.lexeme + "'.");
                 }
                 else {
                     if (!ctx.type_exists(meth->return_type.lexeme)) {
-                        // todo: handle error, return type does not exist
+                        internal::semantic_error(meth->return_type.line, meth->return_type.column,
+                            "return type '" + meth->return_type.lexeme + "' does not exist for method '" + meth->name.lexeme + "' in protocol '" + name.lexeme + "'.");
                     }
                     else {
                         f = method(meth->name.lexeme, meth->return_type.lexeme);
@@ -53,11 +55,13 @@ namespace hulk {
                 for (const auto& param : meth->parameters) {
                     bool error = false;
                     if (param.type.lexeme.empty()) {
-                        // todo: handle error, parameter type not specified
+                        internal::semantic_error(param.type.line, param.type.column,
+                            "parameter type not specified for parameter '" + param.name.lexeme + "' in method '" + meth->name.lexeme + "' in protocol '" + name.lexeme + "'.");
                     }
                     else {
                         if (!ctx.type_exists(param.type.lexeme)) {
-                            // todo: handle error, parameter type does not exist
+                            internal::semantic_error(param.type.line, param.type.column,
+                                "parameter type '" + param.type.lexeme + "' does not exist for parameter '" + param.name.lexeme + "' in method '" + meth->name.lexeme + "' in protocol '" + name.lexeme + "'.");
                         }
                         else {
                             error = f.add_param(param.name.lexeme, param.type.lexeme);
@@ -65,12 +69,14 @@ namespace hulk {
                     }
 
                     if (error) {
-                        // todo: handle error, parameter already exists
+                        internal::semantic_error(param.name.line, param.name.column,
+                            "parameter '" + param.name.lexeme + "' already exists in method '" + meth->name.lexeme + "' in protocol '" + name.lexeme + "'.");
                     }
                 }
 
                 if (!protocol.add_method(f)) {
-                    // todo: handle error, method already exists
+                    internal::semantic_error(meth->name.line, meth->name.column,
+                        "method '" + meth->name.lexeme + "' already exists in protocol '" + name.lexeme + "'.");
                 }
             }
         }

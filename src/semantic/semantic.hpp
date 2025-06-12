@@ -11,8 +11,10 @@ namespace hulk {
         int analyze(const ast::program& program) {
             context ctx;
 
-
             program.context_builder_visit(ctx);
+            if(internal::error_found) {
+                return -1; // Error in context building
+            }
     
             return 0;
         }

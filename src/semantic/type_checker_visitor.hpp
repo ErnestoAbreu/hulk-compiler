@@ -8,6 +8,7 @@ namespace hulk {
     namespace ast {
         using context = semantic::context;
         using type = semantic::type;
+        using method = semantic::method;
 
         void program::type_check(context& ctx) const {
             for (const auto& stmt : statements) {

@@ -40,6 +40,11 @@ namespace internal {
     runtime_error_found = true;
   }
 
+  static void semantic_error(const unsigned int line, unsigned int column, const std::string &message) {
+    std::cerr << "[line " << line << ", column " << column << "] Semantic Error:\n\t" << message << "\n";
+    error_found = true;
+  }
+
 } // namespace internal
 
 } // namespace hulk

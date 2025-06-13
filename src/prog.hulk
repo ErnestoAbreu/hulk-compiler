@@ -1,3 +1,0 @@
-protocol Equatable extends Hashable {
-    equals(other: Object): Boolean;
-}

@@ -21,8 +21,8 @@ std::string read_source_code(const std::string& source_path) {
   return buffer.str();
 }
 
-int main() {
-  auto source_code = read_source_code("prog.hulk");
+int main(const int argc, char **argv) {
+  auto source_code = read_source_code(argv[1]);
 
   if (source_code.empty()) {
     std::cout << "Source code must not be empty" << std::endl;
@@ -31,9 +31,9 @@ int main() {
 
   const auto& tokens = lexer::lex(source_code);
 
-  for (auto &t: tokens) {
-    std::cerr << t.to_string() << "\n";
-  }
+  // for (auto &t: tokens) {
+  //   std::cerr << t.to_string() << "\n";
+  // }
 
   auto parser = parser::parser(tokens);
   const auto& ast = parser.parse();
@@ -42,14 +42,16 @@ int main() {
 
   std::cerr << "PARSED" << "\n";
 
-  std::cerr << ast.statements.size() << " declaration(s) found" << "\n";
+  // std::cerr << ast.statements.size() << " declaration(s) found" << "\n";
 
-  if (ast.main.get()) {
-    std::cerr << "Expression found" << "\n";
-  }
+  // if (ast.main.get()) {
+  //   std::cerr << "Expression found" << "\n";
+  // }
 
   if(semantic::analyze(ast))
     return -1;
+
+  std::cerr << "ANALIZED" << "\n";
 
   return 0;
 }

@@ -33,6 +33,21 @@ namespace hulk {
             if(internal::error_found) {
                 return -1; // Error in context building
             }
+
+            program.scoped_visit(ctx);
+            if(internal::error_found) {
+                return -1; // Error in scoped visit
+            }
+
+            program.infer(ctx);
+            if(internal::error_found) {
+                return -1; // Error in type inference
+            }
+
+            program.type_check(ctx);
+            if(internal::error_found) {
+                return -1; // Error in type checking
+            }
     
             return 0;
         }

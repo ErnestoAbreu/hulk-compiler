@@ -14,17 +14,33 @@ namespace hulk {
             map<string, protocol> protocols;
             map<string, type> types;
             map<string, method> functions;
-            
+
             vector<map<string, attribute>> scopes;
 
-            vector<string> semantic_errors;
+            vector<tuple<int, int, string>> infer_errors;
             bool repeat_infer;
 
-            set<string> number_ops = { "+", "-", "*", "/", "%", "^" }; //  number <op> number => number | <op>number => number
-            set<string> boolean_ops = { "&&", "||", "!" }; // boolean <op> boolean => boolean | <op>boolean => boolean
-            set<string> comparison_ops = { "<", ">", "<=", ">=" }; // number <op> number => boolean
-            set<string> equality_ops = { "==", "!=" }; // any <op> any => boolean
-            set<string> string_ops = { "@", "@@" }; // string <op> string => string 
+            set<ast::binary_op> number_ops = {
+                ast::binary_op::PLUS, ast::binary_op::MINUS, ast::binary_op::MULT,
+                ast::binary_op::DIVIDE
+            }; //  number <op> number => number
+
+            set<ast::binary_op> boolean_ops = {
+                ast::binary_op::OR, ast::binary_op::AND
+            }; // boolean <op> boolean => boolean
+
+            set<ast::binary_op> comparison_ops = {
+                ast::binary_op::GREATER, ast::binary_op::GREATER_EQUAL,
+                ast::binary_op::LESS, ast::binary_op::LESS_EQUAL
+            }; // number <op> number => boolean
+
+            set<ast::binary_op> equality_ops = {
+                ast::binary_op::EQUAL_EQUAL, ast::binary_op::NOT_EQUAL
+            }; // any <op> any => boolean
+            
+            set<ast::binary_op> string_ops = {
+
+            }; // string <op> string => string 
 
             context() = default;
 
@@ -125,6 +141,10 @@ namespace hulk {
 
             attribute& get_variable(const string& var_name) {
                 return current_scope()[var_name];
+            }
+
+            void add_infer_error(int line, int column, const string& message) {
+                infer_errors.emplace_back(line, column, message);
             }
         };
     } // namespace semantic

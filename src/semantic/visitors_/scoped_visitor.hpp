@@ -92,6 +92,17 @@ namespace hulk {
                     internal::semantic_error(calle.line, calle.column,
                         "Function '" + calle.lexeme + "' does not exist.");
                 }
+
+                auto& func = ctx.get_function(calle.lexeme);
+                if (func.params.size() != arguments.size()) {
+                    internal::semantic_error(calle.line, calle.column,
+                        "Function '" + calle.lexeme + "' expects " + std::to_string(func.params.size()) +
+                        " arguments, but got " + std::to_string(arguments.size()) + ".");
+                }
+
+                for (const auto& arg : arguments) {
+                    arg->scoped_visit(ctx);
+                }
             }
         }
 
@@ -191,6 +202,14 @@ namespace hulk {
             if (!type_name.lexeme.empty() && !ctx.type_exists(type_name.lexeme)) {
                 internal::semantic_error(type_name.line, type_name.column,
                     "Type '" + type_name.lexeme + "' does not exist.");
+            }
+
+            auto& type = ctx.get_type(type_name.lexeme);
+
+            if (type.params.size() != arguments.size()) {
+                internal::semantic_error(type_name.line, type_name.column,
+                    "Type '" + type_name.lexeme + "' expects " + std::to_string(type.params.size()) +
+                    " arguments, but got " + std::to_string(arguments.size()) + ".");
             }
 
             for (const auto& arg : arguments) {

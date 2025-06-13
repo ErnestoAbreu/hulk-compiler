@@ -64,7 +64,7 @@ namespace hulk {
                                 "parameter type '" + param.type.lexeme + "' does not exist in parameter '" + param.name.lexeme + "' in method '" + meth->name.lexeme + "' in protocol '" + name.lexeme + "'.");
                         }
                         else {
-                            error = f.add_param(param.name.lexeme, param.type.lexeme);
+                            error = !f.add_param(param.name.lexeme, param.type.lexeme);
                         }
                     }
 
@@ -95,7 +95,7 @@ namespace hulk {
             for (const auto& param : parameters) {
                 bool error = false;
                 if (param.type.lexeme.empty()) {
-                    error = type.add_param(param.name.lexeme);
+                    error = !type.add_param(param.name.lexeme);
                 }
                 else {
                     if (!ctx.type_exists(param.type.lexeme)) {
@@ -103,7 +103,7 @@ namespace hulk {
                             "Type '" + param.type.lexeme + "' does not exist in parameter '" + param.name.lexeme + "' in class '" + name.lexeme + "'.");
                     }
                     else
-                        error = type.add_param(param.name.lexeme, param.type.lexeme);
+                        error = !type.add_param(param.name.lexeme, param.type.lexeme);
                 }
                 if (error) {
                     internal::semantic_error(param.name.line, param.name.column,
@@ -126,7 +126,7 @@ namespace hulk {
             for (const auto& field : fields) {
                 bool error = false;
                 if (field->type.lexeme.empty()) {
-                    error = type.add_field(field->name.lexeme);
+                    error = !type.add_field(field->name.lexeme);
                 }
                 else {
                     if (!ctx.type_exists(field->type.lexeme)) {
@@ -134,7 +134,7 @@ namespace hulk {
                             "Type '" + field->type.lexeme + "' does not exist in field '" + field->name.lexeme + "' in class '" + name.lexeme + "'.");
                     }
                     else
-                        error = type.add_field(field->name.lexeme, field->type.lexeme);
+                        error = !type.add_field(field->name.lexeme, field->type.lexeme);
                 }
                 if (error) {
                     internal::semantic_error(field->name.line, field->name.column,
@@ -160,7 +160,7 @@ namespace hulk {
                 for (const auto& param : meth->parameters) {
                     bool error = false;
                     if (param.type.lexeme.empty()) {
-                        error = f.add_param(param.name.lexeme);
+                        error = !f.add_param(param.name.lexeme);
                     }
                     else {
                         if (!ctx.type_exists(param.type.lexeme)) {
@@ -168,7 +168,7 @@ namespace hulk {
                                 "parameter type '" + param.type.lexeme + "' does not exist in parameter '" + param.name.lexeme + "' in method '" + meth->name.lexeme + "' in class '" + name.lexeme + "'.");
                         }
                         else
-                            error = f.add_param(param.name.lexeme, param.type.lexeme);
+                            error = !f.add_param(param.name.lexeme, param.type.lexeme);
                     }
                     if (error) {
                         internal::semantic_error(param.name.line, param.name.column,
@@ -206,7 +206,7 @@ namespace hulk {
             for (const auto& param : parameters) {
                 bool error = false;
                 if (param.type.lexeme.empty()) {
-                    error = func.add_param(param.name.lexeme);
+                    error = !func.add_param(param.name.lexeme);
                 }
                 else {
                     if (!ctx.type_exists(param.type.lexeme)) {
@@ -214,7 +214,7 @@ namespace hulk {
                             "parameter type '" + param.type.lexeme + "' does not exist in parameter '" + param.name.lexeme + "' in function '" + name.lexeme + "'.");
                     }
                     else
-                        error = func.add_param(param.name.lexeme, param.type.lexeme);
+                        error = !func.add_param(param.name.lexeme, param.type.lexeme);
                 }
 
                 if (error) {

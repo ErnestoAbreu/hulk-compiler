@@ -34,14 +34,19 @@ struct parser {
           decl_list.push_back(std::move(decl.value()));
         }
 
-        if (match(TT::SEMICOLON))
-          ;
+        bool found_semicolon = false;
+        if (match(TT::SEMICOLON)) found_semicolon = true;
       
         if (!decl_list.empty()) {
           auto stmt = decl_list.back();
           if (ast::expression_stmt *t = dynamic_cast<ast::expression_stmt *>(stmt.get())) {
             if (found_expr) {
               error(previous(), "A program in HULK can consist of just one global expression.");
+              break;
+            }
+
+            if (!found_semicolon && previous().get_type() != TT::RBRACE) {
+              error(peek(), "Expected ';' after main expression.");
               break;
             }
             
@@ -51,8 +56,6 @@ struct parser {
           }
         }
       }
-
-      
     } catch (const std::invalid_argument &e) {
       std::cout << "error: " << e.what() << std::endl;
     }
@@ -259,7 +262,7 @@ struct parser {
         lexer::token param_name =
             consume(TT::IDENTIFIER, "Expected parameter name.");
         lexer::token param_type = opt_type();
-
+        
         parameters.push_back(ast::parameter(param_name, param_type));
       } while (match(TT::COMMA) && !is_at_end());
     }
@@ -352,15 +355,13 @@ struct parser {
 
   ast::expr_ptr assignment() {
     auto expr = or_expr();
-    if (match({TT::OP_DESTRUCT_ASSIGN, TT::OP_DIV_ASSIGN, TT::OP_MOD_ASSIGN,
-               TT::OP_MULT_ASSIGN, TT::OP_PLUS_ASSIGN, TT::OP_MINUS_ASSIGN})) {
+    if (match(TT::OP_DESTRUCT_ASSIGN)) {
       const auto equals = previous();
       auto value = assignment();
 
       if (ast::var_expr *t = dynamic_cast<ast::var_expr *>(expr.get())) {
-        lexer::token name = t->name;
         lexer::token type = t->type;
-        return std::make_unique<ast::assign_expr>(name, type, std::move(value));
+        return std::make_unique<ast::assign_expr>(std::move(expr), type, std::move(value));
       }
 
       error(equals, "Invalid assignment target.");
@@ -431,9 +432,8 @@ struct parser {
       if (match(TT::LPAREN)) {
         expr = finish_call(expr);
       } else if (match(TT::DOT)) {
-        lexer::token name =
-            consume(TT::IDENTIFIER, "Expected property name after '.'.");
-        lexer::token type;
+        lexer::token name = consume(TT::IDENTIFIER, "Expected property name after '.'.");
+        lexer::token type = opt_type();
         expr = std::make_unique<ast::var_expr>(std::move(expr), name, type);
       } else
         break;
@@ -464,7 +464,7 @@ struct parser {
     if (match({TT::NUMBER, TT::STRING})) {
       return std::make_unique<ast::literal_expr>(previous().get_literal());
     }
-
+    
     if (match(TT::IDENTIFIER)) {
       std::optional<ast::expr_ptr> object;
       auto name = previous();

@@ -34,20 +34,28 @@ namespace hulk {
                 return -1; // Error in context building
             }
 
+            std::cerr << "Context built successfully." << std::endl;
+
             program.scoped_visit(ctx);
             if(internal::error_found) {
                 return -1; // Error in scoped visit
             }
+
+            std::cerr << "Scoped visit completed successfully." << std::endl;
 
             program.infer(ctx);
             if(internal::error_found) {
                 return -1; // Error in type inference
             }
 
+            std::cerr << "Type inference completed successfully." << std::endl;
+
             program.type_check(ctx);
             if(internal::error_found) {
                 return -1; // Error in type checking
             }
+
+            std::cerr << "Type checking completed successfully." << std::endl;
     
             return 0;
         }

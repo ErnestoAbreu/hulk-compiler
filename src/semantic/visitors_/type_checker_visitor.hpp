@@ -1,8 +1,8 @@
 #ifndef TYPE_CHECKER_VISITOR_HPP
 #define TYPE_CHECKER_VISITOR_HPP
 
-#include "context.hpp"
-#include "../ast/ast"
+#include "../context"
+#include "../../ast/ast"
 
 namespace hulk {
     namespace ast {
@@ -395,6 +395,8 @@ namespace hulk {
                 else {
                     internal::semantic_error(name.line, name.column,
                         "object of type '" + _type + "' does not have field '" + name.lexeme + "'");
+
+                    return "Object";
                 }
             }
             else {

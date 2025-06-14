@@ -50,7 +50,7 @@ namespace hulk {
     struct expr : private internal::uncopyable {
       virtual void scoped_visit(semantic::context& ctx) const {}
       virtual string infer(semantic::context& ctx, const string& shouldbe_type = "") { return ""; }
-      virtual string type_check(semantic::context& ctx) {}
+      virtual string type_check(semantic::context& ctx) {return "Object";}
     };
 
     struct block_expr : public expr {

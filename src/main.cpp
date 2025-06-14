@@ -29,7 +29,11 @@ int main(const int argc, char **argv) {
     return 255;
   }
 
+  std::cerr << "START COMPILATION" << "\n";
+
   const auto& tokens = lexer::lex(source_code);
+
+  std::cerr << "LEXED" << "\n";
 
   // for (auto &t: tokens) {
   //   std::cerr << t.to_string() << "\n";

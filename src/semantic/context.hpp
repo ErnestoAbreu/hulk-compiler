@@ -37,7 +37,7 @@ namespace hulk {
             set<ast::binary_op> equality_ops = {
                 ast::binary_op::EQUAL_EQUAL, ast::binary_op::NOT_EQUAL
             }; // any <op> any => boolean
-            
+
             set<ast::binary_op> string_ops = {
 
             }; // string <op> string => string 
@@ -47,6 +47,9 @@ namespace hulk {
             bool create_protocol(const string& protocol_name) {
                 if (protocols.find(protocol_name) != protocols.end()) {
                     return false; // Protocol already exists
+                }
+                if (!create_type(protocol_name, true)) {
+                    return false; // Type creation failed
                 }
                 protocols[protocol_name] = protocol(protocol_name);
                 return true;
@@ -60,11 +63,12 @@ namespace hulk {
                 return protocols[protocol_name];
             }
 
-            bool create_type(const string& type_name) {
+            bool create_type(const string& type_name, bool is_protocol = false) {
                 if (types.find(type_name) != types.end()) {
                     return false; // Type already exists
                 }
                 types[type_name] = type(type_name);
+                types[type_name].is_protocol = is_protocol;
                 return true;
             }
 
@@ -77,9 +81,22 @@ namespace hulk {
                 return types[type_name];
             }
 
-            type* get_lca_type(const type* t1, const type* t2) {
-                // todo
-                return nullptr; // No common ancestor found
+            type* get_lca_type(type* t1, type* t2) {
+                if (*t1 <= *t2)
+                    return t2;
+                if (*t2 <= *t1)
+                    return t1;
+                // Find the least common ancestor (LCA) of two types
+
+                type_ptr lca = t1->parent;
+                while (lca) {
+                    if (*t2 <= *lca) {
+                        return lca.get(); // Found LCA
+                    }
+                    lca = lca->parent;
+                }
+
+                return &get_type("Object"); // No common ancestor found
             }
 
             bool create_function(const string& func_name) {

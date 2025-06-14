@@ -114,6 +114,7 @@ namespace hulk {
             vector<attribute> fields;
             vector<method> methods;
             type_ptr parent;
+            bool is_protocol;
 
             type(const string& type_name = "")
                 : name(type_name) {

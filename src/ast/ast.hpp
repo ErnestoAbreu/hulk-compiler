@@ -50,6 +50,7 @@ namespace hulk {
     struct expr : private internal::uncopyable {
       virtual void scoped_visit(semantic::context& ctx) const {}
       virtual string infer(semantic::context& ctx, const string& shouldbe_type = "") { return ""; }
+      virtual string type_check(semantic::context& ctx) {}
     };
 
     struct block_expr : public expr {
@@ -61,6 +62,7 @@ namespace hulk {
 
       void scoped_visit(semantic::context& ctx) const override;
       string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
+      string type_check(semantic::context& ctx) override;
     };
 
     struct binary_expr : public expr {
@@ -79,6 +81,7 @@ namespace hulk {
 
       void scoped_visit(semantic::context& ctx) const override;
       string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
+      string type_check(semantic::context& ctx) override;
     };
 
     struct unary_expr : public expr {
@@ -93,12 +96,15 @@ namespace hulk {
 
       void scoped_visit(semantic::context& ctx) const override;
       string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
+      string type_check(semantic::context& ctx) override;
     };
+
     struct literal_expr : public expr {
       lexer::literal value;
 
       explicit literal_expr(const lexer::literal& _value) : value(_value) {}
       string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
+      string type_check(semantic::context& ctx) override;
     };
 
     struct new_expr : public expr {
@@ -112,6 +118,7 @@ namespace hulk {
 
       void scoped_visit(semantic::context& ctx) const override;
       string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
+      string type_check(semantic::context& ctx) override;
     };
 
     struct call_expr : public expr {
@@ -128,6 +135,7 @@ namespace hulk {
 
       void scoped_visit(semantic::context& ctx) const override;
       string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
+      string type_check(semantic::context& ctx) override;
     };
 
     struct let_expr : public expr {
@@ -141,6 +149,7 @@ namespace hulk {
 
       void scoped_visit(semantic::context& ctx) const override;
       string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
+      string type_check(semantic::context& ctx) override;
     };
 
     struct assign_expr : public expr {
@@ -155,6 +164,7 @@ namespace hulk {
 
       void scoped_visit(semantic::context& ctx) const override;
       string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
+      string type_check(semantic::context& ctx) override;
     };
 
     struct declaration_expr : public expr {
@@ -169,6 +179,7 @@ namespace hulk {
 
       void scoped_visit(semantic::context& ctx) const override;
       string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
+      string type_check(semantic::context& ctx) override;
     };
 
     struct if_expr : public expr {
@@ -188,6 +199,7 @@ namespace hulk {
 
       void scoped_visit(semantic::context& ctx) const override;
       string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
+      string type_check(semantic::context& ctx) override;
     };
 
     struct while_expr : public expr {
@@ -200,6 +212,7 @@ namespace hulk {
 
       void scoped_visit(semantic::context& ctx) const override;
       string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
+      string type_check(semantic::context& ctx) override;
     };
 
     struct for_expr : public expr {
@@ -219,6 +232,7 @@ namespace hulk {
 
       void scoped_visit(semantic::context& ctx) const override;
       string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
+      string type_check(semantic::context& ctx) override;
     };
 
     struct var_expr : public expr {
@@ -233,6 +247,7 @@ namespace hulk {
 
       void scoped_visit(semantic::context& ctx) const override;
       string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
+      string type_check(semantic::context& ctx) override;
     };
 
     // Statements
@@ -291,6 +306,7 @@ namespace hulk {
       void context_builder_visit(semantic::context& ctx) const override;
       void scoped_visit(semantic::context& ctx) const override;
       std::string infer(semantic::context& ctx, const std::string& shouldbe_type = "") override;
+      void type_check(semantic::context& ctx) const override;
     };
 
     struct field_stmt : public stmt {
@@ -305,6 +321,7 @@ namespace hulk {
 
       void scoped_visit(semantic::context& ctx) const override;
       std::string infer(semantic::context& ctx, const std::string& shouldbe_type = "") override;
+      void type_check(semantic::context& ctx) const override;
     };
 
     struct super_item : private internal::uncopyable {
@@ -336,6 +353,7 @@ namespace hulk {
       void context_builder_visit(semantic::context& ctx) const override;
       void scoped_visit(semantic::context& ctx) const override;
       std::string infer(semantic::context& ctx, const std::string& shouldbe_type = "") override;
+      void type_check(semantic::context& ctx) const override;
     };
 
     struct protocol_stmt : public stmt {

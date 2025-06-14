@@ -360,7 +360,7 @@ struct parser {
       auto value = assignment();
 
       if (ast::var_expr *t = dynamic_cast<ast::var_expr *>(expr.get())) {
-        lexer::token type = t->type;
+        lexer::token type;
         return std::make_unique<ast::assign_expr>(std::move(expr), type, std::move(value));
       }
 
@@ -423,25 +423,26 @@ struct parser {
           token, static_cast<ast::unary_op>(token.get_type()),
           std::move(right));
     }
-    return call();
+    return var_call();
   }
 
-  ast::expr_ptr call() {
+  ast::expr_ptr var_call() {
     ast::expr_ptr expr = primary();
-    while (true) {
-      if (match(TT::LPAREN)) {
-        expr = finish_call(expr);
-      } else if (match(TT::DOT)) {
+    
+    while (match(TT::DOT)) {
+        std::optional<ast::expr_ptr> object = std::move(expr);
         lexer::token name = consume(TT::IDENTIFIER, "Expected property name after '.'.");
-        lexer::token type = opt_type();
-        expr = std::make_unique<ast::var_expr>(std::move(expr), name, type);
-      } else
-        break;
+
+        if(match(TT::LPAREN))
+          expr = finish_call(object, name);
+        else 
+          expr = std::make_unique<ast::var_expr>(std::move(expr), name);
     }
+
     return expr;
   }
 
-  ast::expr_ptr finish_call(ast::expr_ptr &callee) {
+  ast::expr_ptr finish_call(std::optional<ast::expr_ptr> &object, lexer::token& calle) {
     std::vector<ast::expr_ptr> arguments;
 
     if (!check(TT::RPAREN)) {
@@ -452,8 +453,7 @@ struct parser {
 
     consume(TT::RPAREN, "Expected ')' after arguments.");
 
-    return std::make_unique<ast::call_expr>(std::move(callee), previous(),
-                                            std::move(arguments));
+    return std::make_unique<ast::call_expr>(std::move(object), calle, std::move(arguments));
   }
 
   ast::expr_ptr primary() {
@@ -468,8 +468,11 @@ struct parser {
     if (match(TT::IDENTIFIER)) {
       std::optional<ast::expr_ptr> object;
       auto name = previous();
-      auto type = opt_type();
-      return std::make_unique<ast::var_expr>(std::move(object), name, type);
+
+      if(match(TT::LPAREN))
+        return finish_call(object, name);
+      else 
+        return std::make_unique<ast::var_expr>(std::move(object), name);
     }
 
     if (match(TT::LPAREN)) {

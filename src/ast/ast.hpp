@@ -238,11 +238,9 @@ namespace hulk {
     struct var_expr : public expr {
       std::optional<expr_ptr> object;
       lexer::token name;
-      lexer::token type;
 
-      explicit var_expr(std::optional<expr_ptr> _object, const lexer::token& _name,
-        const lexer::token& _type)
-        : object(std::move(_object)), name(_name), type(_type) {
+      explicit var_expr(std::optional<expr_ptr> _object, const lexer::token& _name)
+        : object(std::move(_object)), name(_name) {
       }
 
       void scoped_visit(semantic::context& ctx) const override;

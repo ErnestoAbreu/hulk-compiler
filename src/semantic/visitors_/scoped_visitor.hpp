@@ -187,7 +187,7 @@ namespace hulk {
         }
 
         void var_expr::scoped_visit(context& ctx) const {
-            if (!object.has_value()) {
+            if (object.has_value()) {
                 object.value()->scoped_visit(ctx);
             }
             else {

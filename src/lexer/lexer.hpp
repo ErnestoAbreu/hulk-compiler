@@ -54,6 +54,8 @@ std::vector<token> lex(const std::string &input) {
     } else {
       value = lexeme;
     }
+    else
+      value = lexeme;
 
     // actualizar línea/columna
     for (char c : lexeme) {

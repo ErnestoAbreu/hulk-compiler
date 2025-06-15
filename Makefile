@@ -7,7 +7,7 @@ all: compile execute
 
 compile:
 	@mkdir -p $(BIN_DIR)
-	@g++ $(SOURCE) -o $(BINARY)
+	@clang++-19 -g -O3 $(SOURCE) `llvm-config --cxxflags --ldflags --system-libs --libs core` -fexceptions -o $(BINARY)
 	@echo "Compilation complete."
 
 execute: compile

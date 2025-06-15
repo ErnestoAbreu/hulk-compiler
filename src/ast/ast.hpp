@@ -6,7 +6,12 @@
 #include <variant>
 #include <vector>
 
-#include "../ast/enums"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/Verifier.h"
+
+#include "enums"
 #include "../internal/internal_uncopyable"
 #include "../semantic/context"
 
@@ -50,7 +55,11 @@ namespace hulk {
     struct expr : private internal::uncopyable {
       virtual void scoped_visit(semantic::context& ctx) const {}
       virtual string infer(semantic::context& ctx, const string& shouldbe_type = "") { return ""; }
-      virtual string type_check(semantic::context& ctx) {return "Object";}
+      virtual string type_check(semantic::context& ctx) { return "Object"; }
+
+      virtual ~expr() = default;
+      // This method is used to allow the visitor pattern
+      virtual llvm::Value* codegen() { return nullptr; }
     };
 
     struct block_expr : public expr {
@@ -82,6 +91,8 @@ namespace hulk {
       void scoped_visit(semantic::context& ctx) const override;
       string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
       string type_check(semantic::context& ctx) override;
+
+      llvm::Value* codegen() override;
     };
 
     struct unary_expr : public expr {
@@ -97,14 +108,19 @@ namespace hulk {
       void scoped_visit(semantic::context& ctx) const override;
       string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
       string type_check(semantic::context& ctx) override;
+
+      llvm::Value* codegen() override;
     };
 
     struct literal_expr : public expr {
       lexer::literal value;
 
       explicit literal_expr(const lexer::literal& _value) : value(_value) {}
+
       string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
       string type_check(semantic::context& ctx) override;
+
+      llvm::Value* codegen() override;
     };
 
     struct new_expr : public expr {
@@ -123,13 +139,13 @@ namespace hulk {
 
     struct call_expr : public expr {
       std::optional<expr_ptr> object;
-      lexer::token calle;
+      lexer::token callee;
       std::vector<expr_ptr> arguments;
 
       explicit call_expr(std::optional<expr_ptr> _object, const lexer::token& _calle,
         std::vector<expr_ptr> _arguments)
         : object(std::move(_object)),
-        calle(_calle),
+        callee(_calle),
         arguments(std::move(_arguments)) {
       }
 
@@ -273,6 +289,7 @@ namespace hulk {
       virtual void scoped_visit(semantic::context& ctx) const {}
       virtual std::string infer(semantic::context& ctx, const std::string& shouldbe_type = "") { return ""; }
       virtual void type_check(semantic::context& ctx) const {}
+      virtual llvm::Value* codegen() { return nullptr; }
     };
 
     struct parameter {
@@ -390,6 +407,7 @@ namespace hulk {
       void scoped_visit(semantic::context& ctx) const;
       std::string infer(semantic::context& ctx, const std::string& shouldbe_type = "") const;
       void type_check(semantic::context& ctx) const;
+      llvm::Value* codegen() const;
     };
 
   }  // namespace ast

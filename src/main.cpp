@@ -57,5 +57,12 @@ int main(const int argc, char **argv) {
 
   std::cerr << "ANALIZED" << "\n";
 
+  code_generator::code_generator codegen;
+  codegen.generate_code(ast);
+
+  std::cerr << "CODE GENERATED" << "\n";
+
+  std::cerr << "END COMPILATION" << "\n";
+
   return 0;
 }

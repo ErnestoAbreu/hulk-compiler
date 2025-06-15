@@ -286,7 +286,7 @@ class parser {
         }
       }
       if (pos >= pattern.size() || pattern[pos] != ']') {
-        throw std::runtime_error("Falta ']' en la posición " + pos);
+        throw std::runtime_error("Falta ']' en la posición " + to_string(pos));
       }
       pos++;
 

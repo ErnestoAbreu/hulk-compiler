@@ -220,11 +220,11 @@ namespace hulk {
                 string obj_type = object.value()->type_check(ctx);
                 auto& obj = ctx.get_type(obj_type);
 
-                if (obj.has_method(calle.lexeme)) {
-                    auto& method = obj.get_method(calle.lexeme);
+                if (obj.has_method(callee.lexeme)) {
+                    auto& method = obj.get_method(callee.lexeme);
                     if (method.params.size() != arguments.size()) {
-                        internal::semantic_error(calle.line, calle.column,
-                            "Method '" + calle.lexeme + "' expects " + std::to_string(method.params.size()) +
+                        internal::semantic_error(callee.line, callee.column,
+                            "Method '" + callee.lexeme + "' expects " + std::to_string(method.params.size()) +
                             " arguments, but got " + std::to_string(arguments.size()) + ".");
                     }
 
@@ -232,8 +232,8 @@ namespace hulk {
                         string arg_type = arguments[i]->type_check(ctx);
                         if (ctx.get_type(arg_type) <= ctx.get_type(method.params[i].attr_type));
                         else {
-                            internal::semantic_error(calle.line, calle.column,
-                                "Method '" + calle.lexeme + "' expects argument " + std::to_string(i + 1) +
+                            internal::semantic_error(callee.line, callee.column,
+                                "Method '" + callee.lexeme + "' expects argument " + std::to_string(i + 1) +
                                 " of type '" + method.params[i].attr_type + "', but got '" + arg_type + "'");
                         }
                     }
@@ -241,17 +241,17 @@ namespace hulk {
                     return method.return_type;
                 }
                 else {
-                    internal::semantic_error(calle.line, calle.column,
-                        "Object of type '" + obj.name + "' does not have method '" + calle.lexeme + "'");
+                    internal::semantic_error(callee.line, callee.column,
+                        "Object of type '" + obj.name + "' does not have method '" + callee.lexeme + "'");
                 }
 
                 return "Object"; // If method does not exist, return Object type
             }
             else {
-                auto& func = ctx.get_function(calle.lexeme);
+                auto& func = ctx.get_function(callee.lexeme);
                 if (func.params.size() != arguments.size()) {
-                    internal::semantic_error(calle.line, calle.column,
-                        "Function '" + calle.lexeme + "' expects " + std::to_string(func.params.size()) +
+                    internal::semantic_error(callee.line, callee.column,
+                        "Function '" + callee.lexeme + "' expects " + std::to_string(func.params.size()) +
                         " arguments, but got " + std::to_string(arguments.size()) + ".");
                 }
 
@@ -259,8 +259,8 @@ namespace hulk {
                     string arg_type = arguments[i]->type_check(ctx);
                     if (ctx.get_type(arg_type) <= ctx.get_type(func.params[i].attr_type));
                     else {
-                        internal::semantic_error(calle.line, calle.column,
-                            "Function '" + calle.lexeme + "' expects argument " + std::to_string(i + 1) +
+                        internal::semantic_error(callee.line, callee.column,
+                            "Function '" + callee.lexeme + "' expects argument " + std::to_string(i + 1) +
                             " of type '" + func.params[i].attr_type + "', but got '" + arg_type + "'");
                     }
                 }

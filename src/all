@@ -13,3 +13,5 @@
 #include "parser/parser"
 
 #include "semantic/semantic"
+
+#include "code_generator/code_generator"

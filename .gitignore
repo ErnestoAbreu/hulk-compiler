@@ -1,3 +1,5 @@
+hulk_compiler
+*.ll
 *.o
 *.out
 *.exe

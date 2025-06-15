@@ -157,23 +157,23 @@ namespace hulk {
                 string object_type = object.value()->infer(ctx);
 
                 if (object_type.empty()) {
-                    ctx.add_infer_error(calle.line, calle.column,
+                    ctx.add_infer_error(callee.line, callee.column,
                         "Object type for method call is not inferred.");
                     return shouldbe_type; // If object type is not inferred, return expected type
                 }
 
                 auto& type = ctx.get_type(object_type);
 
-                if (!type.has_method(calle.lexeme)) {
-                    ctx.add_infer_error(calle.line, calle.column,
-                        "Method '" + calle.lexeme + "' does not exist in type '" + object_type + "'.");
+                if (!type.has_method(callee.lexeme)) {
+                    ctx.add_infer_error(callee.line, callee.column,
+                        "Method '" + callee.lexeme + "' does not exist in type '" + object_type + "'.");
                     return shouldbe_type; // If method does not exist, return expected type
                 }
 
-                auto& method = type.get_method(calle.lexeme);
+                auto& method = type.get_method(callee.lexeme);
                 if (method.params.size() != arguments.size()) {
-                    ctx.add_infer_error(calle.line, calle.column,
-                        "Method '" + calle.lexeme + "' expects " + std::to_string(method.params.size()) +
+                    ctx.add_infer_error(callee.line, callee.column,
+                        "Method '" + callee.lexeme + "' expects " + std::to_string(method.params.size()) +
                         " arguments, but got " + std::to_string(arguments.size()) + ".");
                     return shouldbe_type; // If argument count does not match, return expected type
                 }
@@ -188,7 +188,7 @@ namespace hulk {
                     return method.return_type; // Return the method's return type
             }
             else {
-                auto& func = ctx.get_function(calle.lexeme);
+                auto& func = ctx.get_function(callee.lexeme);
 
                 for (size_t i = 0; i < arguments.size(); ++i) {
                     arguments[i]->infer(ctx, func.params[i].attr_type);

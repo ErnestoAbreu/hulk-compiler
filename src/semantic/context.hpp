@@ -22,7 +22,7 @@ namespace hulk {
 
             set<ast::binary_op> number_ops = {
                 ast::binary_op::PLUS, ast::binary_op::MINUS, ast::binary_op::MULT,
-                ast::binary_op::DIVIDE
+                ast::binary_op::DIVIDE, ast::binary_op::MODULE, ast::binary_op::EXPONENT
             }; //  number <op> number => number
 
             set<ast::binary_op> boolean_ops = {

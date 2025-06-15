@@ -52,6 +52,8 @@ std::vector<token> lex(const std::string &input) {
     } else if (best_type == TRUE || best_type == FALSE) {  // boolean
       value = (best_type == TRUE ? true : false);
     }
+    else
+      value = lexeme;
 
     // actualizar línea/columna
     for (char c : lexeme) {

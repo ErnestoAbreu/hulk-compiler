@@ -6,6 +6,19 @@
 namespace hulk {
     namespace ast {
 
+        llvm::Value* power(llvm::Value* base, llvm::Value* exponent, const std::string& name) {
+            // Declarar la función pow de la biblioteca matemática
+            llvm::Module* module = Builder->GetInsertBlock()->getModule();
+            llvm::Function* powFunc = llvm::Intrinsic::getDeclaration(
+                module,
+                llvm::Intrinsic::pow,
+                { base->getType() }
+            );
+
+            // Llamar a la función pow
+            return Builder->CreateCall(powFunc, { base, exponent }, name);
+        }
+
         llvm::Value* binary_expr::codegen() {
             llvm::Value* L = left->codegen();
             llvm::Value* R = right->codegen();
@@ -16,11 +29,15 @@ namespace hulk {
             case binary_op::PLUS:
                 return Builder->CreateFAdd(L, R, "addtmp");
             case binary_op::MINUS:
-                return Builder->CreateSub(L, R, "subtmp");
+                return Builder->CreateFSub(L, R, "subtmp");
             case binary_op::MULT:
-                return Builder->CreateMul(L, R, "multmp");
+                return Builder->CreateFMul(L, R, "multmp");
             case binary_op::DIVIDE:
-                return Builder->CreateSDiv(L, R, "divtmp");
+                return Builder->CreateFDiv(L, R, "divtmp");
+            case binary_op::MODULE:
+                return Builder->CreateFRem(L, R, "modtmp");
+            case binary_op::EXPONENT:
+                return power(L, R, "powtmp");
             case binary_op::GREATER:
                 return Builder->CreateICmpSGT(L, R, "gttmp");
             case binary_op::GREATER_EQUAL:
@@ -40,6 +57,8 @@ namespace hulk {
             default:
                 return nullptr;
             }
+
+            
         }
 
     } // namespace ast

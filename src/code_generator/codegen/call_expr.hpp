@@ -18,34 +18,52 @@ namespace hulk {
                 if (!ArgValue)
                     return nullptr;
 
+                // Create format double
+                llvm::Value* FormatDouble = Builder->CreateGlobalStringPtr("%f\n", "fmt", 0, TheModule.get());
+
                 // Create format string
-                llvm::Value* FormatStr = Builder->CreateGlobalStringPtr("%f\n", "fmt", 0, TheModule.get());
+                llvm::Value* FormatString = Builder->CreateGlobalStringPtr("%s\n", "fmt", 0, TheModule.get());
 
                 // Call printf
-                std::vector<llvm::Value*> PrintfArgs;
-                PrintfArgs.push_back(FormatStr);
-                PrintfArgs.push_back(ArgValue);
+                if(ArgValue->getType()->isDoubleTy()) {
+                    // Number
+                    std::vector<llvm::Value*> PrintfArgs;
+                    PrintfArgs.push_back(FormatDouble);
+                    PrintfArgs.push_back(ArgValue);
 
-                llvm::Function* PrintfF = TheModule->getFunction("printf");
-                return Builder->CreateCall(PrintfF, PrintfArgs, "printfcall");
+                    llvm::Function* PrintfF = TheModule->getFunction("printf");
+                    return Builder->CreateCall(PrintfF, PrintfArgs, "printfcall");
+                }
+                else if(ArgValue->getType()->isIntegerTy()) {
+                    // Boolean
+                    std::vector<llvm::Value*> PrintfArgs;
+                    PrintfArgs.push_back(FormatString);
+                    // if 1 then true, else false
+                    llvm::Value* BoolValue = Builder->CreateICmpNE(ArgValue, llvm::ConstantInt::get(ArgValue->getType(), 0), "boolcmp");
+                    PrintfArgs.push_back(BoolValue);
+                    llvm::Function* PrintfF = TheModule->getFunction("printf");
+                    return Builder->CreateCall(PrintfF, PrintfArgs, "printfcall");
+                }
+                else {
+                    // String
+                    std::vector<llvm::Value*> PrintfArgs;
+                    PrintfArgs.push_back(FormatString);
+                    PrintfArgs.push_back(ArgValue);
+                    llvm::Function* PrintfF = TheModule->getFunction("printf");
+                    return Builder->CreateCall(PrintfF, PrintfArgs, "printfcall");
+                }
             }
 
-            // Function* CalleeF = TheModule->getFunction(Callee);
-            // if (!CalleeF)
-            //     return LogErrorV("Unknown function referenced");
+            llvm::Function* CalleeF = TheModule->getFunction(callee.lexeme);
 
-            // if (CalleeF->arg_size() != Args.size())
-            //     return LogErrorV("Incorrect # arguments passed");
+            std::vector<llvm::Value*> ArgsV;
+            for (unsigned i = 0, e = arguments.size(); i != e; ++i) {
+                ArgsV.push_back(arguments[i]->codegen());
+                if (!ArgsV.back())
+                    return nullptr;
+            }
 
-            // std::vector<Value*> ArgsV;
-            // for (unsigned i = 0, e = Args.size(); i != e; ++i) {
-            //     ArgsV.push_back(Args[i]->codegen());
-            //     if (!ArgsV.back())
-            //         return nullptr;
-            // }
-
-            // return Builder->CreateCall(CalleeF, ArgsV, "calltmp");
-            return nullptr;
+            return Builder->CreateCall(CalleeF, ArgsV, "calltmp");
         }
 
     } // namespace ast

@@ -15,6 +15,8 @@ enum class binary_op {
   MINUS = static_cast<int>(lexer::token_type::OP_MINUS),
   DIVIDE = static_cast<int>(lexer::token_type::OP_DIVIDE),
   MULT = static_cast<int>(lexer::token_type::OP_MULTIPLY),
+  MODULE = static_cast<int>(lexer::token_type::OP_MODULE),
+  EXPONENT = static_cast<int>(lexer::token_type::OP_EXPONENT),
   GREATER = static_cast<int>(lexer::token_type::OP_GREATER),
   GREATER_EQUAL = static_cast<int>(lexer::token_type::OP_GREATER_EQ),
   LESS = static_cast<int>(lexer::token_type::OP_LESS),

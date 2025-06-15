@@ -38,7 +38,25 @@ namespace hulk {
                 out.close();
             }
 
-            void create_builtin_functions() {}
+            void create_builtin_functions() {
+                add_print();
+            }
+
+            void add_print() {
+                // Crear la función printf (de la biblioteca estándar de C)
+                std::vector<llvm::Type*> printf_args;
+                printf_args.push_back(llvm::Type::getInt8Ty(*ast::TheContext)->getPointerTo());// format string
+                llvm::FunctionType* printf_type = llvm::FunctionType::get(llvm::Type::getInt32Ty(*ast::TheContext), printf_args, true); // varargs
+
+                llvm::Function::Create(printf_type, llvm::Function::ExternalLinkage, "printf", ast::TheModule.get());
+
+                // Crear nuestra función print
+                std::vector<llvm::Type*> print_args;
+                printf_args.push_back(llvm::Type::getInt8Ty(*ast::TheContext)->getPointerTo()); // Puntero genérico
+                llvm::FunctionType* print_type = llvm::FunctionType::get(llvm::Type::getVoidTy(*ast::TheContext), print_args, false);
+
+                llvm::Function* print_func = llvm::Function::Create(print_type, llvm::Function::ExternalLinkage, "print", ast::TheModule.get());
+            }
         };
     } // namespace code_generator
 } // namespace hulk

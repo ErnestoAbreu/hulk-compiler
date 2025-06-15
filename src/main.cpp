@@ -55,7 +55,7 @@ int main(const int argc, char **argv) {
   if(semantic::analyze(ast))
     return -1;
 
-  std::cerr << "ANALIZED" << "\n";
+  std::cerr << "ANALIZED" << "\n\n";
 
   code_generator::code_generator codegen;
   codegen.generate_code(ast);

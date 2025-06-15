@@ -7,3 +7,4 @@ build/
 .vscode/
 test
 .hulk
+hulk/exec

@@ -1,5 +1,5 @@
-#ifndef HULK_CODEGEN_NAME_HPP
-#define HULK_CODEGEN_NAME_HPP 1
+#ifndef HULK_CODEGEN_CALLEXPR_HPP
+#define HULK_CODEGEN_CALLEXPR_HPP 1
 
 #include "../../ast/ast"
 
@@ -51,4 +51,4 @@ namespace hulk {
     } // namespace ast
 } // namespace hulk
 
-#endif // HULK_CODEGEN_NAME_HPP
+#endif // HULK_CODEGEN_CALLEXPR_HPP

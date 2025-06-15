@@ -1,11 +1,6 @@
 #ifndef HULK_AST_HPP
 #define HULK_AST_HPP 1
 
-#include <memory>
-#include <optional>
-#include <variant>
-#include <vector>
-
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/IRBuilder.h"
@@ -17,6 +12,17 @@
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Type.h"
+
+#include <algorithm>
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
+#include <map>
+#include <memory>
+#include <optional>
+#include <variant>
+#include <vector>
+#include <string>
 
 #include "enums"
 #include "../internal/internal_uncopyable"

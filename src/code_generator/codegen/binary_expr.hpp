@@ -1,0 +1,48 @@
+#ifndef HULK_CODEGEN_BINARYEXPR_HPP
+#define HULK_CODEGEN_BINARYEXPR_HPP 1
+
+#include "../../ast/ast"
+
+namespace hulk {
+    namespace ast {
+
+        llvm::Value* binary_expr::codegen() {
+            llvm::Value* L = left->codegen();
+            llvm::Value* R = right->codegen();
+
+            if (!L || !R) return nullptr;
+
+            switch (op) {
+            case binary_op::PLUS:
+                return Builder->CreateFAdd(L, R, "addtmp");
+            case binary_op::MINUS:
+                return Builder->CreateSub(L, R, "subtmp");
+            case binary_op::MULT:
+                return Builder->CreateMul(L, R, "multmp");
+            case binary_op::DIVIDE:
+                return Builder->CreateSDiv(L, R, "divtmp");
+            case binary_op::GREATER:
+                return Builder->CreateICmpSGT(L, R, "gttmp");
+            case binary_op::GREATER_EQUAL:
+                return Builder->CreateICmpSGE(L, R, "getmp");
+            case binary_op::LESS:
+                return Builder->CreateICmpSLT(L, R, "lestmp");
+            case binary_op::LESS_EQUAL:
+                return Builder->CreateICmpSLE(L, R, "letmp");
+            case binary_op::NOT_EQUAL:
+                return Builder->CreateICmpNE(L, R, "netmp");
+            case binary_op::EQUAL_EQUAL:
+                return Builder->CreateICmpEQ(L, R, "eqtmp");
+            case binary_op::OR:
+                return Builder->CreateOr(L, R, "ortmp");
+            case binary_op::AND:
+                return Builder->CreateAnd(L, R, "andtmp");
+            default:
+                return nullptr;
+            }
+        }
+
+    } // namespace ast
+} // namespace hulk
+
+#endif // HULK_CODEGEN_BINARYEXPR_HPP

@@ -29,8 +29,11 @@
 #include "../semantic/context"
 
 namespace hulk {
-
   namespace ast {
+    static std::unique_ptr<llvm::LLVMContext> TheContext;
+    static std::unique_ptr<llvm::Module> TheModule;
+    static std::unique_ptr<llvm::IRBuilder<>> Builder;
+    static std::map<std::string, llvm::Value*> NamedValues;
     // Expressions
 
     // Forwards declarations

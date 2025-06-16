@@ -32,7 +32,7 @@ namespace hulk {
             case binary_op::NOT_EQUAL:
                 return Builder->CreateFCmpONE(L, R, "fcmpne");
             case binary_op::EQUAL_EQUAL:
-                return Builder->CreateICmpEQ(L, R, "eqtmp");
+                return Builder->CreateFCmpOEQ(L, R, "eqtmp");
             case binary_op::OR:
                 return Builder->CreateOr(L, R, "ortmp");
             case binary_op::AND:

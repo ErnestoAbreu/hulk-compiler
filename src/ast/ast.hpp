@@ -34,6 +34,12 @@ namespace hulk {
     static std::unique_ptr<llvm::Module> TheModule;
     static std::unique_ptr<llvm::IRBuilder<>> Builder;
     static std::map<std::string, llvm::Value*> NamedValues;
+    static std::map<std::string, std::map<std::string, unsigned>> StructFieldIndices;
+
+    llvm::AllocaInst* CreateEntryBlockAlloca(llvm::Function* TheFunction, const std::string& VarName, llvm::Type* VarType) {
+      llvm::IRBuilder<> TmpB(&TheFunction->getEntryBlock(), TheFunction->getEntryBlock().begin());
+      return TmpB.CreateAlloca(VarType, nullptr, VarName);
+    }
     // Expressions
 
     // Forwards declarations
@@ -88,6 +94,7 @@ namespace hulk {
       void scoped_visit(semantic::context& ctx) const override;
       string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
       string type_check(semantic::context& ctx) override;
+      virtual llvm::Value* codegen() override;
     };
 
     struct binary_expr : public expr {
@@ -151,6 +158,7 @@ namespace hulk {
       void scoped_visit(semantic::context& ctx) const override;
       string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
       string type_check(semantic::context& ctx) override;
+      llvm::Value* codegen() override;
     };
 
     struct call_expr : public expr {
@@ -183,6 +191,7 @@ namespace hulk {
       void scoped_visit(semantic::context& ctx) const override;
       string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
       string type_check(semantic::context& ctx) override;
+      llvm::Value* codegen() override;
     };
 
     struct assign_expr : public expr {
@@ -233,6 +242,7 @@ namespace hulk {
       void scoped_visit(semantic::context& ctx) const override;
       string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
       string type_check(semantic::context& ctx) override;
+      llvm::Value* codegen() override;
     };
 
     struct while_expr : public expr {
@@ -246,6 +256,7 @@ namespace hulk {
       void scoped_visit(semantic::context& ctx) const override;
       string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
       string type_check(semantic::context& ctx) override;
+      llvm::Value* codegen() override;
     };
 
     struct for_expr : public expr {
@@ -279,6 +290,7 @@ namespace hulk {
       void scoped_visit(semantic::context& ctx) const override;
       string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
       string type_check(semantic::context& ctx) override;
+      llvm::Value* codegen() override;
     };
 
     // Statements

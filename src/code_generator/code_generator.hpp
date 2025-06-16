@@ -16,6 +16,7 @@ namespace hulk {
                 // Open a new context and module.
                 ast::TheContext = std::make_unique<llvm::LLVMContext>();
                 ast::TheModule = std::make_unique<llvm::Module>("hulk_module", *ast::TheContext);
+                ast::NamedValues.clear();
 
                 // Create a new builder for the module.
                 ast::Builder = std::make_unique<llvm::IRBuilder<>>(*ast::TheContext);

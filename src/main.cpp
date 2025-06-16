@@ -35,9 +35,9 @@ int main(const int argc, char **argv) {
 
   std::cerr << "LEXED" << "\n";
 
-  // for (auto &t: tokens) {
-  //   std::cerr << t.to_string() << "\n";
-  // }
+  for (auto &t: tokens) {
+    std::cerr << t.to_string() << "\n";
+  }
 
   auto parser = parser::parser(tokens);
   const auto& ast = parser.parse();

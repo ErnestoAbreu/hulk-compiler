@@ -2,6 +2,8 @@
 #define HULK_CODEGEN_UNARYEXPR_HPP 1
 
 #include "../../ast/ast"
+#include "llvm/IR/Type.h"
+#include "llvm/IR/Instructions.h"
 
 namespace hulk {
     namespace ast {
@@ -13,7 +15,7 @@ namespace hulk {
 
             switch (op) {
             case unary_op::MINUS:
-                return Builder->CreateNeg(V, "negtmp");
+                return Builder->CreateFNeg(V, "fnegtmp");
             case unary_op::NOT:
                 return Builder->CreateNot(V, "nottmp");
             default:

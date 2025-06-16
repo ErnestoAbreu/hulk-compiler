@@ -207,6 +207,7 @@ namespace hulk {
       void scoped_visit(semantic::context& ctx) const override;
       string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
       string type_check(semantic::context& ctx) override;
+      llvm::Value* codegen() override;
     };
 
     struct declaration_expr : public expr {
@@ -222,6 +223,7 @@ namespace hulk {
       void scoped_visit(semantic::context& ctx) const override;
       string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
       string type_check(semantic::context& ctx) override;
+      llvm::Value* codegen() override;
     };
 
     struct if_expr : public expr {

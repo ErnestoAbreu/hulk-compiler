@@ -9,3 +9,5 @@
 #include "codegen/let_expr.hpp"
 #include "codegen/block_expr.hpp"
 #include "codegen/new_expr.hpp"
+#include "codegen/assign_expr.hpp"
+#include "codegen/declaration_expr.hpp"

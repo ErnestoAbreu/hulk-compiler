@@ -14,23 +14,23 @@ namespace hulk {
 
             switch (op) {
             case binary_op::PLUS:
-                return Builder->CreateFAdd(L, R, "addtmp");
+                return Builder->CreateFAdd(L, R, "faddtmp");
             case binary_op::MINUS:
-                return Builder->CreateSub(L, R, "subtmp");
+                return Builder->CreateFSub(L, R, "fsubtmp");
             case binary_op::MULT:
-                return Builder->CreateMul(L, R, "multmp");
+                return Builder->CreateFMul(L, R, "fmultmp");
             case binary_op::DIVIDE:
-                return Builder->CreateSDiv(L, R, "divtmp");
+                return Builder->CreateFDiv(L, R, "fdivtmp");
             case binary_op::GREATER:
-                return Builder->CreateICmpSGT(L, R, "gttmp");
+                return Builder->CreateFCmpOGT(L, R, "fcmpgt");
             case binary_op::GREATER_EQUAL:
-                return Builder->CreateICmpSGE(L, R, "getmp");
+                return Builder->CreateFCmpOGE(L, R, "fcmpge");
             case binary_op::LESS:
-                return Builder->CreateICmpSLT(L, R, "lestmp");
+                return Builder->CreateFCmpOLT(L, R, "fcmplt");
             case binary_op::LESS_EQUAL:
-                return Builder->CreateICmpSLE(L, R, "letmp");
+                return Builder->CreateFCmpOLE(L, R, "fcmple");
             case binary_op::NOT_EQUAL:
-                return Builder->CreateICmpNE(L, R, "netmp");
+                return Builder->CreateFCmpONE(L, R, "fcmpne");
             case binary_op::EQUAL_EQUAL:
                 return Builder->CreateICmpEQ(L, R, "eqtmp");
             case binary_op::OR:
@@ -38,6 +38,7 @@ namespace hulk {
             case binary_op::AND:
                 return Builder->CreateAnd(L, R, "andtmp");
             default:
+                llvm::errs() << "Unknown binary operator\n";
                 return nullptr;
             }
         }

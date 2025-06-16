@@ -9,24 +9,11 @@ namespace hulk {
     namespace ast {
 
         llvm::Value* let_expr::codegen() {
-            auto old = NamedValues;
-
-            llvm::BasicBlock* curBB = Builder->GetInsertBlock();
-            llvm::Function* TheFunction = curBB->getParent();
-
-            for (const auto &decl: assignments) {
-                std::string name = decl->name.get_lexeme();
-                llvm::Value* init = decl->value->codegen();
-
-                llvm::AllocaInst* alloca = CreateEntryBlockAlloca(TheFunction, name, init->getType());
-                Builder->CreateStore(init, alloca);
-
-                NamedValues[name] = alloca;
-            }
+            for (const auto &decl: assignments)
+                decl->codegen();
             
             llvm::Value* body_value = body->codegen();
             
-            NamedValues = std::move(old);
             return body_value;
         }
 

@@ -245,7 +245,7 @@ struct token {
                  const literal &_value, int _line, int _column)
       : type(_type),
         lexeme(_lexeme),
-        value(_value),
+        value(std::move(_value)),
         line(_line),
         column(_column) {}
 

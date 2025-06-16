@@ -62,7 +62,15 @@ llvm::Value* call_expr::codegen() {
     return Builder->CreateCall(PrintfF, PrintfArgs, "printfcall");
   }
 
-  return nullptr;
+  llvm::Function* CalleF = TheModule->getFunction(callee.lexeme);
+
+  std::vector<llvm::Value*> argsValues;
+  for (auto i = 0; i < arguments.size(); i++) {
+    argsValues.push_back(arguments[i]->codegen());
+    if (!argsValues.back()) return nullptr;
+  } 
+
+  return Builder->CreateCall(CalleF, argsValues, "calltmp");
 }
 
 }  // namespace ast

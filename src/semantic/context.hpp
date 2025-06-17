@@ -39,7 +39,7 @@ namespace hulk {
             }; // any <op> any => boolean
 
             set<ast::binary_op> string_ops = {
-
+                ast::binary_op::CONCAT, ast::binary_op::CONCAT_DOBLE
             }; // string <op> string => string 
 
             context() = default;

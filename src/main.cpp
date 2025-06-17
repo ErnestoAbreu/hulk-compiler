@@ -62,7 +62,7 @@ int main(const int argc, char **argv) {
 
   std::cerr << "CODE GENERATED" << "\n";
 
-  std::cerr << "END COMPILATION" << "\n";
+  std::cerr << "COMPILATION COMPLETED" << "\n";
 
   return 0;
 }

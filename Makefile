@@ -1,29 +1,34 @@
-BIN_DIR := hulk
 BUILD_DIR := build
-BINARY := $(BIN_DIR)/hulk_compiler
+HULK_DIR := hulk
+BINARY := $(BUILD_DIR)/hulk_compiler
 SOURCE := src/main.cpp
 SCRIPT := script.hulk
-LLVMOBJ := $(BUILD_DIR)/output.ll
-EXEC := $(BIN_DIR)/exec
+LLVMOBJ := $(HULK_DIR)/output.ll
+EXEC := $(HULK_DIR)/exec
 
 all: compiler compile execute
 
 compiler:
-	@mkdir -p $(BIN_DIR)
+	@mkdir -p $(BUILD_DIR)
 	@clang++-19 -g -O3 $(SOURCE) `llvm-config --cxxflags --ldflags --system-libs --libs core` -fexceptions -o $(BINARY)
 
 compile: compiler
+	@mkdir -p $(HULK_DIR)
 	@./$(BINARY) $(SCRIPT)
-
-execute: compile
+	@echo
+	@echo "\033[31m----- Compiled script.hulk and generated LLVM IR -----\033[0m"
 	@clang++-19 $(LLVMOBJ) -o $(EXEC)
 	@echo
-	@echo "\033[34m----- Compile and execute generated LLVM IR -----\033[0m"
+	@echo "\033[35m----- Generated executable -----\033[0m"
+
+execute: compile
+	@echo
+	@echo "\033[34m----- Executing executable  -----\033[0m"
 	@echo
 	@./$(EXEC)
 
 clean:
-	@rm -rf $(BIN_DIR)
-	@echo "Removed $(BIN_DIR) directory"
+	@rm -rf $(HULK_DIR)
+	@echo "Removed $(HULK_DIR) directory"
 
 .PHONY: all compiler compile execute clean

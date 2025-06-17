@@ -10,7 +10,7 @@ namespace hulk {
     namespace code_generator {
 
         struct code_generator {
-            std::string filename = "build/output.ll";
+            std::string filename = "hulk/output.ll";
 
             code_generator() {
                 // Open a new context and module.

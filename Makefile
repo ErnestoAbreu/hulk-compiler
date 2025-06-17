@@ -14,10 +14,12 @@ compiler:
 
 compile: compiler
 	@./$(BINARY) $(SCRIPT)
-	@echo "Compilation complete."
 
 execute: compile
 	@clang++-19 $(LLVMOBJ) -o $(EXEC)
+	@echo
+	@echo "\033[34m----- Compile and execute generated LLVM IR -----\033[0m"
+	@echo
 	@./$(EXEC)
 
 clean:

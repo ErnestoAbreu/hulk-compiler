@@ -26,30 +26,60 @@ namespace hulk {
 
             void generate_code(const ast::program& program) {
                 auto* value = program.codegen();
-                
+
                 std::error_code EC;
                 llvm::raw_fd_ostream out(filename, EC, llvm::sys::fs::OF_None);
-                
+
                 if (EC) {
                     llvm::errs() << "Error al abrir el archivo: " << EC.message() << "\n";
                     return;
                 }
-                
+
                 ast::TheModule->print(out, nullptr);
                 out.close();
             }
 
             void create_builtin_functions() {
-                add_printf();
+                declare_printf();
+                declare_string_helpers();
             }
 
-            void add_printf() {
+            void declare_printf() {
                 // Crear la función printf (de la biblioteca estándar de C)
                 std::vector<llvm::Type*> printf_args;
                 printf_args.push_back(llvm::Type::getInt8Ty(*ast::TheContext)->getPointerTo());// format string
                 llvm::FunctionType* printf_type = llvm::FunctionType::get(llvm::Type::getInt32Ty(*ast::TheContext), printf_args, true); // varargs
 
                 llvm::Function::Create(printf_type, llvm::Function::ExternalLinkage, "printf", ast::TheModule.get());
+            }
+
+            void declare_string_helpers() {
+                auto& ctx = ast::TheModule->getContext();
+
+                // Declarar malloc
+                llvm::FunctionType* malloc_type = llvm::FunctionType::get(
+                    llvm::Type::getInt8Ty(ctx)->getPointerTo(), { llvm::Type::getInt64Ty(ctx) }, false
+                );
+                llvm::Function::Create(malloc_type, llvm::Function::ExternalLinkage, "malloc", ast::TheModule.get());
+
+                // Declarar memcpy
+                llvm::FunctionType* memcpy_type = llvm::FunctionType::get(
+                    llvm::Type::getVoidTy(ctx),
+                    {
+                        llvm::Type::getInt8Ty(ctx)->getPointerTo(),
+                        llvm::Type::getInt8Ty(ctx)->getPointerTo(),
+                        llvm::Type::getInt64Ty(ctx),
+                        llvm::Type::getInt1Ty(ctx)
+                    },
+                    false
+                );
+                llvm::Function::Create(memcpy_type, llvm::Function::ExternalLinkage, "llvm.memcpy.p0i8.p0i8.i64", ast::TheModule.get());
+
+                // Declarar strlen
+                llvm::FunctionType* strlen_type = llvm::FunctionType::get(
+                    llvm::Type::getInt64Ty(ctx), { llvm::Type::getInt8Ty(ctx)->getPointerTo() }, false
+                );
+                llvm::Function::Create(strlen_type, llvm::Function::ExternalLinkage, "strlen", ast::TheModule.get());
             }
         };
     } // namespace code_generator

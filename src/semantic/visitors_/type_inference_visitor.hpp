@@ -19,7 +19,9 @@ namespace hulk {
                 for (auto& stmt : statements)
                     stmt->infer(ctx);
 
-                main->infer(ctx);
+                if (main)
+                    main->infer(ctx);
+
             } while (ctx.repeat_infer);
 
             for (const auto& error : ctx.infer_errors) {
@@ -132,9 +134,11 @@ namespace hulk {
                 func.return_type = return_type.lexeme;
             }
 
-            for (const auto& param : parameters) {
+            for (auto& param : parameters) {
                 if (func.get_param(param.name.lexeme).attr_type.empty()) {
-                    func.get_param(param.name.lexeme).attr_type = ctx.get_variable(param.name.lexeme).attr_type;
+                    inferred_type = ctx.get_variable(param.name.lexeme).attr_type;
+                    param.type.lexeme = inferred_type;
+                    func.get_param(param.name.lexeme).attr_type = inferred_type;
                 }
             }
 

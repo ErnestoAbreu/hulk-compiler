@@ -11,3 +11,5 @@
 #include "codegen/new_expr.hpp"
 #include "codegen/assign_expr.hpp"
 #include "codegen/declaration_expr.hpp"
+
+#include "codegen/function_stmt.hpp"

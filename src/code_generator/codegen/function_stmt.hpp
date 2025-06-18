@@ -11,9 +11,9 @@ namespace hulk {
             // Create FunctionType
             std::vector<llvm::Type*> ParamTypes;
             for (const auto& param : parameters)
-                ParamTypes.push_back(code_generator::get_type(param.type.lexeme, TheModule.get()));
+                ParamTypes.push_back(get_type(param.type.lexeme, TheModule.get()));
 
-            llvm::FunctionType* FuncType = llvm::FunctionType::get(code_generator::get_type(return_type.lexeme, TheModule.get()), ParamTypes, false);
+            llvm::FunctionType* FuncType = llvm::FunctionType::get(get_type(return_type.lexeme, TheModule.get()), ParamTypes, false);
 
             // Create Function
             llvm::Function* Func = llvm::Function::Create(FuncType, llvm::Function::ExternalLinkage, name.lexeme, TheModule.get());
@@ -33,7 +33,7 @@ namespace hulk {
             NamedValues.clear();
             for (auto& Arg : Func->args()) {
                 // Create an alloca for this variable.
-                llvm::AllocaInst* Alloca = CreateEntryBlockAlloca(Func, std::string(Arg.getName()), Arg.getType());
+                llvm::AllocaInst* Alloca = CreateEntryBlockAlloca(Func, Arg.getType(), std::string(Arg.getName()));
 
                 // Store the initial value into the alloca.
                 Builder->CreateStore(&Arg, Alloca);

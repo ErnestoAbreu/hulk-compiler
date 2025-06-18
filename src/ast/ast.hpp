@@ -1,17 +1,19 @@
 #ifndef HULK_AST_HPP
 #define HULK_AST_HPP 1
 
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/Module.h"
-#include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/Verifier.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/PassManager.h"
 #include "llvm/IR/Type.h"
+#include "llvm/IR/Verifier.h"
 
 #include <algorithm>
 #include <cctype>
@@ -33,7 +35,7 @@ namespace hulk {
     static std::unique_ptr<llvm::LLVMContext> TheContext;
     static std::unique_ptr<llvm::Module> TheModule;
     static std::unique_ptr<llvm::IRBuilder<>> Builder;
-    static std::map<std::string, llvm::Value*> NamedValues;
+    static std::map<std::string, llvm::AllocaInst*> NamedValues;
     static std::map<std::string, std::map<std::string, unsigned>> StructFieldIndices;
 
     llvm::AllocaInst* CreateEntryBlockAlloca(llvm::Function* TheFunction, const std::string& VarName, llvm::Type* VarType) {
@@ -340,19 +342,16 @@ namespace hulk {
       lexer::token return_type;
 
       explicit function_stmt(const lexer::token _name, const function_type _type,
-        std::vector<parameter> _parameters, expr_ptr _body,
-        const lexer::token _return_type)
-        : name(_name),
-        type(_type),
-        parameters(std::move(_parameters)),
-        body(std::move(_body)),
-        return_type(_return_type) {
+        std::vector<parameter> _parameters, expr_ptr _body, const lexer::token _return_type)
+        : name(_name), type(_type), parameters(std::move(_parameters)), body(std::move(_body)), return_type(_return_type) {
       }
 
       void context_builder_visit(semantic::context& ctx) const override;
       void scoped_visit(semantic::context& ctx) const override;
       std::string infer(semantic::context& ctx, const std::string& shouldbe_type = "") override;
       void type_check(semantic::context& ctx) const override;
+
+      llvm::Function* codegen() override;
     };
 
     struct field_stmt : public stmt {
@@ -438,6 +437,7 @@ namespace hulk {
       void scoped_visit(semantic::context& ctx) const;
       std::string infer(semantic::context& ctx, const std::string& shouldbe_type = "") const;
       void type_check(semantic::context& ctx) const;
+
       llvm::Value* codegen() const;
     };
 

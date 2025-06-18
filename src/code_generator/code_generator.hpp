@@ -16,16 +16,17 @@ namespace hulk {
                 // Open a new context and module.
                 ast::TheContext = std::make_unique<llvm::LLVMContext>();
                 ast::TheModule = std::make_unique<llvm::Module>("hulk_module", *ast::TheContext);
-                ast::NamedValues.clear();
 
                 // Create a new builder for the module.
                 ast::Builder = std::make_unique<llvm::IRBuilder<>>(*ast::TheContext);
+
+                ast::NamedValues.clear();
 
                 create_builtin_functions();
             }
 
             void generate_code(const ast::program& program) {
-                auto* value = program.codegen();
+                program.codegen();
 
                 std::error_code EC;
                 llvm::raw_fd_ostream out(filename, EC, llvm::sys::fs::OF_None);
@@ -41,11 +42,12 @@ namespace hulk {
 
             void create_builtin_functions() {
                 declare_printf();
+                declare_malloc();
                 declare_string_helpers();
             }
 
             void declare_printf() {
-                // Crear la función printf (de la biblioteca estándar de C)
+                // Declare printf function
                 std::vector<llvm::Type*> printf_args;
                 printf_args.push_back(llvm::Type::getInt8Ty(*ast::TheContext)->getPointerTo());// format string
                 llvm::FunctionType* printf_type = llvm::FunctionType::get(llvm::Type::getInt32Ty(*ast::TheContext), printf_args, true); // varargs
@@ -53,14 +55,15 @@ namespace hulk {
                 llvm::Function::Create(printf_type, llvm::Function::ExternalLinkage, "printf", ast::TheModule.get());
             }
 
-            void declare_string_helpers() {
-                auto& ctx = ast::TheModule->getContext();
-
-                // Declarar malloc
+            void declare_malloc() {
                 llvm::FunctionType* malloc_type = llvm::FunctionType::get(
-                    llvm::Type::getInt8Ty(ctx)->getPointerTo(), { llvm::Type::getInt64Ty(ctx) }, false
+                    llvm::Type::getInt8Ty(*ast::TheContext)->getPointerTo(), { llvm::Type::getInt64Ty(*ast::TheContext) }, false
                 );
                 llvm::Function::Create(malloc_type, llvm::Function::ExternalLinkage, "malloc", ast::TheModule.get());
+            }
+
+            void declare_string_helpers() {
+                auto& ctx = ast::TheModule->getContext();
 
                 // Declarar memcpy
                 llvm::FunctionType* memcpy_type = llvm::FunctionType::get(

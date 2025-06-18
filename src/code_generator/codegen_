@@ -13,3 +13,4 @@
 #include "codegen/declaration_expr.hpp"
 
 #include "codegen/function_stmt.hpp"
+#include "codegen/class_stmt.hpp"

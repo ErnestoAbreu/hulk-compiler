@@ -1,6 +1,15 @@
+type Point(x : Number, y : Number) {
+    x = x;
+    y = y;
+    
+    name() => "Point";
+}
+
 function sum(a, b) => a + b;
 
 let a = 2 in {
     let a = a + 2 in print(a);
+    print(a);
+    a := 3;
     print(a);
 }

@@ -381,20 +381,18 @@ namespace hulk {
       std::vector<field_stmt_ptr> fields;
       std::vector<function_stmt_ptr> methods;
 
-      explicit class_stmt(const lexer::token& _name,
-        std::optional<super_item_ptr> _super,
-        std::vector<field_stmt_ptr> _fields,
-        std::vector<function_stmt_ptr> _methods)
-        : name(_name),
-        super_class(std::move(_super)),
-        fields(std::move(_fields)),
-        methods(std::move(_methods)) {
+      explicit class_stmt(const lexer::token& _name, std::vector<parameter> _parameters, std::optional<super_item_ptr> _super,
+        std::vector<field_stmt_ptr> _fields, std::vector<function_stmt_ptr> _methods)
+        : name(_name), super_class(std::move(_super)), parameters(std::move(_parameters)),
+        fields(std::move(_fields)), methods(std::move(_methods)) {
       }
 
       void context_builder_visit(semantic::context& ctx) const override;
       void scoped_visit(semantic::context& ctx) const override;
       std::string infer(semantic::context& ctx, const std::string& shouldbe_type = "") override;
       void type_check(semantic::context& ctx) const override;
+
+      llvm::Value* codegen() override;
     };
 
     struct protocol_stmt : public stmt {

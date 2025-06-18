@@ -16,6 +16,7 @@ namespace hulk {
                 ctx.infer_errors.clear();
                 ctx.repeat_infer = false;
 
+
                 for (auto& stmt : statements)
                     stmt->infer(ctx);
 
@@ -39,7 +40,7 @@ namespace hulk {
             for (const auto& param : parameters)
                 ctx.add_variable(param.name.lexeme, param.type.lexeme);
 
-            if (!super_class.has_value()) {
+            if (super_class.has_value()) {
                 type& parent_type = ctx.get_type(super_class.value()->name.lexeme);
 
                 auto& parent_args = super_class.value()->init;
@@ -59,6 +60,7 @@ namespace hulk {
                     }
                     else {
                         field->type.lexeme = inferred_type;
+                        this_type.get_field(field->name.lexeme).attr_type = inferred_type;
                         ctx.repeat_infer = true; // If type was inferred, we need to repeat inference
                     }
                 }

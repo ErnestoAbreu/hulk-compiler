@@ -7,9 +7,4 @@ type Point(x : Number, y : Number) {
 
 function sum(a, b) => a + b;
 
-let a = 2 in {
-    let a = a + 2 in print(a);
-    print(a);
-    a := 3;
-    print(a);
-}
+let a = new Point(1,2) in print("OK");

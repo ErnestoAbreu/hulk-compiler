@@ -1,34 +1,28 @@
 #ifndef HULK_CODEGEN_DECLARATION_EXPR_HPP
 #define HULK_CODEGEN_DECLARATION_EXPR_HPP 1
 
-#include <iostream>
-
 #include "../../ast/ast"
-#include "llvm/IR/DerivedTypes.h"
-#include "llvm/IR/Type.h"
+#include "utils.hpp"
 
 namespace hulk {
+    namespace ast {
 
-namespace ast {
+        llvm::Value* declaration_expr::codegen() {
+            llvm::Value* init_val = value->codegen();
+            if (!init_val) return nullptr;
 
-llvm::Value* declaration_expr::codegen() {
-  llvm::Value* initVal = value->codegen();
-  if (!initVal) return nullptr;
+            llvm::Function* function = Builder->GetInsertBlock()->getParent();
 
-  llvm::Type* llvmType = initVal->getType();
-  llvm::Function* function = Builder->GetInsertBlock()->getParent();
-  llvm::IRBuilder<> tmpB(&function->getEntryBlock(), function->getEntryBlock().begin());
-  llvm::AllocaInst* alloca = tmpB.CreateAlloca(llvmType, nullptr, name.get_lexeme());
+            llvm::AllocaInst* alloca = CreateEntryBlockAlloca(function, init_val->getType(), name.get_lexeme());
 
-  Builder->CreateStore(initVal, alloca);
+            Builder->CreateStore(init_val, alloca);
 
-  NamedValues[name.get_lexeme()] = alloca;
+            NamedValues[name.get_lexeme()] = alloca;
 
-  return initVal;
-}
+            return init_val;
+        }
 
-}  // namespace ast
-
+    }  // namespace ast
 }  // namespace hulk
 
 #endif  // HULK_CODEGEN_DECLARATION_EXPR_HPP

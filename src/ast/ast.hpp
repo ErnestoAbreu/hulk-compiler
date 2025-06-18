@@ -38,10 +38,6 @@ namespace hulk {
     static std::map<std::string, llvm::AllocaInst*> NamedValues;
     static std::map<std::string, std::map<std::string, unsigned>> StructFieldIndices;
 
-    llvm::AllocaInst* CreateEntryBlockAlloca(llvm::Function* TheFunction, const std::string& VarName, llvm::Type* VarType) {
-      llvm::IRBuilder<> TmpB(&TheFunction->getEntryBlock(), TheFunction->getEntryBlock().begin());
-      return TmpB.CreateAlloca(VarType, nullptr, VarName);
-    }
     // Expressions
 
     // Forwards declarations

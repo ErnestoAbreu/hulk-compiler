@@ -4,9 +4,9 @@
 #include "../../ast/ast"
 
 namespace hulk {
-    namespace code_generator {
+    namespace ast {
 
-        llvm::Type* get_type(const std::string& type_name, llvm::Module* module) {
+        static llvm::Type* get_type(const std::string& type_name, llvm::Module* module) {
             auto& context = module->getContext();
 
             if (type_name == "Number")
@@ -17,6 +17,11 @@ namespace hulk {
                 return llvm::Type::getInt8Ty(context)->getPointerTo();
 
             // return module->getTypeByName("class." + type_name);
+        }
+
+        static llvm::AllocaInst* CreateEntryBlockAlloca(llvm::Function* func, llvm::Type* var_type, llvm::StringRef var_name) {
+            llvm::IRBuilder<> TmpB(&func->getEntryBlock(), func->getEntryBlock().begin());
+            return TmpB.CreateAlloca(var_type, nullptr, var_name);
         }
 
     } // namespace code_generator

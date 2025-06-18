@@ -9,9 +9,9 @@ namespace hulk {
         using context = semantic::context;
 
         void program::scoped_visit(context& ctx) const {
-            for (const auto& stmt : statements) {
+            for (const auto& stmt : statements)
                 stmt->scoped_visit(ctx);
-            }
+
             if (main)
                 main->scoped_visit(ctx);
         }

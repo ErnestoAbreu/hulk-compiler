@@ -434,7 +434,7 @@ struct parser {
         if(match(TT::LPAREN))
           expr = finish_call(object, name);
         else 
-          expr = std::make_unique<ast::var_expr>(std::move(expr), name);
+          expr = std::make_unique<ast::var_expr>(std::move(object), name);
     }
 
     return expr;
@@ -464,7 +464,7 @@ struct parser {
     }
     
     if (match(TT::IDENTIFIER)) {
-      std::optional<ast::expr_ptr> object;
+      std::optional<ast::expr_ptr> object = std::nullopt;
       auto name = previous();
 
       if(match(TT::LPAREN))

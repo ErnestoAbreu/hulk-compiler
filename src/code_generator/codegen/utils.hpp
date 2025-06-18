@@ -16,7 +16,7 @@ namespace hulk {
             if (type_name == "String")
                 return llvm::Type::getInt8Ty(context)->getPointerTo();
 
-            // return module->getTypeByName("class." + type_name);
+            return llvm::StructType::getTypeByName(context, type_name);
         }
 
         static llvm::AllocaInst* CreateEntryBlockAlloca(llvm::Function* func, llvm::Type* var_type, llvm::StringRef var_name) {

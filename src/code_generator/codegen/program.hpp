@@ -9,8 +9,7 @@ namespace hulk {
         llvm::Value* program::codegen() const {
             // Generate code for each statement in the program
             for (const auto& stmt : statements)
-                if (!stmt->codegen())
-                    return nullptr;
+                stmt->codegen();
 
             if (main) {
                 // Create main function

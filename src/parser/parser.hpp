@@ -142,8 +142,7 @@ struct parser {
     if (match(TT::LPAREN)) {
       if (!check(TT::RPAREN)) {
         do {
-          lexer::token param_name =
-              consume(TT::IDENTIFIER, "Expected parameter name.");
+          lexer::token param_name = consume(TT::IDENTIFIER, "Expected parameter name.");
           lexer::token param_type = opt_type();
 
           parameters.push_back(ast::parameter(param_name, param_type));
@@ -188,8 +187,7 @@ struct parser {
 
     consume(TT::RBRACE, "Expected '}' after type body.");
 
-    return std::make_shared<ast::class_stmt>(
-        name, std::move(super_class), std::move(fields), std::move(methods));
+    return std::make_shared<ast::class_stmt>(name, parameters, std::move(super_class), std::move(fields), std::move(methods));
   }
 
   ast::field_stmt_ptr field_declaration(const lexer::token name) {

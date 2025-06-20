@@ -7,4 +7,10 @@ type Point(x : Number, y : Number) {
 
 function sum(a, b) => a + b;
 
-let a = new Point(1,2) in print("OK");
+let a = 5, b = true, c = "asdasd" in {
+    print(a);
+    print(b);
+    c := "asd";
+    print(c);
+    print("ASDASD" @@ "AASDAS\nASDASD");
+};

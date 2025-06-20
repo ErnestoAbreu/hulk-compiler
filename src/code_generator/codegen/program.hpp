@@ -26,8 +26,10 @@ namespace hulk {
                 auto* value = main->codegen();
 
                 // Return 0 if the main expression is valid
-                ast::Builder->CreateRet(llvm::ConstantInt::get(llvm::Type::getInt32Ty(*ast::TheContext), 0));
-                return value;
+                if (value)
+                    ast::Builder->CreateRet(llvm::ConstantInt::get(llvm::Type::getInt32Ty(*ast::TheContext), 0));
+                else
+                    ast::Builder->CreateRet(llvm::ConstantInt::get(llvm::Type::getInt32Ty(*ast::TheContext), -1));
             }
             return nullptr;
         }

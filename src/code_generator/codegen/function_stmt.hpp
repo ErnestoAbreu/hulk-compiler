@@ -11,9 +11,9 @@ namespace hulk {
             // Create FunctionType
             std::vector<llvm::Type*> ParamTypes;
             for (const auto& param : parameters)
-                ParamTypes.push_back(get_type(param.type.lexeme, TheModule.get()));
+                ParamTypes.push_back(GetType(param.type.lexeme, TheModule.get()));
 
-            llvm::FunctionType* FuncType = llvm::FunctionType::get(get_type(return_type.lexeme, TheModule.get()), ParamTypes, false);
+            llvm::FunctionType* FuncType = llvm::FunctionType::get(GetType(return_type.lexeme, TheModule.get()), ParamTypes, false);
 
             // Create Function
             llvm::Function* Func = llvm::Function::Create(FuncType, llvm::Function::ExternalLinkage, name.lexeme, TheModule.get());

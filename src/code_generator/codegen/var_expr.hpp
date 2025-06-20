@@ -2,39 +2,42 @@
 #define HULK_CODEGEN_VAR_EXPR_HPP 1
 
 #include "../../ast/ast"
+#include "utils.hpp"
 
 namespace hulk {
     namespace ast {
 
         llvm::Value* var_expr::codegen() {
             if (object.has_value()) {
-                auto* object_value = (*object)->codegen();
+                llvm::Value* object_value = (*object)->codegen();
+
                 if (!object_value) {
                     llvm::errs() << "Error in var_expr codegen: object value is null: " << name.get_lexeme() << "\n";
+                    internal::error_found = true;
                     return nullptr;
                 }
 
-                auto* object_type = object_value->getType();
-                if (!object_type->isPointerTy()) {
-                    llvm::errs() << "Error in var_expr codegen: expected pointer type, got " << *object_type << "\n";
+                llvm::Type* object_type = object_value->getType();
+                if (object_type->isPointerTy()) {
+                    llvm::errs() << "Error in var_expr object is a pointer: " << *object_type << "\n";
+                    internal::error_found = true;
                     return nullptr;
                 }
 
-                auto* object_ptr = Builder->CreateLoad(object_type->getPointerTo(), object_value, "object_ptr");
+                llvm::AllocaInst* object_alloca = Builder->CreateAlloca(object_type, nullptr, "object_alloca");
+                Builder->CreateStore(object_value, object_alloca);
 
-                if (NamedValues.find(name.get_lexeme()) == NamedValues.end()) {
-                    llvm::errs() << "Error in var_expr codegen: variable '" << name.get_lexeme() << "' not found\n";
-                    return nullptr;
-                }
+                unsigned int index = GetStructFieldIndex(object_type->getStructName().str(), name.get_lexeme());
+                llvm::Value* member_ptr = Builder->CreateStructGEP(object_type, object_alloca, index, "memberptr");
 
-                //todo
-                return nullptr;
+                return Builder->CreateLoad(object_type->getStructElementType(index), member_ptr, name.get_lexeme());
             }
             else {
                 llvm::AllocaInst* alloca = NamedValues[name.get_lexeme()];
 
                 if (!alloca) {
                     llvm::errs() << "Error in var_expr codegen: " << name.get_lexeme() << "\n";
+                    internal::error_found = true;
                     return nullptr;
                 }
 

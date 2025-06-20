@@ -21,7 +21,7 @@ std::string read_source_code(const std::string& source_path) {
   return buffer.str();
 }
 
-int main(const int argc, char **argv) {
+int main(const int argc, char** argv) {
   auto source_code = read_source_code(argv[1]);
 
   if (source_code.empty()) {
@@ -35,30 +35,21 @@ int main(const int argc, char **argv) {
 
   std::cerr << "LEXED" << "\n";
 
-  // for (auto &t: tokens) {
-  //   std::cerr << t.to_string() << "\n";
-  // }
-
   auto parser = parser::parser(tokens);
   const auto& ast = parser.parse();
-  
+
   if (internal::error_found) return -1;
 
   std::cerr << "PARSED" << "\n";
 
-  // std::cerr << ast.statements.size() << " declaration(s) found" << "\n";
-
-  // if (ast.main.get()) {
-  //   std::cerr << "Expression found" << "\n";
-  // }
-
-  if(semantic::analyze(ast))
+  if (semantic::analyze(ast))
     return -1;
 
   std::cerr << "ANALIZED" << "\n";
 
   code_generator::code_generator codegen;
-  codegen.generate_code(ast);
+  if (codegen.generate_code(ast))
+    return -1;
 
   std::cerr << "CODE GENERATED" << "\n";
 

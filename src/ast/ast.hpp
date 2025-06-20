@@ -37,6 +37,7 @@ namespace hulk {
     static std::unique_ptr<llvm::IRBuilder<>> Builder;
     static std::map<std::string, llvm::AllocaInst*> NamedValues;
     static std::map<std::string, std::map<std::string, unsigned>> StructFieldIndices;
+    static std::map<llvm::Value*, llvm::Type*> PointerType;
 
     // Expressions
 

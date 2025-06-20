@@ -1,16 +1,7 @@
-type Point(x : Number, y : Number) {
-    x = x;
-    y = y;
-    
-    name() => "Point";
-}
+function gcd(a, b) => while (a > 0)
+    let m = a % b in {
+        b := a;
+        a := m;
+    };
 
-function sum(a, b) => a + b;
-
-let a = 5, b = true, c = "asdasd" in {
-    print(a);
-    print(b);
-    c := "asd";
-    print(c);
-    print("ASDASD" @@ "AASDAS\nASDASD");
-};
+print(gcd(12, 15));

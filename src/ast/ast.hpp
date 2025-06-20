@@ -28,6 +28,7 @@
 
 #include "enums"
 #include "../internal/internal_uncopyable"
+#include "../internal/internal_error"
 #include "../semantic/context"
 
 namespace hulk {

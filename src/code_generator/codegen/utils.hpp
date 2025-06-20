@@ -31,6 +31,8 @@ namespace hulk {
         static llvm::Type* GetType(const std::string& type_name, llvm::Module* module) {
             auto& context = module->getContext();
 
+            if(type_name == "Object")
+                return llvm::PointerType::getUnqual(context);
             if (type_name == "Number")
                 return llvm::Type::getDoubleTy(context);
             if (type_name == "Boolean")

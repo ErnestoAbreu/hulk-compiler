@@ -14,10 +14,9 @@ namespace hulk {
 
             std::vector<llvm::Type*> ctor_param_types;
             for (const auto& param : parameters) {
-                llvm::Type* param_type = get_type(param.type.get_lexeme(), TheModule.get());
+                llvm::Type* param_type = GetType(param.type.get_lexeme(), TheModule.get());
                 ctor_param_types.push_back(param_type);
             }
-
 
             llvm::FunctionType* ctor_type = llvm::FunctionType::get(llvm::PointerType::get(class_type, 0), ctor_param_types, false);
 
@@ -28,8 +27,10 @@ namespace hulk {
             Builder->SetInsertPoint(ctor_entry);
 
             int idx = 0;
-            for (auto& arg : ctor_func->args())
+            for (auto& arg : ctor_func->args()) {
+                AddStructField(type_name, parameters[idx].name.get_lexeme());
                 arg.setName(parameters[idx++].name.get_lexeme());
+            }
 
             NamedValues.clear();
             for (auto& arg : ctor_func->args()) {
@@ -39,14 +40,7 @@ namespace hulk {
                 NamedValues[std::string(arg.getName())] = alloca;
             }
 
-            // Create a instance of class_type
-            llvm::Value* size = llvm::ConstantExpr::getSizeOf(class_type);
-            size = Builder->CreateIntCast(size, Builder->getInt64Ty(), false);
-
-            llvm::Function* malloc_func = TheModule->getFunction("malloc");
-            llvm::Value* memory = Builder->CreateCall(malloc_func, { size }, "malloc_" + type_name);
-
-            llvm::Value* instance = Builder->CreateBitCast(memory, llvm::PointerType::get(class_type, 0), type_name + "_instance");
+            llvm::Value* instance = Builder->CreateAlloca(class_type, nullptr, type_name + "_inst");
 
             //todo: initializate parent fields
 
@@ -56,6 +50,7 @@ namespace hulk {
             for (const auto& field : fields) {
                 // Get field pointer
                 llvm::Value* field_ptr = Builder->CreateStructGEP(class_type, instance, off_set + idx, field->name.get_lexeme() + "_ptr");
+                idx++;
 
                 // Get initializer value
                 llvm::Value* init_value = field->initializer->codegen();
@@ -83,11 +78,11 @@ namespace hulk {
                 param_types.push_back(llvm::PointerType::get(class_type, 0));
 
                 for (const auto& param : meth->parameters) {
-                    llvm::Type* param_type = get_type(param.type.get_lexeme(), TheModule.get());
+                    llvm::Type* param_type = GetType(param.type.get_lexeme(), TheModule.get());
                     param_types.push_back(param_type);
                 }
 
-                llvm::Type* return_type = get_type(meth->return_type.get_lexeme(), TheModule.get());
+                llvm::Type* return_type = GetType(meth->return_type.get_lexeme(), TheModule.get());
                 llvm::FunctionType* func_type = llvm::FunctionType::get(return_type, param_types, false);
 
                 llvm::Function* func = llvm::Function::Create(func_type, llvm::Function::InternalLinkage, type_name + "." + meth->name.get_lexeme(), TheModule.get());
@@ -118,7 +113,7 @@ namespace hulk {
             std::vector<llvm::Type*> field_types;
 
             for (const auto& field : fields) {
-                llvm::Type* field_type = get_type(field->type.get_lexeme(), TheModule.get());
+                llvm::Type* field_type = GetType(field->type.get_lexeme(), TheModule.get());
                 field_types.push_back(field_type);
             }
 

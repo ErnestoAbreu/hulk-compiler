@@ -25,19 +25,28 @@ namespace hulk {
                 create_builtin_functions();
             }
 
-            void generate_code(const ast::program& program) {
+            int generate_code(const ast::program& program) {
                 program.codegen();
+
+                if (internal::error_found)
+                    return -1;
+
+                if (llvm::verifyModule(*ast::TheModule, &llvm::errs())) {
+                    llvm::errs() << "Error: El módulo contiene IR inválido\n";
+                    return -1;
+                }
 
                 std::error_code EC;
                 llvm::raw_fd_ostream out(filename, EC, llvm::sys::fs::OF_None);
 
                 if (EC) {
                     llvm::errs() << "Error al abrir el archivo: " << EC.message() << "\n";
-                    return;
+                    return -1;
                 }
 
                 ast::TheModule->print(out, nullptr);
                 out.close();
+                return 0;
             }
 
             void create_builtin_functions() {

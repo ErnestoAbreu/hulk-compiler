@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 using namespace std;
 
 namespace hulk {
@@ -136,9 +137,6 @@ namespace hulk {
                     if (field.name == field_name)
                         return true;
 
-                if (parent)
-                    return parent->has_field(field_name);
-
                 return false;
             }
 
@@ -146,9 +144,6 @@ namespace hulk {
                 for (auto& field : fields)
                     if (field.name == field_name)
                         return field;
-
-                if (parent)
-                    return parent->get_field(field_name);
 
                 return *(new attribute()); // warn: this is dangerous, make sure to check with has_field first
             }

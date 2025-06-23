@@ -6,6 +6,7 @@
 #include <map>
 #include <set>
 #include "type.hpp"
+#include "../ast/ast"
 using namespace std;
 
 namespace hulk {
@@ -16,6 +17,7 @@ namespace hulk {
             map<string, method> functions;
 
             map<string, vector<string>> variable_scope;
+            string self;
 
             vector<tuple<int, int, string>> infer_errors;
             bool repeat_infer;
@@ -111,6 +113,10 @@ namespace hulk {
                 variable_scope[var_name].push_back(type_name);
             }
 
+            void rollback_variable(const string& var_name) {
+                variable_scope[var_name].pop_back();
+            }
+
             bool variable_exists(const string& var_name) {
                 if (variable_scope[var_name].empty())
                     return false;
@@ -125,6 +131,7 @@ namespace hulk {
                 infer_errors.emplace_back(line, column, message);
             }
         };
+        
     } // namespace semantic
 } // namespace hulk
 

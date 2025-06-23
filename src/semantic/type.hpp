@@ -11,10 +11,8 @@ namespace hulk {
         // Forward declarations
         struct attribute;
         struct method;
-        struct protocol;
         struct type;
 
-        using protocol_ptr = shared_ptr<protocol>;
         using type_ptr = shared_ptr<type>;
 
         struct attribute {
@@ -58,95 +56,6 @@ namespace hulk {
             }
         };
 
-        struct protocol {
-            string name;
-            vector<method> methods;
-            protocol_ptr parent;
-
-            protocol(const string& protocol_name = "")
-                : name(protocol_name) {
-            }
-
-            bool operator==(const protocol& other) const {
-                return name == other.name;
-            }
-
-            bool operator!=(const protocol& other) const {
-                return !(*this == other);
-            }
-
-            bool operator<=(const protocol& other) const {
-                bool conforms = true;
-                for (const auto& method : other.methods) {
-                    if (!has_method(method.name))
-                        return false; // If any method in 'other' is not in 'this', return false
-
-                    auto& this_method = get_method(method.name);
-                    conforms &= this_method.return_type <= method.return_type;
-
-                    if (this_method.params.size() != method.params.size())
-                        return false; // If the number of parameters doesn't match, return false
-
-                    for (size_t i = 0; i < this_method.params.size(); ++i)
-                        conforms &= method.params[i].attr_type <= this_method.params[i].attr_type;
-
-                    if (!conforms)
-                        break;
-                }
-                return conforms;
-            }
-
-            bool add_method(const method& m) {
-                for (const auto& method : methods)
-                    if (method.name == m.name)
-                        return false; // Method already exists
-
-                methods.push_back(m);
-                return true;
-            }
-
-            bool has_method(const string& method_name) const {
-                for (const auto& method : methods)
-                    if (method.name == method_name)
-                        return true;
-
-                if (parent)
-                    return parent->has_method(method_name);
-
-                return false;
-            }
-
-            method& get_method(const string& method_name) {
-                for (auto& method : methods)
-                    if (method.name == method_name)
-                        return method;
-
-                if (parent)
-                    return parent->get_method(method_name);
-
-                return *(new method());// warn: this is dangerous, make sure to check with has_method first
-            }
-
-            const method& get_method(const string& method_name) const {
-                for (const auto& method : methods)
-                    if (method.name == method_name)
-                        return method;
-
-                if (parent)
-                    return parent->get_method(method_name);
-
-                return *(new method());// warn: this is dangerous, make sure to check with has_method first
-            }
-
-            bool add_parent(protocol_ptr parent_protocol) {
-                if (parent)
-                    return false; // Parent already exists, cannot add another
-
-                parent = parent_protocol;
-                return true;
-            }
-        };
-
         struct type {
             string name;
             vector<attribute> params;
@@ -167,28 +76,29 @@ namespace hulk {
                 return !(*this == other);
             }
 
-            bool operator<=(const protocol& proto) const {
-                bool conforms = true;
-
-                for (const auto& method : proto.methods) {
-                    if (!has_method(method.name))
-                        return false; // If any method in 'proto' is not in 'this', return false
-
-                    auto& this_method = get_method(method.name);
-                    conforms &= this_method.return_type <= method.return_type;
-
-                    if (this_method.params.size() != method.params.size())
-                        return false; // If the number of parameters doesn't match, return false
-
-                    for (size_t i = 0; i < this_method.params.size(); ++i)
-                        conforms &= method.params[i].attr_type <= this_method.params[i].attr_type;
-                }
-
-                return conforms;
-            }
-
             bool operator<=(const type& other) const {
                 if (*this == other) return true;
+
+                if (other.is_protocol) {
+                    bool conforms = true;
+
+                    for (const auto& method : other.methods) {
+                        if (!has_method(method.name))
+                            return false; // If any method in 'proto' is not in 'this', return false
+
+                        auto& this_method = get_method(method.name);
+                        conforms &= this_method.return_type <= method.return_type;
+
+                        if (this_method.params.size() != method.params.size())
+                            return false; // If the number of parameters doesn't match, return false
+
+                        for (size_t i = 0; i < this_method.params.size(); ++i)
+                            conforms &= method.params[i].attr_type <= this_method.params[i].attr_type;
+                    }
+
+                    return conforms;
+                }
+
                 if (*parent <= other)
                     return true;
 

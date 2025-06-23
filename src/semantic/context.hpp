@@ -47,8 +47,13 @@ namespace hulk {
             bool create_protocol(const string& protocol_name) {
                 if (!create_type(protocol_name, true))
                     return false; // Type creation failed
-
                 return true;
+            }
+
+            bool is_protocol(const string& protocol_name) {
+                if (types[protocol_name].is_protocol)
+                    return true;
+                return false;
             }
 
             bool create_type(const string& type_name, bool is_protocol = false) {

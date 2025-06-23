@@ -10,12 +10,12 @@ using namespace std;
 
 namespace hulk {
     namespace semantic {
+
         struct context {
-            map<string, protocol> protocols;
             map<string, type> types;
             map<string, method> functions;
 
-            vector<map<string, attribute>> scopes;
+            map<string, vector<string>> variable_scope;
 
             vector<tuple<int, int, string>> infer_errors;
             bool repeat_infer;
@@ -45,22 +45,10 @@ namespace hulk {
             context() = default;
 
             bool create_protocol(const string& protocol_name) {
-                if (protocols.find(protocol_name) != protocols.end()) {
-                    return false; // Protocol already exists
-                }
-                if (!create_type(protocol_name, true)) {
+                if (!create_type(protocol_name, true))
                     return false; // Type creation failed
-                }
-                protocols[protocol_name] = protocol(protocol_name);
+
                 return true;
-            }
-
-            bool protocol_exists(const string& protocol_name) const {
-                return protocols.find(protocol_name) != protocols.end();
-            }
-
-            protocol& get_protocol(const string& protocol_name) {
-                return protocols[protocol_name];
             }
 
             bool create_type(const string& type_name, bool is_protocol = false) {
@@ -68,7 +56,6 @@ namespace hulk {
                     return false; // Type already exists
                 }
                 types[type_name] = type(type_name);
-                types[type_name].is_protocol = is_protocol;
                 return true;
             }
 
@@ -115,49 +102,18 @@ namespace hulk {
                 return functions[func_name];
             }
 
-            void add_scope() {
-                if (scopes.empty())
-                    scopes.push_back(map<string, attribute>());
-                else
-                    scopes.push_back(scopes.back());
-            }
-
-            void rollback_scope() {
-                if (!scopes.empty()) {
-                    scopes.pop_back();
-                }
-            }
-
-            map<string, attribute>& current_scope() {
-                if (scopes.empty()) {
-                    // todo handle internal error;
-                }
-                return scopes.back();
-            }
-
-            void add_variable(const string& var_name) {
-                if (scopes.empty()) {
-                    // todo handle internal error;
-                }
-                else
-                    current_scope()[var_name] = attribute(var_name);
-            }
-
-            void add_variable(const string& var_name, const string& type_name) {
-                if (scopes.empty()) {
-                    // todo handle internal error;
-                }
-                else
-                    current_scope()[var_name] = attribute(var_name, type_name);
+            void add_variable(const string& var_name, const string& type_name = "") {
+                variable_scope[var_name].push_back(type_name);
             }
 
             bool variable_exists(const string& var_name) {
-                if (scopes.empty()) return false;
-                return current_scope().find(var_name) != current_scope().end();
+                if (variable_scope[var_name].empty())
+                    return false;
+                return true;
             }
 
-            attribute& get_variable(const string& var_name) {
-                return current_scope()[var_name];
+            string& get_variable_type(const string& var_name) {
+                return variable_scope[var_name].back();
             }
 
             void add_infer_error(int line, int column, const string& message) {

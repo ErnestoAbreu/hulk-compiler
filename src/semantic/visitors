@@ -1,4 +1,4 @@
 #include "visitors_/context_builder_"
-#include "visitors_/scoped_visitor.hpp"
+#include "visitors_/scoped_visitor_"
 #include "visitors_/type_inference_visitor.hpp"
 #include "visitors_/type_checker_visitor.hpp"

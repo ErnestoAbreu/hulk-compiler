@@ -1,0 +1,19 @@
+#include "scoped_visitor/program.hpp"
+
+#include "scoped_visitor/class_stmt.hpp"
+#include "scoped_visitor/field_stmt.hpp"
+#include "scoped_visitor/function_stmt.hpp"
+
+#include "scoped_visitor/assign_expr.hpp"
+#include "scoped_visitor/binary_expr.hpp"
+#include "scoped_visitor/block_expr.hpp"
+#include "scoped_visitor/call_expr.hpp"
+#include "scoped_visitor/declaration_expr.hpp"
+#include "scoped_visitor/for_expr.hpp"
+#include "scoped_visitor/if_expr.hpp"
+#include "scoped_visitor/let_expr.hpp"
+#include "scoped_visitor/new_expr.hpp"
+#include "scoped_visitor/unary_expr.hpp"
+#include "scoped_visitor/var_expr.hpp"
+#include "scoped_visitor/while_expr.hpp"
+

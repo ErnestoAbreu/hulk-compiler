@@ -12,15 +12,12 @@ namespace hulk {
             }
             else {
                 if (!ctx.function_exists(callee.lexeme)) {
-                    internal::error(callee.line, callee.column,
-                        "Function '" + callee.lexeme + "' does not exist.");
+                    internal::error(callee, "Function does not exist.");
                 }
 
                 auto& func = ctx.get_function(callee.lexeme);
                 if (func.params.size() != arguments.size()) {
-                    internal::error(callee.line, callee.column,
-                        "Function '" + callee.lexeme + "' expects " + std::to_string(func.params.size()) +
-                        " arguments, but got " + std::to_string(arguments.size()) + ".");
+                    internal::error(callee, "Function expects " + std::to_string(func.params.size()) + " arguments, but got " + std::to_string(arguments.size()) + ".");
                 }
 
                 for (const auto& arg : arguments) {

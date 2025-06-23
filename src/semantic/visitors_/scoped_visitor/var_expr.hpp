@@ -31,7 +31,10 @@ namespace hulk {
             }
             else {
                 if (!ctx.variable_exists(name.lexeme)) {
-                    internal::error(name, "variable does not exist.");
+                    if (name.lexeme == "self" && !ctx.self.empty())
+                        return;
+                    
+                    internal::error(name, "variable '" + name.lexeme + "' does not exist.");
                 }
             }
         }

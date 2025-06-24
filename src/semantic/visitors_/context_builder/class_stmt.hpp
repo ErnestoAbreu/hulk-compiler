@@ -45,6 +45,10 @@ namespace hulk {
                     type.add_parent(super_type);
                 }
             }
+            else {
+                // If no parent class, add Object as the default parent
+                type.add_parent(std::make_shared<semantic::type>(ctx.get_type("Object")));
+            }
 
             // Add fields to the type
             for (const auto& field : fields) {

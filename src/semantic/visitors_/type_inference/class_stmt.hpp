@@ -42,7 +42,7 @@ namespace hulk {
                 idx++;
             }
 
-            int idx = 0;
+            idx = 0;
             for (auto& param : parameters) {
                 if (param.type.lexeme.empty()) {
                     // Infer param type

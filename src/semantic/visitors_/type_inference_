@@ -12,6 +12,7 @@
 #include "type_inference/for_expr.hpp"
 #include "type_inference/if_expr.hpp"
 #include "type_inference/let_expr.hpp"
+#include "type_inference/literal_expr.hpp"
 #include "type_inference/new_expr.hpp"
 #include "type_inference/unary_expr.hpp"
 #include "type_inference/var_expr.hpp"

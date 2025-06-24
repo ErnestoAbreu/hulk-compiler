@@ -416,6 +416,7 @@ namespace hulk {
       }
 
       void context_builder_visit(semantic::context& ctx) const override;
+      void type_check(semantic::context& ctx) const override;
     };
 
     struct expression_stmt : public stmt {

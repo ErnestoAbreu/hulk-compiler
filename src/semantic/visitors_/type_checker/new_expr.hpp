@@ -10,9 +10,11 @@ namespace hulk {
             int args_count = arguments.size();
             auto& current = ctx.get_type(type_name.lexeme);
 
-            while (current.params.size() == 0) {
+            while (current.params.empty()) {
                 if (current.parent)
-                    current = ctx.get_type(current.parent->name);
+                    current = *current.parent;
+                else
+                    break;
             }
 
             for (int i = 0; i < args_count; ++i) {

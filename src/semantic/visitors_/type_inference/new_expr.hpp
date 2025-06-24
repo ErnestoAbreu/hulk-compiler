@@ -10,8 +10,12 @@ namespace hulk {
         string new_expr::infer(semantic::context& ctx, const string& shouldbe_type) {
             auto& type = ctx.get_type(type_name.lexeme);
 
-            while(type.params.empty())
-                type = *type.parent; // Traverse up the hierarchy to find a type with parameters
+            while (type.params.empty()) {
+                if (type.parent)
+                    type = *type.parent;
+                else
+                    break;
+            }
 
             for (int i = 0; i < arguments.size(); ++i) {
                 arguments[i]->infer(ctx, type.params[i].attr_type->name);

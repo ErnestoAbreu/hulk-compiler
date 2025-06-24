@@ -13,8 +13,8 @@ namespace hulk {
 
             auto& type = ctx.get_type(type_name.lexeme);
 
-            while(type.params.empty()) {
-                if(type.parent)
+            while (type.params.empty()) {
+                if (type.parent)
                     type = *type.parent;
                 else
                     break; // No parent, exit the loop

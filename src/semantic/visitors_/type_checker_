@@ -1,0 +1,21 @@
+#include "type_checker/program.hpp"
+
+#include "type_checker/class_stmt.hpp"
+#include "type_checker/field_stmt.hpp"
+#include "type_checker/function_stmt.hpp"
+
+#include "type_checker/assign_expr.hpp"
+#include "type_checker/binary_expr.hpp"
+#include "type_checker/block_expr.hpp"
+#include "type_checker/call_expr.hpp"
+#include "type_checker/declaration_expr.hpp"
+#include "type_checker/for_expr.hpp"
+#include "type_checker/if_expr.hpp"
+#include "type_checker/let_expr.hpp"
+#include "type_checker/literal_expr.hpp"
+#include "type_checker/new_expr.hpp"
+#include "type_checker/unary_expr.hpp"
+#include "type_checker/var_expr.hpp"
+#include "type_checker/while_expr.hpp"
+
+

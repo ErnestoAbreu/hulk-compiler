@@ -7,7 +7,7 @@
 namespace hulk {
     namespace ast {
 
-        string while_expr::infer(context& ctx, const string& shouldbe_type) {
+        string while_expr::infer(semantic::context& ctx, const string& shouldbe_type) {
             condition->infer(ctx, "Boolean");
             return body->infer(ctx, shouldbe_type);
         }

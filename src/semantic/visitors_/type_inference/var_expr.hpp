@@ -21,6 +21,9 @@ namespace hulk {
                 return field.attr_type->name; // Return the type of the field
             }
             else {
+                if(name.lexeme == "self" && !ctx.variable_exists(name.lexeme)) 
+                    return ctx.self;
+                
                 auto& var_type = ctx.get_variable_type(name.lexeme);
 
                 if (var_type.empty()) {

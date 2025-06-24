@@ -1,5 +1,5 @@
-#ifndef HULK_SEMANTIC_TYPE_INFERENCE_PROGRAM_HPP
-#define HULK_SEMANTIC_TYPE_INFERENCE_PROGRAM_HPP
+#ifndef HULK_SEMANTIC_TYPE_INFERENCE_UNARY_EXPR_HPP
+#define HULK_SEMANTIC_TYPE_INFERENCE_UNARY_EXPR_HPP
 
 #include "../../../ast/ast"
 #include "utils.hpp"
@@ -24,4 +24,4 @@ namespace hulk {
     } // namespace ast
 } // namespace hulk
 
-#endif // HULK_SEMANTIC_TYPE_INFERENCE_PROGRAM_HPP
+#endif // HULK_SEMANTIC_TYPE_INFERENCE_UNARY_EXPR_HPP

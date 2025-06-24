@@ -62,7 +62,7 @@ namespace hulk {
                 if (types.find(type_name) != types.end()) {
                     return false; // Type already exists
                 }
-                types[type_name] = type(type_name);
+                types[type_name] = type(type_name, is_protocol);
                 return true;
             }
 

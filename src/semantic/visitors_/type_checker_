@@ -1,5 +1,6 @@
 #include "type_checker/program.hpp"
 
+#include "type_checker/protocol_stmt.hpp"
 #include "type_checker/class_stmt.hpp"
 #include "type_checker/field_stmt.hpp"
 #include "type_checker/function_stmt.hpp"

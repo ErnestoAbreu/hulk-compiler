@@ -15,6 +15,21 @@ namespace hulk {
             }
 
             if (super_class) {
+                int init_size = super_class->get()->init.size();
+                auto& parent = ctx.get_type(super_class->get()->name.lexeme);
+
+                while(parent.params.empty()) {
+                    if (parent.parent)
+                        parent = *parent.parent;
+                    else
+                        break; // No parent, exit the loop
+                }
+
+                if (init_size != parent.params.size()) {
+                    internal::error(super_class->get()->name, "Type '" + super_class->get()->name.lexeme +
+                        "' expects " + std::to_string(parent.params.size()) + " arguments, but got " + std::to_string(init_size) + ".");
+                }
+
                 for (const auto& arg : super_class->get()->init)
                     arg->scoped_visit(ctx);
             }

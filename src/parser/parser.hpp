@@ -200,26 +200,26 @@ struct parser {
   }
 
   ast::while_expr_ptr while_expression() {
-    consume(TT::LPAREN, "Expected '(' after while.");
+    auto condition_token = consume(TT::LPAREN, "Expected '(' after while.");
     ast::expr_ptr condition = expression();
     consume(TT::RPAREN, "Expected ')' after condition.");
     ast::expr_ptr body = expression();
-    return std::make_unique<ast::while_expr>(std::move(condition),
-                                             std::move(body));
+    return std::make_unique<ast::while_expr>(condition_token, std::move(condition),std::move(body));
   }
 
   ast::stmt_ptr statement() { return expression_statement(); }
 
   ast::if_expr_ptr if_expression() {
-    consume(TT::LPAREN, "Expected '(' after 'if'.");
+    auto condition_token = consume(TT::LPAREN, "Expected '(' after 'if'.");
     auto condition = expression();
     consume(TT::RPAREN, "Expected ')' after if condition.");
 
     auto then_branch = expression();
 
+    std::vector<lexer::token> elif_tokens;
     std::vector<std::pair<ast::expr_ptr, ast::expr_ptr>> elif_branchs;
     while (match(TT::KW_ELIF)) {
-      consume(TT::LPAREN, "Expected '(' after 'elif'.");
+      elif_tokens.push_back(consume(TT::LPAREN, "Expected '(' after 'elif'."));
       auto condition = expression();
       consume(TT::RPAREN, "Expected ')' after elif condition");
 
@@ -233,9 +233,11 @@ struct parser {
       else_branch = expression();
     }
 
-    return std::make_unique<ast::if_expr>(
-        std::move(condition), std::move(then_branch), std::move(elif_branchs),
-        std::move(else_branch));
+    return std::make_unique<ast::if_expr>( 
+        condition_token, std::move(condition), std::move(then_branch),
+        std::move(elif_tokens), std::move(elif_branchs), 
+        std::move(else_branch)
+      );
   }
 
   ast::expression_stmt_ptr expression_statement() {

@@ -11,17 +11,18 @@ namespace hulk {
 
             if (ctx.get_type(cond_type) == ctx.get_type("Boolean"));
             else {
-                internal::error(0, 0, "condition is not a boolean, got '" + cond_type + "'");
+                internal::error(condition_token.line, condition_token.column, "condition is not a boolean, got '" + cond_type + "'");
             }
 
             string then_type = then_branch->type_check(ctx);
-
+            int idx = 0;
             for (const auto& elif : elif_branchs) {
                 string elif_cond_type = elif.first->type_check(ctx);
                 if (ctx.get_type(elif_cond_type) == ctx.get_type("Boolean"));
                 else {
-                    internal::error(0, 0, "elif condition is not a boolean, got '" + elif_cond_type + "'");
+                    internal::error(elif_tokens[idx].line, elif_tokens[idx].column, "elif condition is not a boolean, got '" + elif_cond_type + "'");
                 }
+                idx++;
 
                 string elif_type = elif.second->type_check(ctx);
                 then_type = ctx.get_lca_type(&ctx.get_type(then_type), &ctx.get_type(elif_type))->name;

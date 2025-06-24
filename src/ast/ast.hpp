@@ -227,16 +227,20 @@ namespace hulk {
     };
 
     struct if_expr : public expr {
+      lexer::token condition_token; // Token for the 'if' keyword
       expr_ptr condition;
       expr_ptr then_branch;
+      std::vector<lexer::token> elif_tokens;
       std::vector<std::pair<expr_ptr, expr_ptr>> elif_branchs;
       std::optional<expr_ptr> else_branch;
 
-      explicit if_expr(expr_ptr _condition, expr_ptr _then_branch,
-        std::vector<std::pair<expr_ptr, expr_ptr>> _elif_branchs,
+      explicit if_expr(lexer::token _condition_token, expr_ptr _condition, expr_ptr _then_branch,
+        std::vector<lexer::token> elif_tokens, std::vector<std::pair<expr_ptr, expr_ptr>> _elif_branchs,
         std::optional<expr_ptr> _else_branch)
-        : condition(std::move(_condition)),
+        : condition_token(_condition_token), 
+        condition(std::move(_condition)),
         then_branch(std::move(_then_branch)),
+        elif_tokens(std::move(elif_tokens)),
         elif_branchs(std::move(_elif_branchs)),
         else_branch(std::move(_else_branch)) {
       }
@@ -248,11 +252,12 @@ namespace hulk {
     };
 
     struct while_expr : public expr {
+      lexer::token condition_token;
       expr_ptr condition;
       expr_ptr body;
 
-      explicit while_expr(expr_ptr _condition, expr_ptr _body)
-        : condition(std::move(_condition)), body(std::move(_body)) {
+      explicit while_expr(lexer::token _condition_token, expr_ptr _condition, expr_ptr _body)
+        : condition_token(_condition_token), condition(std::move(_condition)), body(std::move(_body)) {
       }
 
       void scoped_visit(semantic::context& ctx) const override;

@@ -37,11 +37,15 @@ namespace hulk {
 
             // Add parent class
             if (super_class) {
-                if (!ctx.type_exists(super_class->get()->name.lexeme)) {
+                string super_class_name = super_class->get()->name.lexeme;
+                if (!ctx.type_exists(super_class_name)) {
                     internal::error(super_class->get()->name, "parent type does not exist, in class '" + name.lexeme + "'.");
                 }
+                else if (super_class_name == "Number" || super_class_name == "String" || super_class_name == "Boolean") {
+                    internal::error(super_class->get()->name, "parent type cannot be a builtin type.");
+                }
                 else {
-                    type_ptr super_type = std::make_shared<semantic::type>(ctx.get_type(super_class->get()->name.lexeme));
+                    type_ptr super_type = std::make_shared<semantic::type>(ctx.get_type(super_class_name));
                     type.add_parent(super_type);
                 }
             }

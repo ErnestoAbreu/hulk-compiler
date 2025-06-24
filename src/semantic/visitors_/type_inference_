@@ -1,0 +1,18 @@
+#include "type_inference/program.hpp"
+
+#include "type_inference/class_stmt.hpp"
+#include "type_inference/field_stmt.hpp"
+#include "type_inference/function_stmt.hpp"
+
+#include "type_inference/assign_expr.hpp"
+#include "type_inference/binary_expr.hpp"
+#include "type_inference/block_expr.hpp"
+#include "type_inference/call_expr.hpp"
+#include "type_inference/declaration_expr.hpp"
+#include "type_inference/for_expr.hpp"
+#include "type_inference/if_expr.hpp"
+#include "type_inference/let_expr.hpp"
+#include "type_inference/new_expr.hpp"
+#include "type_inference/unary_expr.hpp"
+#include "type_inference/var_expr.hpp"
+#include "type_inference/while_expr.hpp"

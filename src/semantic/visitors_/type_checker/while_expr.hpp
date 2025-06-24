@@ -11,7 +11,7 @@ namespace hulk {
 
             if (ctx.get_type(cond_type) == ctx.get_type("Boolean"));
             else {
-                internal::error(0, 0, "condition is not a boolean, got '" + cond_type + "'");
+                internal::error(condition_token.line, condition_token.column, "condition is not a boolean, got '" + cond_type + "'");
             }
 
             return body->type_check(ctx);

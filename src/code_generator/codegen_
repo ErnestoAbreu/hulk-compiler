@@ -1,7 +1,11 @@
+#include "codegen/program.hpp"
+
+#include "codegen/function_stmt.hpp"
+#include "codegen/class_stmt.hpp"
+
 #include "codegen/binary_expr.hpp"
 #include "codegen/literal.hpp"
 #include "codegen/unary_expr.hpp"
-#include "codegen/program.hpp"
 #include "codegen/call_expr.hpp"
 #include "codegen/var_expr.hpp"
 #include "codegen/while_expr.hpp"
@@ -11,6 +15,4 @@
 #include "codegen/new_expr.hpp"
 #include "codegen/assign_expr.hpp"
 #include "codegen/declaration_expr.hpp"
-
-#include "codegen/function_stmt.hpp"
-#include "codegen/class_stmt.hpp"
+#include "codegen/for_expr.hpp"

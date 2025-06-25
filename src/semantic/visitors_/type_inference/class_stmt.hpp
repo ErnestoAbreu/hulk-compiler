@@ -44,7 +44,7 @@ namespace hulk {
                         semantic::repeat_infer = true;
                     }
                     else {
-                        semantic::add_infer_error(param.type.line, param.type.column, "param type not inferred");
+                        semantic::add_infer_error(param.name.line, param.name.column, "param type not inferred");
                     }
 
                 }
@@ -54,7 +54,7 @@ namespace hulk {
 
             ctx.self = name.lexeme;
 
-            for (const auto& meth : methods) {
+            for (auto& meth : methods) {
                 semantic::method& func = this_type.get_method(meth->name.lexeme);
 
                 for (const auto& param : meth->parameters) {

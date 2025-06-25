@@ -8,3 +8,9 @@ build/
 test
 .hulk
 hulk/exec
+
+*.aux
+*.fdb_latexmk
+*.log
+*.fls
+*.synctex.gz

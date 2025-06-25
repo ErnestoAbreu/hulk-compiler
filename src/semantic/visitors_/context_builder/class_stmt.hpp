@@ -7,7 +7,7 @@ namespace hulk {
     namespace ast {
         using type_ptr = std::shared_ptr<semantic::type>;
 
-        void class_stmt::context_builder_visit(semantic::context& ctx) const {
+        void class_stmt::context_builder_visit(semantic::context& ctx) {
             // Create the type in the context
             if (!ctx.create_type(name.lexeme)) {
                 internal::error(name, "Type already exists.");
@@ -47,6 +47,27 @@ namespace hulk {
                 else {
                     type_ptr super_type = std::make_shared<semantic::type>(ctx.get_type(super_class_name));
                     type.add_parent(super_type);
+                }
+
+                if (super_class->get()->init.empty()) {
+                    if (!parameters.empty()) {
+                        internal::error(super_class->get()->name, "parent class '" + super_class_name + "' must have an initializer if the child class has parameters.");
+                    }
+                    else {
+                        // If the parent class has no initializer, we can add its parameters to the child class
+                        auto& super_type = ctx.get_type(super_class_name);
+                        for (const auto& param : super_type.params) {
+                            type.add_param("_" + param.name, param.attr_type);
+                            
+                            parameters.push_back(parameter(
+                                lexer::token(lexer::token_type::IDENTIFIER, "_" + param.name, "", name.line, name.column),
+                                param.attr_type ? lexer::token(lexer::token_type::IDENTIFIER, param.attr_type->name, "", name.line, name.column) : lexer::token()
+                            ));
+                            
+                            expr_ptr init_expr = std::make_unique<var_expr>(std::nullopt, lexer::token(lexer::token_type::IDENTIFIER, "_" + param.name, "", name.line, name.column));
+                            super_class->get()->init.push_back(init_expr);
+                        }
+                    }
                 }
             }
             else {

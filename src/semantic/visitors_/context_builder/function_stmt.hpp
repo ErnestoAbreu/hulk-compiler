@@ -6,7 +6,7 @@
 namespace hulk {
     namespace ast {
 
-        void function_stmt::context_builder_visit(semantic::context& ctx) const {
+        void function_stmt::context_builder_visit(semantic::context& ctx) {
             if (!ctx.create_function(name.lexeme)) {
                 internal::error(name, "Function already exists.");
                 return;

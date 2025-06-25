@@ -16,15 +16,6 @@ namespace hulk {
             if (super_class.has_value()) {
                 auto& parent_type = ctx.get_type(super_class.value()->name.lexeme);
 
-                while (parent_type.params.empty()) {
-                    if (parent_type.parent)
-                        parent_type = *parent_type.parent;
-                    else {
-                        internal::error("Something wrong finding parent constructor for a type", "INFERENCE");
-                        return "";
-                    }
-                }
-
                 auto& parent_args = super_class.value()->init;
                 for (int i = 0; i < parent_args.size(); ++i) {
                     parent_args[i]->infer(ctx, parent_type.params[i].attr_type->name);

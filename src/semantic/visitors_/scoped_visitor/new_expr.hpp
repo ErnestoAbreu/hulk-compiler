@@ -13,13 +13,6 @@ namespace hulk {
 
             auto& type = ctx.get_type(type_name.lexeme);
 
-            while (type.params.empty()) {
-                if (type.parent)
-                    type = *type.parent;
-                else
-                    break; // No parent, exit the loop
-            }
-
             if (type.params.size() != arguments.size()) {
                 internal::error(type_name, "Type expects " + std::to_string(type.params.size()) + " arguments, but got " + std::to_string(arguments.size()) + ".");
             }

@@ -1,0 +1,9 @@
+type Range(min:Number, max:Number) {
+    min = min;
+    max = max;
+    current = min - 1;
+
+    next(): Boolean => (self.current := self.current + 1) < self.max;
+    current(): Number => self.current;
+}
+function range(min:Number, max:Number) => new Range(min,max);

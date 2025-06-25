@@ -13,6 +13,7 @@ namespace hulk {
             else {
                 if (!ctx.function_exists(callee.lexeme)) {
                     internal::error(callee, "Function does not exist.");
+                    return;
                 }
 
                 auto& func = ctx.get_function(callee.lexeme);

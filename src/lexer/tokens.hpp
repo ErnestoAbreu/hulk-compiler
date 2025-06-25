@@ -274,7 +274,7 @@ static const std::vector<std::pair<std::string, token_type>> regexs_tokens = {
     {"[\n]+", token_type::NEWLINE},
 
     // Literales
-    {"\"([\t- ]|[#-~]|[\"])*\"",
+    {"\"([\t- ]|[#-~])*\"",
      token_type::STRING},  // falta evitar que se ponga \n y \" en .*
     {"'.'", token_type::CHAR},
     {"Null", token_type::T_NULL},
@@ -283,6 +283,7 @@ static const std::vector<std::pair<std::string, token_type>> regexs_tokens = {
 
     // Palabras clave
     {"if", token_type::KW_IF},
+    {"elif", token_type::KW_ELIF},
     {"else", token_type::KW_ELSE},
     {"while", token_type::KW_WHILE},
     {"for", token_type::KW_FOR},
@@ -292,7 +293,6 @@ static const std::vector<std::pair<std::string, token_type>> regexs_tokens = {
     {"type", token_type::KW_TYPE},
     {"new", token_type::KW_NEW},
     {"inherits", token_type::KW_INHERITS},
-    // {"self", token_type::KW_SELF},
     // {"base", token_type::KW_BASE},
     {"protocol", token_type::KW_PROTOCOL},
     {"extends", token_type::KW_EXTENDS},

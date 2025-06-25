@@ -274,7 +274,7 @@ static const std::vector<std::pair<std::string, token_type>> regexs_tokens = {
     {"[\n]+", token_type::NEWLINE},
 
     // Literales
-    {"\"([\t- ]|[#-~])*\"",
+    {"\"([\t- ]|[#-~]|[\"])*\"",
      token_type::STRING},  // falta evitar que se ponga \n y \" en .*
     {"'.'", token_type::CHAR},
     {"Null", token_type::T_NULL},

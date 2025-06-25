@@ -65,7 +65,7 @@ namespace hulk {
                             ));
                             
                             expr_ptr init_expr = std::make_unique<var_expr>(std::nullopt, lexer::token(lexer::token_type::IDENTIFIER, "_" + param.name, "", name.line, name.column));
-                            super_class->get()->init.push_back(init_expr);
+                            super_class->get()->init.push_back(std::move(init_expr));
                         }
                     }
                 }

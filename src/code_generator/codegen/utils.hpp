@@ -6,8 +6,58 @@
 namespace hulk {
     namespace ast {
 
+        /* VTABLE AUXILIAR METHODS */
+
+        unsigned getMethodIndex(const std::string& type_name, const std::string& method_name) {
+            const auto& methods = VTableMethodsName[type_name];
+            for (unsigned i = 0; i < methods.size(); ++i) {
+                if (methods[i] == method_name) {
+                    return i;
+                }
+            }
+            throw std::runtime_error("Method not found in VTable");
+        }
+
+        void registerMethod(const std::string& type_name, const std::string& parent_name, const std::string& method_name) {
+            // Si es una clase nueva, inicializa su entrada
+            if (VTableMethodsName.find(type_name) == VTableMethodsName.end()) {
+                VTableMethodsName[type_name] = VTableMethodsName[parent_name];
+            }
+
+            // Verificar si el método ya existe (sobreescritura)
+            bool overridden = false;
+            for (auto& m : VTableMethodsName[type_name]) {
+                if (m == method_name) {
+                    overridden = true;
+                    break;
+                }
+            }
+
+            // Si no fue sobreescrito, añadir al final
+            if (!overridden) {
+                VTableMethodsName[type_name].push_back(method_name);
+            }
+
+            // Actualizar el índice global
+            VTableMethodIndices[type_name + "." + method_name] = getMethodIndex(type_name, method_name);
+        }
+
+        // llvm::Value* getMethodPtr(llvm::IRBuilder<>& Builder, llvm::Value* object, const std::string& type_name, const std::string& method_name) {
+        //     // 1. Obtener la vtable del objeto
+        //     llvm::Value* vtablePtr = Builder.CreateStructGEP(class_type, object, 0, "vtable_ptr");
+        //     llvm::Value* vtable = Builder.CreateLoad(llvm::PointerType::get(vtable_type, 0), vtablePtr);
+
+        //     // 2. Obtener el índice del método
+        //     unsigned index = getMethodIndex(type_name, method_name);
+
+        //     // 3. Obtener el puntero al método
+        //     llvm::Value* methodPtr = Builder.CreateStructGEP(vtable_type, vtable, index, "method_ptr");
+        //     return Builder.CreateLoad(function_type, methodPtr, method_name + "_ptr");
+        // }
+
+
         static void AddStructField(string type_name, string field_name) {
-            StructFieldIndices[type_name][field_name] = StructFieldIndices[type_name].size();
+            StructFieldIndices[type_name][field_name] = StructFieldIndices[type_name].size() + 1;
         }
 
         static unsigned GetStructFieldIndex(string type_name, string field_name) {
@@ -31,8 +81,6 @@ namespace hulk {
         static llvm::Type* GetType(const std::string& type_name, llvm::Module* module) {
             auto& context = module->getContext();
 
-            if(type_name == "Object")
-                return llvm::PointerType::getUnqual(context);
             if (type_name == "Number")
                 return llvm::Type::getDoubleTy(context);
             if (type_name == "Boolean")
@@ -76,7 +124,7 @@ namespace hulk {
                     return nullptr;
                 }
 
-                llvm::Type* object_type = PointerType[object_alloca];
+                llvm::Type* object_type = PointerDynamicType[object_alloca];
 
                 if (!object_type->isStructTy()) {
                     llvm::errs() << "Error: Object type is not a struct: " << *object_type << "\n";
@@ -93,7 +141,7 @@ namespace hulk {
                     return nullptr;
                 }
 
-                PointerType[member_ptr] = object_type->getStructElementType(index);
+                PointerDynamicType[member_ptr] = object_type->getStructElementType(index);
                 return member_ptr;
             }
             else {
@@ -104,7 +152,7 @@ namespace hulk {
                     return nullptr;
                 }
 
-                PointerType[it->second] = it->second->getAllocatedType();
+                PointerDynamicType[it->second] = it->second->getAllocatedType();
                 return it->second;
             }
         }

@@ -1,3 +1,6 @@
-{
-print("asd" @@ "Asd");
+type Point(x : Number, y : Number) {
+    x = x;
+    y = y;
 }
+
+print("ok");

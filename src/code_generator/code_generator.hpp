@@ -22,6 +22,7 @@ namespace hulk {
 
                 ast::NamedValues.clear();
 
+                create_builtin_types();
                 create_builtin_functions();
             }
 
@@ -47,6 +48,25 @@ namespace hulk {
                 ast::TheModule->print(out, nullptr);
                 out.close();
                 return 0;
+            }
+
+            void create_builtin_types() {
+                create_object();
+            }
+
+            void create_object() {
+                auto& context = *ast::TheContext;
+
+                llvm::StructType* object = llvm::StructType::create(context, "Object");
+
+                llvm::Type* vtable_type = llvm::ArrayType::get(
+                    llvm::PointerType::getUnqual(
+                        llvm::FunctionType::get(llvm::Type::getVoidTy(context), true)
+                    ),
+                    1
+                );
+
+                object->setBody({ vtable_type->getPointerTo() });
             }
 
             void create_builtin_functions() {
@@ -94,6 +114,7 @@ namespace hulk {
                 llvm::Function::Create(strlen_type, llvm::Function::ExternalLinkage, "strlen", ast::TheModule.get());
             }
         };
+
     } // namespace code_generator
 } // namespace hulk
 

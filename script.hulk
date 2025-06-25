@@ -1,7 +1,3 @@
-function gcd(a, b) => while (a > 0)
-    let m = a % b in {
-        b := a;
-        a := m;
-    };
-
-print(gcd(12, 15));
+{
+print("asd" @@ "Asd");
+}

@@ -10,6 +10,7 @@ namespace hulk {
   namespace internal {
 
     static bool error_found = false;
+    static unsigned int lib_lines = 0;
 
     static void print(const unsigned int line, const unsigned int column, const std::string where, const std::string message) {
       std::cerr << "[" << line << ", " << column << "] Parse error" << where << ": " << message << "\n";

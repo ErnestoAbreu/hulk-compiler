@@ -173,8 +173,8 @@ namespace hulk {
             }
 
             // Configurar el vptr para apuntar a la vtable
-            llvm::Value* VTablePtr = Builder->CreateStructGEP(class_type, instance, 0, "vptr_loc");
-            Builder->CreateStore(Builder->CreateBitCast(VTables[type_name], llvm::PointerType::get(VTablesType[type_name], 0)), VTablePtr);
+            // llvm::Value* VTablePtr = Builder->CreateStructGEP(class_type, instance, 0, "vptr_loc");
+            // Builder->CreateStore(Builder->CreateBitCast(VTables[type_name], llvm::PointerType::get(VTablesType[type_name], 0)), VTablePtr);
 
             Builder->CreateRet(instance);
 
@@ -198,9 +198,9 @@ namespace hulk {
 
             class_type->setBody(field_types);
 
-            create_vtable(this, class_type);
+            // create_vtable(this, class_type);
 
-            create_type_constructor(this, class_type);
+            // create_type_constructor(this, class_type);
 
             return nullptr;
         }

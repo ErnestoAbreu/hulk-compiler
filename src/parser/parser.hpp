@@ -504,7 +504,7 @@ struct parser {
 
   static parse_error error(const lexer::token &token,
                            const std::string &message) {
-    internal::error(token, message);
+    internal::error(token, message, "parser");
     return parse_error(message);
   }
 

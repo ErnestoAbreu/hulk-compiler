@@ -14,7 +14,7 @@ namespace internal {
   static bool runtime_error_found = false;
 
   static void print(const unsigned int line, const unsigned int column, const std::string where, const std::string message) {
-    std::cerr << "[" << line << ", " << column << "] Error" << where << ": " << message << "\n";
+    std::cerr << "[" << line << ", " << column << "] Parse error" << where << ": " << message << "\n";
     error_found = true;
   }
 

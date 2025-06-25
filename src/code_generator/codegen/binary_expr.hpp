@@ -64,7 +64,10 @@ namespace hulk {
             llvm::Value* L = left->codegen();
             llvm::Value* R = right->codegen();
 
-            if (!L || !R) return nullptr;
+            if (!L || !R) {
+                internal::error(token, "binary expression is nullptr");
+                return nullptr;
+            }
 
             switch (op) {
             case binary_op::PLUS:
@@ -100,7 +103,7 @@ namespace hulk {
             case binary_op::CONCAT_DOBLE:
                 return concat(Builder.get(), concat(Builder.get(), L, Builder->CreateGlobalStringPtr(" ", "strtmp", 0, TheModule.get())), R);
             default:
-                llvm::errs() << "Unknown binary operator\n";
+                internal::error(token, "unknown binary operator");
                 return nullptr;
             }
         }

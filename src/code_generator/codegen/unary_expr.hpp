@@ -2,8 +2,6 @@
 #define HULK_CODEGEN_UNARYEXPR_HPP 1
 
 #include "../../ast/ast"
-#include "llvm/IR/Type.h"
-#include "llvm/IR/Instructions.h"
 
 namespace hulk {
     namespace ast {
@@ -11,7 +9,10 @@ namespace hulk {
         llvm::Value* unary_expr::codegen() {
             llvm::Value* V = expression->codegen();
 
-            if (!V) return nullptr;
+            if (!V)  {
+                internal::error(token, "unary expression is nullptr");
+                return nullptr;
+            }
 
             switch (op) {
             case unary_op::MINUS:
@@ -19,6 +20,7 @@ namespace hulk {
             case unary_op::NOT:
                 return Builder->CreateNot(V, "nottmp");
             default:
+                internal::error(token, "unknown unary operator");
                 return nullptr;
             }
         }

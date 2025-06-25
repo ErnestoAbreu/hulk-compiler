@@ -5,6 +5,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <regex>
+#include <unordered_map>
 
 #include "../lexer/tokens.hpp"
 #include "regex_engine.hpp"
@@ -12,6 +14,19 @@
 namespace hulk {
 
 namespace lexer {
+
+std::unordered_map<std::string, std::string> escape_mapping = {
+    {"\\a", "\a"},  // Bell (alert)
+    {"\\b", "\b"},  // Backspace
+    {"\\t", "\t"},  // Horizontal tab
+    {"\\n", "\n"},  // Newline
+    {"\\v", "\v"},  // Vertical tab
+    {"\\f", "\f"},  // Formfeed
+    {"\\r", "\r"},  // Carriage return
+    {"\\\"", "\""}, // Double quote
+    {"\\'", "\'"},  // Single quote
+    {"\\\\", "\\"}  // Backslash
+};
 
 std::vector<token> lex(const std::string &input) {
   std::vector<std::pair<nfa, token_type>> nfas;
@@ -39,9 +54,9 @@ std::vector<token> lex(const std::string &input) {
       }
     }
 
-    if (max_len == 0) {  // <=================== mejorar el manejo de errores
-      // caracter inesperado
-      exit(EXIT_FAILURE);
+    if (max_len == 0) {  
+      internal::lexical_error(line, column, "Unexpected caracter.");
+      exit(0);
     }
 
     std::string lexeme = input.substr(pos, max_len);
@@ -52,7 +67,7 @@ std::vector<token> lex(const std::string &input) {
     } else if (best_type == TRUE || best_type == FALSE) {  // boolean
       value = (best_type == TRUE ? true : false);
     } else {
-      value = lexeme.substr(1,lexeme.size() - 2);
+      value = lexeme.substr(1, lexeme.size() - 2);
     }
 
     // actualizar línea/columna

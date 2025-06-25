@@ -12,8 +12,8 @@ namespace hulk {
     static bool error_found = false;
     static unsigned int lib_lines = 0;
 
-    static void print(const unsigned int line, const unsigned int column, const std::string where, const std::string message) {
-      std::cerr << "[" << line << ", " << column << "] Parse error" << where << ": " << message << "\n";
+    static void print(const unsigned int line, const unsigned int column, const std::string where, const std::string message, std::string component = "") {
+      std::cerr << "[" << line << ", " << column << "] error in" << component << " " << where << ": " << message << "\n";
       error_found = true;
     }
 
@@ -33,6 +33,10 @@ namespace hulk {
       else {
         print(token.get_location().first, token.get_location().second, " at '" + std::string(token.get_lexeme()) + "'", message);
       }
+    }
+
+    static void lexical_error(const unsigned int line, const unsigned int column, const std::string &message) {
+      print(line, column, "", message, "lexer");
     }
 
   } // namespace internal

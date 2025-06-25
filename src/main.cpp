@@ -49,6 +49,8 @@ int main(const int argc, char** argv) {
 
   const auto& tokens = lexer::lex(source_code);
 
+  if (internal::error_found) return -1;
+   
   std::cerr << "LEXED" << "\n";
 
   auto parser = parser::parser(tokens);

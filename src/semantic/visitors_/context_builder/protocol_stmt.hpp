@@ -7,7 +7,7 @@ namespace hulk {
     namespace ast {
         using type_ptr = std::shared_ptr<semantic::type>;
 
-        void protocol_stmt::context_builder_visit(semantic::context& ctx) const {
+        void protocol_stmt::context_builder_visit(semantic::context& ctx) {
             // Create the protocol in the context
             if (!ctx.create_protocol(name.lexeme)) {
                 internal::error(name, "Protocol already exists.");

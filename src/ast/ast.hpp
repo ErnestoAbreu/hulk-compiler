@@ -33,12 +33,16 @@
 
 namespace hulk {
   namespace ast {
+    // Code generation context
     static std::unique_ptr<llvm::LLVMContext> TheContext;
     static std::unique_ptr<llvm::Module> TheModule;
     static std::unique_ptr<llvm::IRBuilder<>> Builder;
     static std::map<std::string, llvm::AllocaInst*> NamedValues;
     static std::map<std::string, std::map<std::string, unsigned>> StructFieldIndices;
-    static std::map<llvm::Value*, llvm::Type*> PointerType;
+    static std::map<llvm::Value*, llvm::Type*> PointerDynamicType;
+    static std::map<llvm::Type*, llvm::Type*> TypeParent;
+    static std::map<llvm::Type*, std::string> TypeMethods;
+
 
     // Expressions
 
@@ -284,6 +288,7 @@ namespace hulk {
       void scoped_visit(semantic::context& ctx) const override;
       string infer(semantic::context& ctx, const string& shouldbe_type = "") override;
       string type_check(semantic::context& ctx) override;
+      llvm::Value* codegen() override;
     };
 
     struct var_expr : public expr {
@@ -321,7 +326,7 @@ namespace hulk {
     using super_item_ptr = std::shared_ptr<super_item>;
 
     struct stmt : private internal::uncopyable {
-      virtual void context_builder_visit(semantic::context& ctx) const {}
+      virtual void context_builder_visit(semantic::context& ctx) {}
       virtual void scoped_visit(semantic::context& ctx) const {}
       virtual std::string infer(semantic::context& ctx, const std::string& shouldbe_type = "") { return ""; }
       virtual void type_check(semantic::context& ctx) const {}
@@ -349,7 +354,7 @@ namespace hulk {
         : name(_name), type(_type), parameters(std::move(_parameters)), body(std::move(_body)), return_type(_return_type) {
       }
 
-      void context_builder_visit(semantic::context& ctx) const override;
+      void context_builder_visit(semantic::context& ctx) override;
       void scoped_visit(semantic::context& ctx) const override;
       std::string infer(semantic::context& ctx, const std::string& shouldbe_type = "") override;
       void type_check(semantic::context& ctx) const override;
@@ -394,7 +399,7 @@ namespace hulk {
         fields(std::move(_fields)), methods(std::move(_methods)) {
       }
 
-      void context_builder_visit(semantic::context& ctx) const override;
+      void context_builder_visit(semantic::context& ctx) override;
       void scoped_visit(semantic::context& ctx) const override;
       std::string infer(semantic::context& ctx, const std::string& shouldbe_type = "") override;
       void type_check(semantic::context& ctx) const override;
@@ -415,7 +420,7 @@ namespace hulk {
         super_protocol(_super_protocol) {
       }
 
-      void context_builder_visit(semantic::context& ctx) const override;
+      void context_builder_visit(semantic::context& ctx) override;
       void type_check(semantic::context& ctx) const override;
     };
 

@@ -58,12 +58,12 @@ namespace hulk {
                         auto& super_type = ctx.get_type(super_class_name);
                         for (const auto& param : super_type.params) {
                             type.add_param("_" + param.name, param.attr_type);
-                            
+
                             parameters.push_back(parameter(
                                 lexer::token(lexer::token_type::IDENTIFIER, "_" + param.name, "", name.line, name.column),
                                 param.attr_type ? lexer::token(lexer::token_type::IDENTIFIER, param.attr_type->name, "", name.line, name.column) : lexer::token()
                             ));
-                            
+
                             expr_ptr init_expr = std::make_unique<var_expr>(std::nullopt, lexer::token(lexer::token_type::IDENTIFIER, "_" + param.name, "", name.line, name.column));
                             super_class->get()->init.push_back(std::move(init_expr));
                         }
@@ -73,6 +73,11 @@ namespace hulk {
             else {
                 // If no parent class, add Object as the default parent
                 type.add_parent(std::make_shared<semantic::type>(ctx.get_type("Object")));
+                super_class = std::optional<super_item_ptr>(
+                    std::make_shared<super_item>(
+                        lexer::token(lexer::token_type::IDENTIFIER, "Object", "", name.line, name.column), std::vector<expr_ptr>()
+                    )
+                );
             }
 
             // Add fields to the type

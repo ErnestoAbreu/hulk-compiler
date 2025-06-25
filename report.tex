@@ -1,0 +1,111 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc} 
+\usepackage[T1]{fontenc}    
+\usepackage[spanish]{babel} 
+\usepackage{graphicx}       
+\usepackage{amsmath}   
+\usepackage{hyperref}  
+\usepackage[left=2.5cm, right=2.5cm, top=3cm, bottom=3cm]{geometry}
+
+\title{Compilador HULK}
+\author{Ernesto Abreu Peraza \\ Eduardo Brito Labrada \\ Darío López Falcón}
+\date{}
+
+\begin{document}
+
+\maketitle 
+
+\section{Lenguaje HULK}
+
+HULK (\textit{Havana University Language for Kompilers}) es un lenguaje de programación didáctico, seguro en tipos, orientado a objetos e incremental, diseñado para el curso Introducción a los Compiladores de la carrera de Ciencias de la Computación en la Universidad de La Habana.
+
+En una visión general, HULK es un lenguaje de programación orientado a objetos con herencia simple, polimorfismo y encapsulación a nivel de clase. Además, en HULK es posible definir funciones globales fuera del alcance de todas las clases. También se puede definir una única expresión global que constituye el punto de entrada al programa.
+
+La mayoría de las construcciones sintácticas en HULK son expresiones, incluyendo instrucciones condicionales y ciclos. HULK es un lenguaje estáticamente tipado con inferencia de tipos opcional, lo que significa que algunas (o todas) las partes de un programa pueden ser anotadas con tipos, y el compilador verificará la consistencia de todas las operaciones.
+
+\section{Detalles de implementación}
+
+La implementación del compilador de \textbf{HULK} se estructura en varias etapas del proceso de compilación, cada una con responsabilidades bien definidas y desarrolladas en el lenguaje de programación \texttt{C++}. 
+
+El proceso de compilación en HULK se divide en cuatro fases principales:
+
+\begin{enumerate}
+    \item \textbf{Análisis léxico}: transforma la secuencia de caracteres del programa fuente en una secuencia de \textit{tokens} significativos para el lenguaje.
+    \item \textbf{Análisis sintáctico}: construye un árbol de sintaxis abstracta (\textbf{AST}) validando la estructura gramatical del programa.
+    \item \textbf{Análisis semántico}: verifica la coherencia del programa a nivel de tipos, ámbitos, herencia y accesibilidad de miembros.
+    \item \textbf{Generación de código}: traduce el \textbf{AST} validado a código intermedio \textbf{LLVM IR} para su posterior compilación a código máquina optimizado.
+\end{enumerate}
+
+\subsection{Análisis léxico}
+
+El análisis léxico del compilador de HULK se implementó mediante un generador de analizadores léxicos desarrollado desde cero en \texttt{C++}. Este generador permite construir analizadores léxicos a partir de expresiones regulares definidas para cada tipo de token. 
+
+\subsubsection{Funcionamiento del motor de expresiones regulares}
+
+\begin{itemize}
+  \item \textbf{Estructuras de datos:}
+  \begin{itemize}
+    \item \textbf{State}: representa un estado con `out' (lista de transiciones).
+    \item \textbf{Transition}: tipo (CHAR, ANY, EPSILON), carácter asociado (para tipo CHAR) y estado destino.
+    \item \textbf{NFA}: par de estados (inicio y aceptación) que definen el autómata (representado como un grafo dirigido).
+  \end{itemize}
+  
+  \item \textbf{Construcción de Thompson:} compone los NFA mediante operaciones específicas:
+  \begin{itemize}
+    \item \texttt{char\_nfa}: literales
+    \item \texttt{any\_nfa}: comodín `.'
+    \item \texttt{concat\_nfa}: concatenación con epsilon
+    \item \texttt{alt\_nfa}: alternación con nuevo inicio y fin
+    \item \texttt{star\_nfa}: bucle para `*'
+    \item \texttt{plus\_nfa}: uno o más (implementado usando \texttt{star\_nfa})
+    \item \texttt{char\_class\_nfa}: clases y rangos de caracteres
+  \end{itemize}
+  
+  \item \textbf{Parser de expresiones:} realiza un análisis sintáctico descendente recursivo para construir el AST de las operaciones regex:
+  \begin{itemize}
+    \item \texttt{parse()}: invoca \texttt{parse\_expr()} y verifica el fin del patrón.
+    \item \texttt{parse\_expr()}: maneja alternación (`|') y llama a \texttt{parse\_term}.
+    \item \texttt{parse\_term()}: agrupa factores hasta encontrar `)' o `|' y llama a \texttt{parse\_factor}.
+    \item \texttt{parse\_factor()}: aplica operadores `*', `+' o `?' y llama a \texttt{parse\_primary} cuando corresponde.
+    \item \texttt{parse\_primary()}: procesa `()', `.', `[]' y literales, llamando a \texttt{parse\_expr} cuando es necesario.
+  \end{itemize}
+  
+  \item \textbf{Simulación del NFA:}
+  \begin{itemize}
+    \item \texttt{add\_state}: agrega un estado y sigue transiciones épsilon (prioritarias por no consumir entrada).
+    \item \texttt{match}: procesa caracteres, transita por CHAR y ANY, y verifica estados de aceptación al final.
+  \end{itemize}
+\end{itemize}
+
+\subsection{Análisis sintáctico}
+
+El parser del compilador HULK implementa un \textbf{analizador descendente recursivo} que transforma la secuencia de tokens en un AST. Su diseño sigue la estructura gramatical del lenguaje HULK y se organiza en dos componentes principales:
+
+\begin{enumerate}
+  \item \textbf{Funcionamiento General:}
+  \begin{itemize}
+    \item \textbf{Entrada}: Recibe tokens del analizador léxico (identificadores, palabras clave, operadores, etc.)
+    
+    \item \textbf{Proceso}: Implementa métodos especializados para cada construcción del lenguaje:
+    \begin{itemize}
+        \item Declaraciones (funciones, clases, protocolos)
+        \item Expresiones (operaciones, llamadas, estructuras de control)
+        \item Sentencias (asignaciones, bloques)
+    \end{itemize}
+    
+    \item \textbf{Salida}: Genera un AST estructurado para el análisis semántico
+  \end{itemize}
+  \item \textbf{Características principales:}
+  \begin{itemize}
+      \item \textbf{Manejo de errores}: Detecta y reporta inconsistencias sintácticas con mensajes descriptivos
+      \item \textbf{Precedencia de operadores}: Resuelve correctamente expresiones complejas mediante funciones anidadas, teniendo en cuenta la gramática escrita para el lenguaje en \texttt{grammar\_LL1.txt}
+      \item \textbf{Tipado}: Soporta anotaciones de tipo opcionales en declaraciones
+  \end{itemize}
+\end{enumerate}
+
+\subsection{Análisis semántico}
+
+\subsection{Generación de código}
+
+\end{document}

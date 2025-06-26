@@ -85,12 +85,14 @@ namespace hulk {
     using new_expr_ptr = std::unique_ptr<new_expr>;
 
     struct expr : private internal::uncopyable {
+      string ret_type;
+
       virtual void scoped_visit(semantic::context& ctx) const {}
       virtual string infer(semantic::context& ctx, const string& shouldbe_type = "") { return ""; }
       virtual string type_check(semantic::context& ctx) { return "Object"; }
 
       virtual ~expr() = default;
-      // This method is used to allow the visitor pattern
+      
       virtual llvm::Value* codegen() { return nullptr; }
     };
 

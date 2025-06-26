@@ -8,39 +8,41 @@
 
 namespace hulk {
 
-namespace ast {
+    namespace ast {
 
-llvm::Value* while_expr::codegen() {
-    llvm::BasicBlock* curBB = Builder->GetInsertBlock();
-    llvm::Function* TheFunction = curBB->getParent();
+        llvm::Value* while_expr::codegen() {
+            llvm::BasicBlock* curBB = Builder->GetInsertBlock();
+            llvm::Function* TheFunction = curBB->getParent();
 
-    llvm::BasicBlock* conditionBB =
-        llvm::BasicBlock::Create(*TheContext, "while.cond", TheFunction);
-    llvm::BasicBlock* bodyBB =
-        llvm::BasicBlock::Create(*TheContext, "while.body", TheFunction);
-    llvm::BasicBlock* endBB = llvm::BasicBlock::Create(*TheContext, "while.end", TheFunction);
+            llvm::BasicBlock* conditionBB = llvm::BasicBlock::Create(*TheContext, "while.cond", TheFunction);
+            llvm::BasicBlock* bodyBB = llvm::BasicBlock::Create(*TheContext, "while.body", TheFunction);
+            llvm::BasicBlock* endBB = llvm::BasicBlock::Create(*TheContext, "while.end", TheFunction);
 
-    Builder->CreateBr(conditionBB);
-    Builder->SetInsertPoint(conditionBB);
+            llvm::AllocaInst* return_alloc = Builder->CreateAlloca(GetType(ret_type, TheModule.get()), nullptr, "ret_alloc");
 
-    llvm::Value* condition_value = condition->codegen();
+            Builder->CreateBr(conditionBB);
+            Builder->SetInsertPoint(conditionBB);
 
-    llvm::Value* condition_bool = Builder->CreateICmpNE(
-        condition_value, llvm::ConstantInt::get(condition_value->getType(), 0),
-        "while.test");
-    
-    Builder->CreateCondBr(condition_bool, bodyBB, endBB);
+            llvm::Value* condition_value = condition->codegen();
 
-    Builder->SetInsertPoint(bodyBB);
-    llvm::Value* body_value = body->codegen();
+            llvm::Value* condition_bool = Builder->CreateICmpNE(condition_value, llvm::ConstantInt::get(condition_value->getType(), 0), "while.test");
 
-    Builder->CreateBr(conditionBB);
+            Builder->CreateCondBr(condition_bool, bodyBB, endBB);
 
-    Builder->SetInsertPoint(endBB);
-    return body_value;
-}
+            Builder->SetInsertPoint(bodyBB);
+            llvm::Value* body_value = body->codegen();
+            Builder->CreateStore(body_value, return_alloc);
 
-}  // namespace ast
+            Builder->CreateBr(conditionBB);
+
+            Builder->SetInsertPoint(endBB);
+
+            llvm::Value* return_value = Builder->CreateLoad(GetType(ret_type, TheModule.get()), return_alloc, "ret_value");
+
+            return return_value;
+        }
+
+    }  // namespace ast
 
 }  // namespace hulk
 

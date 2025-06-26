@@ -40,6 +40,10 @@ namespace hulk {
                 return shouldbe_type; // If method return type is not defined, return expected type
             }
             else {
+                if(callee.lexeme == "print") {
+                    return arguments[0]->infer(ctx,"Object");
+                }
+
                 auto& func = ctx.get_function(callee.lexeme);
 
                 for (size_t i = 0; i < arguments.size(); ++i) {

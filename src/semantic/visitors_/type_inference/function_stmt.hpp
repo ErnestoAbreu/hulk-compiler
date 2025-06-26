@@ -19,7 +19,7 @@ namespace hulk {
             // Infer return type if not specified
             if (return_type.lexeme.empty()) {
                 if (inferred_type.empty()) {
-                    semantic::add_infer_error(name.line, name.column, "return type not inferred");
+                    semantic::add_infer_error(name.line, name.column, "return type not inferred, is necessary to annotate it.");
                 }
                 else {
                     return_type.lexeme = inferred_type;
@@ -33,7 +33,7 @@ namespace hulk {
                 if (param.type.lexeme.empty()) {
                     inferred_type = ctx.get_variable_type(param.name.lexeme);
                     if (inferred_type.empty()) {
-                        semantic::add_infer_error(param.name.line, param.name.column, "parameter type not inferred");
+                        semantic::add_infer_error(param.name.line, param.name.column, "parameter type not inferred, is necessary to annotate it.");
                     }
                     else {
                         param.type.lexeme = inferred_type;

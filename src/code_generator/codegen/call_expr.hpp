@@ -19,6 +19,8 @@ llvm::Value* call_expr::codegen() {
     llvm::Value* ArgValue = arguments[0]->codegen();
     if (!ArgValue) return nullptr;
     llvm::Type* ArgType = ArgValue->getType();
+
+    llvm::Value* RetValue = ArgValue;
     
     const char* formatStr = nullptr;
     std::vector<llvm::Value*> PrintfArgs;
@@ -58,8 +60,10 @@ llvm::Value* call_expr::codegen() {
         "printf", TheModule.get());
         PrintfF->setCallingConv(llvm::CallingConv::C);
     }
+
+    Builder->CreateCall(PrintfF, PrintfArgs, "printfcall");
     
-    return Builder->CreateCall(PrintfF, PrintfArgs, "printfcall");
+    return RetValue;
   }
 
   llvm::Function* CalleF = TheModule->getFunction(callee.lexeme);

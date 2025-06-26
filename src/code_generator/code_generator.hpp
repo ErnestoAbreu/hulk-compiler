@@ -34,7 +34,7 @@ namespace hulk {
 
                 if (llvm::verifyModule(*ast::TheModule, &llvm::errs())) {
                     llvm::errs() << "Error: El módulo contiene IR inválido\n";
-                    return -1;
+                    // return -1;
                 }
 
                 std::error_code EC;

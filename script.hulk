@@ -1,6 +1,8 @@
-type Point(x : Number, y : Number) {
-    x = x;
-    y = y;
+function operate(x, y) {
+    print(x + y);
+    print(x - y);
+    print(x * y);
+    print(x / y);
 }
 
-print(2);
+print(operate(1, 2));

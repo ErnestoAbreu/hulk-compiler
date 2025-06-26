@@ -1,8 +1,9 @@
-function operate(x, y) {
-    print(x + y);
-    print(x - y);
-    print(x * y);
-    print(x / y);
-}
+function gcd(a, b) => while (a > 0) {
+    let m = a % b in {
+        b := a;
+        a := m;
+        b;
+    };
+};
 
-print(operate(1, 2));
+print(gcd(15, 25));

@@ -14,7 +14,7 @@ namespace hulk {
                 internal::error(condition_token.line, condition_token.column, "condition is not a boolean, got '" + cond_type + "'");
             }
 
-            return body->type_check(ctx);
+            return ret_type = body->type_check(ctx);
         }
 
     } // namespace ast

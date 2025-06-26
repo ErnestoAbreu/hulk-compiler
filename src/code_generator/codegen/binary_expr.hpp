@@ -6,7 +6,44 @@
 namespace hulk {
     namespace ast {
 
+        llvm::Value* doube_to_string(llvm::Value* value) {
+            llvm::Module* module = Builder->GetInsertBlock()->getModule();
+
+            llvm::Function* sprintfFunc = module->getFunction("sprintf"); // Buscar la función sprintf de C en el módulo
+            if (!sprintfFunc) {
+                llvm::FunctionType* sprintfType = llvm::FunctionType::get(
+                    Builder->getInt32Ty(),
+                    {
+                        Builder->getInt8Ty()->getPointerTo(), // Buffer
+                        Builder->getInt8Ty()->getPointerTo(), // Format string
+                    },
+                    true // Is variadic
+                    );
+                sprintfFunc = llvm::Function::Create(
+                    sprintfType,
+                    llvm::Function::ExternalLinkage,
+                    "sprintf",
+                    module
+                );
+            }
+
+            llvm::Value* buffer = Builder->CreateAlloca(Builder->getInt8Ty(), Builder->getInt32(64));
+
+            llvm::Value* formatStr = Builder->CreateGlobalStringPtr("%.6g"); // 6 dígitos de precisión
+
+            Builder->CreateCall(sprintfFunc, { buffer, formatStr, value });
+
+            return buffer;
+        }
+
         llvm::Value* concat(llvm::IRBuilder<>* builder, llvm::Value* str1, llvm::Value* str2) {
+            if (str1->getType()->isDoubleTy()) {
+                str1 = doube_to_string(str1);
+            }
+            if (str2->getType()->isDoubleTy()) {
+                str2 = doube_to_string(str2);
+            }
+
             llvm::Module* module = builder->GetInsertBlock()->getModule();
             auto& ctx = module->getContext();
 

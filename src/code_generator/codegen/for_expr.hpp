@@ -7,7 +7,7 @@ namespace hulk {
     namespace ast {
 
         llvm::Value* for_expr::codegen() {
-
+            return nullptr;
         }
 
     } // namespace ast

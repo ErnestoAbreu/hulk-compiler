@@ -66,7 +66,7 @@ namespace hulk {
                     1
                 );
 
-                object->setBody({ vtable_type->getPointerTo() });
+                object->setBody(vtable_type->getPointerTo());
             }
 
             void create_builtin_functions() {

@@ -6,7 +6,7 @@
 namespace hulk {
     namespace ast {
 
-        llvm::Value* doube_to_string(llvm::Value* value) {
+        llvm::Value* double_to_string(llvm::Value* value) {
             llvm::Module* module = Builder->GetInsertBlock()->getModule();
 
             llvm::Function* sprintfFunc = module->getFunction("sprintf"); // Buscar la función sprintf de C en el módulo
@@ -29,7 +29,7 @@ namespace hulk {
 
             llvm::Value* buffer = Builder->CreateAlloca(Builder->getInt8Ty(), Builder->getInt32(64));
 
-            llvm::Value* formatStr = Builder->CreateGlobalStringPtr("%.6g"); // 6 dígitos de precisión
+            llvm::Value* formatStr = Builder->CreateGlobalStringPtr("%.6g", "double.fmt"); // 6 dígitos de precisión
 
             Builder->CreateCall(sprintfFunc, { buffer, formatStr, value });
 
@@ -38,10 +38,10 @@ namespace hulk {
 
         llvm::Value* concat(llvm::IRBuilder<>* builder, llvm::Value* str1, llvm::Value* str2) {
             if (str1->getType()->isDoubleTy()) {
-                str1 = doube_to_string(str1);
+                str1 = double_to_string(str1);
             }
             if (str2->getType()->isDoubleTy()) {
-                str2 = doube_to_string(str2);
+                str2 = double_to_string(str2);
             }
 
             llvm::Module* module = builder->GetInsertBlock()->getModule();

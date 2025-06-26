@@ -1,15 +1,17 @@
-type Point {
-    x = 3;
-    y = 4;
+type Point(x : Number,y : Number) {
+    x = x;
+    y = y;
 
-    getX(n) => self.x + n;
-    getY() => self.y;
+    getX() => self.x;
+    getY() => self.getX() + self.y;
 
     setX(x) => self.x := x;
+    setY(y) => self.y := y;
 }
 
-let a = new Point() in {
-    print(a.getX(10));
-    print(a.setX(10));
-    print(a.getX(10));
+type PolarPoint inherits Point {
+    rho() => sqrt(self.getX() ^ 2 + self.getY() ^ 2);
 }
+
+let pt = new PolarPoint(3,4) in
+    print("rho: ");

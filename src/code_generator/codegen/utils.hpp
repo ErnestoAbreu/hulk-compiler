@@ -8,39 +8,39 @@ namespace hulk {
 
         /* VTABLE AUXILIAR METHODS */
 
-        unsigned getMethodIndex(const std::string& type_name, const std::string& method_name) {
-            const auto& methods = VTableMethodsName[type_name];
-            for (unsigned i = 0; i < methods.size(); ++i) {
-                if (methods[i] == method_name) {
-                    return i;
-                }
-            }
-            throw std::runtime_error("Method not found in VTable");
-        }
+        // unsigned getMethodIndex(const std::string& type_name, const std::string& method_name) {
+        //     const auto& methods = VTableMethodsName[type_name];
+        //     for (unsigned i = 0; i < methods.size(); ++i) {
+        //         if (methods[i] == method_name) {
+        //             return i;
+        //         }
+        //     }
+        //     throw std::runtime_error("Method not found in VTable");
+        // }
 
-        void registerMethod(const std::string& type_name, const std::string& parent_name, const std::string& method_name) {
-            // Si es una clase nueva, inicializa su entrada
-            if (VTableMethodsName.find(type_name) == VTableMethodsName.end()) {
-                VTableMethodsName[type_name] = VTableMethodsName[parent_name];
-            }
+        // void registerMethod(const std::string& type_name, const std::string& parent_name, const std::string& method_name) {
+        //     // Si es una clase nueva, inicializa su entrada
+        //     if (VTableMethodsName.find(type_name) == VTableMethodsName.end()) {
+        //         VTableMethodsName[type_name] = VTableMethodsName[parent_name];
+        //     }
 
-            // Verificar si el método ya existe (sobreescritura)
-            bool overridden = false;
-            for (auto& m : VTableMethodsName[type_name]) {
-                if (m == method_name) {
-                    overridden = true;
-                    break;
-                }
-            }
+        //     // Verificar si el método ya existe (sobreescritura)
+        //     bool overridden = false;
+        //     for (auto& m : VTableMethodsName[type_name]) {
+        //         if (m == method_name) {
+        //             overridden = true;
+        //             break;
+        //         }
+        //     }
 
-            // Si no fue sobreescrito, añadir al final
-            if (!overridden) {
-                VTableMethodsName[type_name].push_back(method_name);
-            }
+        //     // Si no fue sobreescrito, añadir al final
+        //     if (!overridden) {
+        //         VTableMethodsName[type_name].push_back(method_name);
+        //     }
 
-            // Actualizar el índice global
-            VTableMethodIndices[type_name + "." + method_name] = getMethodIndex(type_name, method_name);
-        }
+        //     // Actualizar el índice global
+        //     VTableMethodIndices[type_name + "." + method_name] = getMethodIndex(type_name, method_name);
+        // }
 
         // llvm::Value* getMethodPtr(llvm::IRBuilder<>& Builder, llvm::Value* object, const std::string& type_name, const std::string& method_name) {
         //     // 1. Obtener la vtable del objeto
@@ -57,7 +57,7 @@ namespace hulk {
 
 
         static void AddStructField(string type_name, string field_name) {
-            StructFieldIndices[type_name][field_name] = StructFieldIndices[type_name].size();
+            StructFieldIndices[type_name][field_name] = StructFieldIndices[type_name].size() + 1;
         }
 
         static unsigned GetStructFieldIndex(string type_name, string field_name) {

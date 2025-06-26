@@ -21,6 +21,11 @@ compile: compiler
 	@echo
 	@echo "\033[35m----- Generated executable -----\033[0m"
 
+compile_llvm:
+	@clang++-19 $(LLVMOBJ) -o $(EXEC)
+	@echo
+	@echo "\033[35m----- Generated executable -----\033[0m"
+
 execute: compile
 	@echo
 	@echo "\033[34m----- Executing executable  -----\033[0m"

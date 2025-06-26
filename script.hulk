@@ -1,9 +1,15 @@
-function gcd(a, b) => while (a > 0) {
-    let m = a % b in {
-        b := a;
-        a := m;
-        b;
-    };
-};
+type Point {
+    x = 3;
+    y = 4;
 
-print(gcd(15, 25));
+    getX(n) => self.x + n;
+    getY() => self.y;
+
+    setX(x) => self.x := x;
+}
+
+let a = new Point() in {
+    print(a.getX(10));
+    print(a.setX(10));
+    print(a.getX(10));
+}

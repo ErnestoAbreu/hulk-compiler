@@ -7,9 +7,9 @@ namespace hulk {
     namespace ast {
 
         llvm::Value* new_expr::codegen() {
-            std::string struct_name = "type." + type_name.get_lexeme();
+            std::string struct_name = type_name.get_lexeme();
 
-            llvm::StructType* struct_type = llvm::StructType::getTypeByName(*TheContext, struct_name);
+            llvm::Type* struct_type = GetType(struct_name, TheModule.get());
             if (!struct_type) {
                 llvm::errs() << "Error: no struct type" << struct_name << "\n";
                 internal::error_found = true;
@@ -36,9 +36,7 @@ namespace hulk {
 
             llvm::Value* object_ptr = Builder->CreateCall(type_ctor, args_values, struct_name + "_ptr");
 
-            llvm::Value* object = Builder->CreateLoad(struct_type, object_ptr, struct_name + "obj");
-
-            return object;
+            return object_ptr;
         }
 
     }  // namespace ast

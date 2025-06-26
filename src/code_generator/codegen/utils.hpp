@@ -57,7 +57,7 @@ namespace hulk {
 
 
         static void AddStructField(string type_name, string field_name) {
-            StructFieldIndices[type_name][field_name] = StructFieldIndices[type_name].size() + 1;
+            StructFieldIndices[type_name][field_name] = StructFieldIndices[type_name].size();
         }
 
         static unsigned GetStructFieldIndex(string type_name, string field_name) {
@@ -98,61 +98,49 @@ namespace hulk {
 
         static llvm::Value* GetAllocation(var_expr* var) {
             if (!var) {
-                llvm::errs() << "Error: Variable is null.\n";
-                internal::error_found = true;
+                internal::error("Variable is null in GetAllocation.");
                 return nullptr;
             }
 
             if (var->object) {
                 var_expr* object_var = dynamic_cast<var_expr*>(var->object->get());
                 if (!object_var) {
-                    llvm::errs() << "Error: Object in variable is not a var_expr.\n";
-                    internal::error_found = true;
+                    internal::error("Object variable is not a var_expr in GetAllocation.");
                     return nullptr;
                 }
 
                 llvm::Value* object_alloca = GetAllocation(object_var);
                 if (!object_alloca) {
-                    llvm::errs() << "Error: Failed to get allocation for object variable.\n";
-                    internal::error_found = true;
+                    internal::error("Failed to get allocation for object variable: " + object_var->name.get_lexeme());
                     return nullptr;
                 }
 
-                if (!object_alloca->getType()->isPointerTy()) {
-                    llvm::errs() << "Error: Object allocation is not a pointer type: " << *object_alloca->getType() << "\n";
-                    internal::error_found = true;
-                    return nullptr;
-                }
+                llvm::Type* object_type = GetType(object_var->ret_type, TheModule.get());
 
-                llvm::Type* object_type = PointerDynamicType[object_alloca];
+                llvm::Value* object_ptr = Builder->CreateLoad(object_type->getPointerTo(), object_alloca, "self_ptr");
 
-                if (!object_type->isStructTy()) {
-                    llvm::errs() << "Error: Object type is not a struct: " << *object_type << "\n";
-                    internal::error_found = true;
+                if (!object_ptr || !object_ptr->getType()->isPointerTy()) {
+                    internal::error("Object pointer is null or not a pointer type: " + var->name.get_lexeme());
                     return nullptr;
                 }
 
                 unsigned index = GetStructFieldIndex(object_type->getStructName().str(), var->name.get_lexeme());
 
-                llvm::Value* member_ptr = Builder->CreateStructGEP(object_type, object_alloca, index, "memberptr");
+                llvm::Value* member_ptr = Builder->CreateStructGEP(object_type, object_ptr, index, "memberptr");
                 if (!member_ptr) {
-                    llvm::errs() << "Error: Failed to create struct GEP for member: " << var->name.get_lexeme() << "\n";
-                    internal::error_found = true;
+                    internal::error("Failed to create struct GEP for member: " + var->name.get_lexeme());
                     return nullptr;
                 }
 
-                PointerDynamicType[member_ptr] = object_type->getStructElementType(index);
                 return member_ptr;
             }
             else {
                 auto it = NamedValues.find(var->name.get_lexeme());
                 if (it == NamedValues.end()) {
-                    llvm::errs() << "Error: Variable '" << var->name.get_lexeme() << "' not found.\n";
-                    internal::error_found = true;
+                    internal::error("Variable not found in NamedValues: " + var->name.get_lexeme());
                     return nullptr;
                 }
 
-                PointerDynamicType[it->second] = it->second->getAllocatedType();
                 return it->second;
             }
         }

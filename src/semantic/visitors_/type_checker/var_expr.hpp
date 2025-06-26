@@ -11,14 +11,14 @@ namespace hulk {
                 auto& obj_type = ctx.get_type(_type);
 
                 auto& field = obj_type.get_field(name.lexeme);
-                return field.attr_type->name;
+                return ret_type = field.attr_type->name;
             }
             else {
                 if (name.lexeme == "self" && !ctx.variable_exists(name.lexeme))
-                    return ctx.self;
+                    return ret_type = ctx.self;
 
                 auto& var_type = ctx.get_variable_type(name.lexeme);
-                return var_type;
+                return ret_type = var_type;
             }
         }
 

@@ -37,6 +37,7 @@ namespace hulk {
     static std::unique_ptr<llvm::LLVMContext> TheContext;
     static std::unique_ptr<llvm::Module> TheModule;
     static std::unique_ptr<llvm::IRBuilder<>> Builder;
+    
     static std::map<std::string, llvm::AllocaInst*> NamedValues;
 
     static std::map<std::string, std::map<std::string, unsigned>> StructFieldIndices;
@@ -46,9 +47,6 @@ namespace hulk {
 
     static std::map<std::string, llvm::GlobalVariable*> VTables;
     static std::map<std::string, llvm::Type*> VTablesType;
-
-
-    static std::map<llvm::Value*, llvm::Type*> PointerDynamicType;
 
     // Expressions
 

@@ -11,7 +11,7 @@ namespace hulk {
             std::vector<llvm::Type*> param_types;
 
             // Implicit 'self' parameter
-            param_types.push_back(llvm::PointerType::getUnqual(class_type));
+            param_types.push_back(class_type->getPointerTo());
 
             for (const auto& param : method->parameters) {
                 llvm::Type* param_type = GetType(param.type.get_lexeme(), TheModule.get());
@@ -23,13 +23,21 @@ namespace hulk {
 
             llvm::Function* func = llvm::Function::Create(func_type, llvm::Function::InternalLinkage, type_name + "." + method->name.get_lexeme(), TheModule.get());
 
+            int idx = 0;
+            for (auto& arg : func->args()) {
+                if (idx)
+                    arg.setName(method->parameters[idx - 1].name.lexeme);
+                else
+                    arg.setName("self");
+                idx++;
+            }
+
             // Set function body
             llvm::BasicBlock* entry = llvm::BasicBlock::Create(*TheContext.get(), "entry", func);
             Builder->SetInsertPoint(entry);
 
             NamedValues.clear();
             for (auto& arg : func->args()) {
-                // Create an alloca for this variable.
                 llvm::AllocaInst* alloca = CreateEntryBlockAlloca(func, arg.getType(), std::string(arg.getName()));
                 Builder->CreateStore(&arg, alloca);
                 NamedValues[std::string(arg.getName())] = alloca;
@@ -42,7 +50,6 @@ namespace hulk {
             return func;
         }
 
-        // Función auxiliar para extraer nombres de métodos (simplificada)
         std::string get_method_name_from_vtable_entry(llvm::Constant* entry) {
             if (auto* func = llvm::dyn_cast<llvm::Function>(entry)) {
                 return func->getName().str();
@@ -104,15 +111,8 @@ namespace hulk {
             llvm::Function* ctor_func = llvm::Function::Create(ctor_type, llvm::Function::InternalLinkage, type_name + "._ctor", TheModule.get());
 
             int idx = 0;
-            for (auto& arg : ctor_func->args()) {
-                if (idx == 0) {
-                    arg.setName("self");
-                    idx++;
-                }
-                else {
-                    arg.setName(parameters[idx++].name.get_lexeme());
-                }
-            }
+            for (auto& arg : ctor_func->args())
+                arg.setName(parameters[idx++].name.get_lexeme());
 
             // Set constructor body
             llvm::BasicBlock* ctor_entry = llvm::BasicBlock::Create(*TheContext.get(), "entry", ctor_func);
@@ -126,38 +126,43 @@ namespace hulk {
                 NamedValues[std::string(arg.getName())] = alloca;
             }
 
-            llvm::Value* instance = Builder->CreateAlloca(class_type, nullptr, type_name + "_inst");
+            // Allocate memory for the instance
+            llvm::Function* malloc_func = TheModule->getFunction("malloc");
+            llvm::Value* size = llvm::ConstantExpr::getSizeOf(class_type);
+            size = Builder->CreateIntCast(size, Builder->getInt64Ty(), false);
+            llvm::Value* instance_raw = Builder->CreateCall(malloc_func, size, type_name + "_inst_raw");
+            llvm::Value* instance = Builder->CreateBitCast(instance_raw, class_type->getPointerTo());
 
-            // Call parent constructor
-            auto parent_type_str = type_ptr->super_class->get()->name.lexeme;
-            auto* parent_ctor = TheModule->getFunction(parent_type_str + "._ctor");
+            // // Call parent constructor
+            // auto parent_type_str = type_ptr->super_class->get()->name.lexeme;
+            // auto* parent_ctor = TheModule->getFunction(parent_type_str + "._ctor");
 
-            std::vector<llvm::Value*> parent_args;
-            for (const auto& arg : type_ptr->super_class->get()->init) {
-                auto* arg_value = arg->codegen();
-                parent_args.push_back(arg_value);
-            }
+            // std::vector<llvm::Value*> parent_args;
+            // for (const auto& arg : type_ptr->super_class->get()->init) {
+            //     auto* arg_value = arg->codegen();
+            //     parent_args.push_back(arg_value);
+            // }
 
-            auto* parent_ptr = Builder->CreateCall(parent_ctor, parent_args, "parent_ptr");
-            auto* type_parent_part_ptr = Builder->CreateStructGEP(class_type, instance, 0, "parent_inst_ptr");
+            // auto* parent_ptr = Builder->CreateCall(parent_ctor, parent_args, "parent_ptr");
+            // auto* type_parent_part_ptr = Builder->CreateStructGEP(class_type, instance, 0, "parent_inst_ptr");
 
-            llvm::Constant* Size = llvm::ConstantExpr::getSizeOf(GetType(parent_type_str, TheModule.get()));
+            // llvm::Constant* Size = llvm::ConstantExpr::getSizeOf(GetType(parent_type_str, TheModule.get()));
 
-            // Llamar a memcpy
-            llvm::Function* memcpy_fn = llvm::Intrinsic::getDeclaration(
-                TheModule.get(), llvm::Intrinsic::memcpy,
-                { Builder->getInt8Ty()->getPointerTo(), Builder->getInt8Ty()->getPointerTo(), Size->getType(), Builder->getInt1Ty() }
-            );
+            // // Llamar a memcpy
+            // llvm::Function* memcpy_fn = llvm::Intrinsic::getDeclaration(
+            //     TheModule.get(), llvm::Intrinsic::memcpy,
+            //     { Builder->getInt8Ty()->getPointerTo(), Builder->getInt8Ty()->getPointerTo(), Size->getType(), Builder->getInt1Ty() }
+            // );
 
-            Builder->CreateCall(memcpy_fn, {
-                Builder->CreateBitCast(type_parent_part_ptr, Builder->getInt8Ty()->getPointerTo()),
-                Builder->CreateBitCast(parent_ptr, Builder->getInt8Ty()->getPointerTo()),
-                Size,Builder->getInt1(false) }
-                );
+            // Builder->CreateCall(memcpy_fn, {
+            //     Builder->CreateBitCast(type_parent_part_ptr, Builder->getInt8Ty()->getPointerTo()),
+            //     Builder->CreateBitCast(parent_ptr, Builder->getInt8Ty()->getPointerTo()),
+            //     Size,Builder->getInt1(false) }
+            //     );
 
             // Initialize the instance
             idx = 0;
-            int off_set = 1;
+            int off_set = 0;
             for (const auto& field : fields) {
                 // Get field pointer
                 llvm::Value* field_ptr = Builder->CreateStructGEP(class_type, instance, off_set + idx, field->name.get_lexeme() + "_ptr");
@@ -186,9 +191,9 @@ namespace hulk {
             llvm::StructType* class_type = llvm::StructType::create(*TheContext.get(), type_name);
             std::vector<llvm::Type*> field_types;
 
-            // Add parent type fields at the beginning
-            llvm::Type* super_type_ptr = GetType(super_class->get()->name.get_lexeme(), TheModule.get())->getPointerTo();
-            field_types.push_back(super_type_ptr);
+            // // Add parent type fields at the beginning
+            // llvm::Type* super_type_ptr = GetType(super_class->get()->name.get_lexeme(), TheModule.get())->getPointerTo();
+            // field_types.push_back(super_type_ptr);
 
             for (const auto& field : fields) {
                 llvm::Type* field_type = GetType(field->type.get_lexeme(), TheModule.get());
@@ -200,7 +205,14 @@ namespace hulk {
 
             // create_vtable(this, class_type);
 
-            // create_type_constructor(this, class_type);
+            create_type_constructor(this, class_type);
+
+            for (const auto& method : methods) {
+                auto func = create_method(type_name, method, class_type);
+                if (!func) {
+                    internal::error("Code generation error in function " + method->name.lexeme + "of type " + type_name, "CODE GENERATOR");
+                }
+            }
 
             return nullptr;
         }

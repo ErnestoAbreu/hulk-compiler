@@ -3,4 +3,4 @@ type Point(x : Number, y : Number) {
     y = y;
 }
 
-print("ok");
+print(2);

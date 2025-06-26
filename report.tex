@@ -106,6 +106,86 @@ El parser del compilador HULK implementa un \textbf{analizador descendente recur
 
 \subsection{Análisis semántico}
 
+El análisis semántico del compilador HULK se encarga de verificar la coherencia del programa a nivel de tipos, ámbitos, herencia y accesibilidad de miembros.
+Para esto se recorre el AST generado por el analizador sintáctico llevando un contexto del programa a cada nodo visitado, tendiendo en cuenta 4 enfoques principales:
+
+\begin{itemize}
+  \item \textbf{Context Builder}: Construye un contexto con información sobre el ámbito global, incluyendo tipos, funciones y protocolos.
+  \item \textbf{Scoped Visit}: Verifica la validez de las declaraciones y expresiones dentro de su ámbito, asegurando que los identificadores estén definidos y sean accesibles.
+  \item \textbf{Type Inference}: Realiza la inferencia de tipos para las expresiones, determinando el tipo de cada expresión según las reglas del lenguaje y las declaraciones previas. Anota variables y argumentos con los tipos inferidos en caso de no estar anotados explicitamente.
+  \item \textbf{Type Checker}: Verifica la coherencia de los tipos en las expresiones y declaraciones, asegurando que las operaciones sean válidas según las reglas del lenguaje.
+\end{itemize}
+
+\begin{enumerate}
+  
+  \item \textbf{Context:}
+  \begin{itemize}
+    \item Representa el contexto del programa, incluyendo tipos, funciones y protocolos.
+    \item Permite la creación de ámbitos anidados para tipos, funciones y expresiones.
+    \item Facilita la resolución de identificadores y la verificación de accesibilidad.
+    \item Los protocolos se manejan como tipos a nivel sémantico.
+  \end{itemize}
+
+  \item \textbf{Context Builder:} 
+  \begin{itemize}
+    \item Construye el contexto global con los tipos y funciones predefinidos.
+    \item Recorre el AST para identificar y registrar las declaraciones de tipos, funciones y protocolos.
+    \item Valida que los tipos anotados en las firmas de las declaraciones.
+    \item Valida la herencia de tipos.
+  \end{itemize}
+  
+  \item \textbf{Scoped Visit:} 
+  \begin{itemize}
+    \item Asegura que las declaraciones de variables y funciones estén en el ámbito correcto.
+    \item Asegura que los identificadores estén definidos y sean accesibles.
+    \item Verifica tipos anotados en las expresiones.
+  \end{itemize}
+  
+  \item \textbf{Type Inference:} 
+  \begin{itemize}
+    \item Recorre el AST para inferir los tipos de las expresiones. Este proceso se repite mientras se anoten tipos nuevos. Como la cantidad de tipos a anotar es finita, el proceso termina eventualmente.
+    \item Anota variables y argumentos con los tipos inferidos en caso de no estar anotados explicitamente. Si no se pueden anotar todos, se reporta un error para que sean anotado explicitamente.
+    \item Determina el tipo de cada expresión según las reglas del lenguaje y las declaraciones previas.
+  \end{itemize}
+  
+  \item \textbf{Type Checker:} 
+  \begin{itemize}
+    \item Verifica la coherencia de los tipos en las expresiones y declaraciones.
+    \item Asegura que las operaciones sean válidas según las reglas del lenguaje.
+    \item Verifica que las llamadas a funciones y métodos sean consistentes con sus firmas.
+    \item Verifica que las asignaciones sean compatibles con los tipos de las variables.
+    \item Asegura que las expresiones condicionales y de control de flujo tengan tipos válidos.
+    \item Valida que las clases y protocolos se usen correctamente
+    \item Valida la coherencia cuando se sobreescriben métodos, misma firma para tipos, y covariacia y contravariancia para protocolos.
+    \item Asegura que las asignaciones sean compatibles con los tipos de las variables.
+  \end{itemize} 
+\end{enumerate}
+
 \subsection{Generación de código}
+
+La generación de código del compilador HULK se basa en la generación de código intermedio a \textbf{LLVM IR}. Esta fase toma el AST validado por el análisis semántico y lo traduce a el lenguaje intermedio LLVM, usando la API 
+que LLVM proporciona para hacer generación de código desde C++, sin necesidad de escribir el código directamente, el cual luego es compilado a código máquina usando el compilador clang++-19.
+
+\begin{enumerate}
+  \item \textbf{Tipos:}
+      \begin{itemize}
+        \item \textbf{Number}: Representa enteros y flotantes, mapeados a \texttt{double} en LLVM.
+        \item \textbf{Boolean}: Representa valores booleanos, mapeados a \texttt{i1} en LLVM.
+        \item \textbf{String}: Representa cadenas de texto, mapeadas a \texttt{[N x i8]} en LLVM.
+        \item \textbf{Types}: Representa estructuras de datos complejas, mapeadas a \texttt{struct} en LLVM.
+      \end{itemize}
+  \item \textbf{Variables y asignaciones:} Las variables se representan como registros en LLVM, y las asignaciones se traducen a instrucciones de movimiento de datos. Se usa la instrucción \textbf{alloca} para reservar espacio de memoria en la pila para las variables, \texttt{store} para asignarles valores  y \texttt{load} para leer sus valores.
+  \item \textbf{Control de flujo:} Las estructuras de control (condicionales, ciclos) se traducen a instrucciones de salto y bifurcación en LLVM.
+  \item \textbf{Funciones:} Las funciones se representan como bloques de código en LLVM, con sus parámetros y tipos de retorno definidos. Se usa la instrucción \texttt{call} para invocar funciones y \texttt{ret} para retornar valores.
+  \item \textbf{Tipos y objetos:} 
+      \begin{itemize}
+        \item Los tipos de datos complejos (clases, estructuras) se representan como \texttt{structs} en LLVM. Las instancias de objetos se crean usando la instrucción \texttt{alloca} para reservar espacio en la pila y se inicializan con los valores correspondientes.
+        \item Los campos de los objetos se acceden mediante la instrucción \texttt{getelementptr}, que permite calcular la dirección de un campo específico dentro de un objeto.
+        \item La herencia se maneja creando la estructura base y las estructuras derivadas, donde los campos de la clase base se incluyen al inicio de la estructura derivada. Esto permite acceder a los campos de la clase base desde la clase derivada.
+        \item Los métodos se representan como funciones en LLVM, y se accede a ellos mediante la vtable de métodos. Cada clase tiene su propia vtable, que es un array de punteros a funciones. Cuando se invoca un método, se busca en la vtable correspondiente a la instancia del objeto.
+        \item La vtable se genera también colocando las direcciones de los métodos de la clase base primero, y luego los de la clase derivada, sobreescribiendo métodos de la clase base en caso de ser necesario. Esto permite que al invocar un método desde una instancia de la clase derivada, se acceda al método correcto según el tipo de la instancia.
+      \end{itemize}
+\end{enumerate}
+
 
 \end{document}

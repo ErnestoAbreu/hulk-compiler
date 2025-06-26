@@ -31,8 +31,7 @@ namespace hulk {
             }
             else {
                 if (!ctx.variable_exists(name.lexeme)) {
-                    if(name.lexeme == "self" && !ctx.self.empty())
-                        internal::error(name, "self is not a valid read or assigment target.");
+                    if(name.lexeme == "self" && !ctx.self.empty());
                     else 
                         internal::error(name, "variable '" + name.lexeme + "' does not exist.");
                 }

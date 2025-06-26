@@ -67,6 +67,15 @@ namespace hulk {
                 );
 
                 object->setBody(vtable_type->getPointerTo());
+
+                llvm::FunctionType* ctor_type = llvm::FunctionType::get(llvm::PointerType::get(object, 0), {}, false);
+                llvm::Function* ctor_func = llvm::Function::Create(ctor_type, llvm::Function::InternalLinkage, "Object._ctor", ast::TheModule.get());
+
+                llvm::BasicBlock* ctor_entry = llvm::BasicBlock::Create(*ast::TheContext.get(), "entry", ctor_func);
+                ast::Builder->SetInsertPoint(ctor_entry);
+
+                llvm::Value* object_ptr = ast::Builder->CreateAlloca(object, nullptr, "object_ptr");
+                ast::Builder->CreateRet(object_ptr);
             }
 
             void create_builtin_functions() {

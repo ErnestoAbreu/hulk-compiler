@@ -72,7 +72,8 @@ namespace hulk {
             }
             else {
                 // If no parent class, add Object as the default parent
-                type.add_parent(std::make_shared<semantic::type>(ctx.get_type("Object")));
+                auto object_ptr = std::make_shared<semantic::type>(ctx.get_type("Object"));
+                type.add_parent(object_ptr);
                 super_class = std::optional<super_item_ptr>(
                     std::make_shared<super_item>(
                         lexer::token(lexer::token_type::IDENTIFIER, "Object", "", name.line, name.column), std::vector<expr_ptr>()

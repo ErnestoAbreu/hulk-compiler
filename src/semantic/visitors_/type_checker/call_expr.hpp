@@ -23,6 +23,11 @@ namespace hulk {
                     }
                 }
 
+                if(!method.return_type){
+                    internal::error(callee,"type not inferred, is neccesary to annotate.");
+                    exit(1);
+                }
+
                 return method.return_type->name;
             }
             else {

@@ -7,7 +7,9 @@
 namespace hulk {
     namespace ast {
 
-        llvm::Function* create_method(std::string type_name, function_stmt_ptr method, llvm::StructType* class_type) {
+        static map<string, vector<function_stmt_ptr>> type_methods;
+
+        llvm::Function* create_method(std::string type_name, function_stmt_ptr method, llvm::Type* class_type) {
             std::vector<llvm::Type*> param_types;
 
             // Implicit 'self' parameter
@@ -176,6 +178,15 @@ namespace hulk {
                 if (!func) {
                     internal::error("Code generation error in function " + method->name.lexeme + "of type " + type_name, "CODE GENERATOR");
                 }
+                type_methods[name.lexeme].push_back(method);
+            }
+
+            for(const auto& method : type_methods[super_class->get()->name.lexeme]) {
+                auto func = create_method(type_name, method, GetType(super_class->get()->name.lexeme, TheModule.get()));
+                if (!func) {
+                    internal::error("Code generation error in function " + method->name.lexeme + "of type " + type_name, "CODE GENERATOR");
+                }
+                type_methods[name.lexeme].push_back(method);
             }
 
             return nullptr;

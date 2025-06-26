@@ -28,17 +28,19 @@ namespace hulk {
             // Add built-in types to the context
             ctx.create_type("Object");
 
+            auto object_type_ptr = make_shared<semantic::type>(ctx.get_type("Object"));
+
             ctx.create_type("String");
             auto& string_type = ctx.get_type("String");
-            string_type.add_parent(make_shared<semantic::type>(ctx.get_type("Object")));
+            string_type.add_parent(object_type_ptr);
 
             ctx.create_type("Number");
             auto& number_type = ctx.get_type("Number");
-            number_type.add_parent(make_shared<semantic::type>(ctx.get_type("Object")));
+            number_type.add_parent(object_type_ptr);
 
             ctx.create_type("Boolean");
             auto& boolean_type = ctx.get_type("Boolean");
-            boolean_type.add_parent(make_shared<semantic::type>(ctx.get_type("Object")));
+            boolean_type.add_parent(object_type_ptr);
         }
 
         void add_builtin_functions(semantic::context& ctx) {

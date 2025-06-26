@@ -1,6 +1,7 @@
 #ifndef HULK_SEMANTIC_TYPE_HPP
 #define HULK_SEMANTIC_TYPE_HPP 1
 
+#include <iostream>
 #include <string>
 #include <vector>
 #include <memory>
@@ -115,7 +116,7 @@ namespace hulk {
                 return true;
             }
 
-            bool add_parent(type_ptr parent_type) {
+            bool add_parent(type_ptr& parent_type) {
                 if (parent)
                     return false; // Parent already exists
 

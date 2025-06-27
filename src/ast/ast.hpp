@@ -43,10 +43,12 @@ namespace hulk {
     static std::map<std::string, std::map<std::string, unsigned>> StructFieldIndices;
 
     static std::map<std::string, std::vector<std::string>> VTableMethodsName;
-    static std::map<std::string, unsigned> VTableMethodIndices;
 
-    static std::map<std::string, llvm::GlobalVariable*> VTables;
-    static std::map<std::string, llvm::Type*> VTablesType;
+    static std::map<std::string, llvm::Type*> VTableTypes;
+    static std::map<std::string, llvm::GlobalVariable*> VTableValues;
+    
+    static std::map<std::string, std::map<string, llvm::FunctionType*>> MethodTypes;
+    static std::map<std::string, std::string> ParentOfType;
 
     // Expressions
 

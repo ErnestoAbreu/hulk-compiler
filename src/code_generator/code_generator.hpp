@@ -20,10 +20,8 @@ namespace hulk {
                 // Create a new builder for the module.
                 ast::Builder = std::make_unique<llvm::IRBuilder<>>(*ast::TheContext);
 
-                ast::NamedValues.clear();
-
-                create_builtin_types();
                 create_builtin_functions();
+                create_builtin_types();
             }
 
             int generate_code(const ast::program& program) {
@@ -63,7 +61,7 @@ namespace hulk {
                     llvm::PointerType::getUnqual(
                         llvm::FunctionType::get(llvm::Type::getVoidTy(context), true)
                     ),
-                    1
+                    0
                 );
 
                 object->setBody(vtable_type->getPointerTo());
@@ -81,14 +79,13 @@ namespace hulk {
             void create_builtin_functions() {
                 declare_printf();
                 declare_malloc();
-                declare_string_helpers();
+                declare_strlen();
             }
 
             void declare_printf() {
-                // Declare printf function
                 std::vector<llvm::Type*> printf_args;
-                printf_args.push_back(llvm::Type::getInt8Ty(*ast::TheContext)->getPointerTo());// format string
-                llvm::FunctionType* printf_type = llvm::FunctionType::get(llvm::Type::getInt32Ty(*ast::TheContext), printf_args, true); // varargs
+                printf_args.push_back(llvm::Type::getInt8Ty(*ast::TheContext)->getPointerTo());
+                llvm::FunctionType* printf_type = llvm::FunctionType::get(llvm::Type::getInt32Ty(*ast::TheContext), printf_args, true);
 
                 llvm::Function::Create(printf_type, llvm::Function::ExternalLinkage, "printf", ast::TheModule.get());
             }
@@ -100,28 +97,13 @@ namespace hulk {
                 llvm::Function::Create(malloc_type, llvm::Function::ExternalLinkage, "malloc", ast::TheModule.get());
             }
 
-            void declare_string_helpers() {
-                auto& ctx = ast::TheModule->getContext();
-
-                // Declarar memcpy
-                llvm::FunctionType* memcpy_type = llvm::FunctionType::get(
-                    llvm::Type::getVoidTy(ctx),
-                    {
-                        llvm::Type::getInt8Ty(ctx)->getPointerTo(),
-                        llvm::Type::getInt8Ty(ctx)->getPointerTo(),
-                        llvm::Type::getInt64Ty(ctx),
-                        llvm::Type::getInt1Ty(ctx)
-                    },
-                    false
-                );
-                llvm::Function::Create(memcpy_type, llvm::Function::ExternalLinkage, "llvm.memcpy.p0i8.p0i8.i64", ast::TheModule.get());
-
-                // Declarar strlen
+            void declare_strlen() {
                 llvm::FunctionType* strlen_type = llvm::FunctionType::get(
-                    llvm::Type::getInt64Ty(ctx), { llvm::Type::getInt8Ty(ctx)->getPointerTo() }, false
+                    llvm::Type::getInt64Ty(*ast::TheContext), { llvm::Type::getInt8Ty(*ast::TheContext)->getPointerTo() }, false
                 );
                 llvm::Function::Create(strlen_type, llvm::Function::ExternalLinkage, "strlen", ast::TheModule.get());
             }
+
         };
 
     } // namespace code_generator

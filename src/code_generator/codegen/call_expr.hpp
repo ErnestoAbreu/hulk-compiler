@@ -77,30 +77,34 @@ namespace hulk {
                 }
 
                 string type_name = object->get()->ret_type;
-                llvm::Function* CalleF = TheModule->getFunction(type_name + "." + callee.lexeme);
+                llvm::Value* func_ptr = getMethodPtr(object_ptr, type_name, callee.lexeme);
 
-                std::vector<llvm::Value*> argsValues;
-                argsValues.push_back(object_ptr);
-
+                llvm::FunctionType* func_type = MethodTypes[type_name][callee.lexeme];
+                
+                func_ptr = Builder->CreateBitCast(func_ptr, func_type->getPointerTo(), "casted_method_ptr");
+                
+                std::vector<llvm::Value*> args_values;
+                args_values.push_back(object_ptr);
+                
                 for (auto i = 0; i < arguments.size(); i++) {
-                    argsValues.push_back(arguments[i]->codegen());
-                    if (!argsValues.back()) return nullptr;
+                    args_values.push_back(arguments[i]->codegen());
+                    if (!args_values.back()) return nullptr;
                 }
 
-                llvm::Value* return_value = Builder->CreateCall(CalleF, argsValues, "calltmp");
+                llvm::Value* return_value = Builder->CreateCall(func_type, func_ptr, args_values, "calltmp");
 
                 return return_value;
             }
             else {
-                llvm::Function* CalleF = TheModule->getFunction(callee.lexeme);
+                llvm::Function* calleeF = TheModule->getFunction(callee.lexeme);
 
-                std::vector<llvm::Value*> argsValues;
+                std::vector<llvm::Value*> args_values;
                 for (auto i = 0; i < arguments.size(); i++) {
-                    argsValues.push_back(arguments[i]->codegen());
-                    if (!argsValues.back()) return nullptr;
+                    args_values.push_back(arguments[i]->codegen());
+                    if (!args_values.back()) return nullptr;
                 }
 
-                return Builder->CreateCall(CalleF, argsValues, "calltmp");
+                return Builder->CreateCall(calleeF, args_values, "calltmp");
             }
         }
 

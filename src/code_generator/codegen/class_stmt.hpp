@@ -7,6 +7,41 @@
 namespace hulk {
     namespace ast {
 
+        void create_vtable(const class_stmt* class_ptr, llvm::StructType* class_type) {
+            std::string type_name = class_ptr->name.get_lexeme();
+            std::string parent_name = class_ptr->super_class->get()->name.get_lexeme();
+
+            // Register methods 
+            for (const auto& method : class_ptr->methods) {
+                registerMethod(type_name, parent_name, method->name.get_lexeme());
+            }
+
+            // Create vtable 
+            std::vector<llvm::Type*> vtable_func_types;
+            std::vector<llvm::Constant*> vtable_methods;
+
+            for (const auto& method_name : VTableMethodsName[type_name]) {
+                llvm::Function* func = TheModule->getFunction(method_name);
+                if (!func) {
+                    internal::error("function not found", "CODEGEN");
+                    continue;
+                }
+
+                vtable_func_types.push_back(func->getType());
+                vtable_methods.push_back(func);
+            }
+
+            llvm::StructType* vtable_type = llvm::StructType::create(*TheContext.get(), vtable_func_types, type_name + ".vtable_type");
+
+            llvm::GlobalVariable* vtable = new llvm::GlobalVariable(
+                *TheModule.get(), vtable_type, false, llvm::GlobalValue::ExternalLinkage,
+                llvm::ConstantStruct::get(vtable_type, vtable_methods), type_name + "_vtable"
+            );
+
+            VTableValues[type_name] = vtable;
+            VTableTypes[type_name] = vtable_type;
+        }
+
         llvm::Function* create_method(std::string type_name, function_stmt_ptr method, llvm::StructType* class_type) {
             std::vector<llvm::Type*> param_types;
 
@@ -20,6 +55,7 @@ namespace hulk {
 
             llvm::Type* return_type = GetType(method->return_type.get_lexeme(), TheModule.get());
             llvm::FunctionType* func_type = llvm::FunctionType::get(return_type, param_types, false);
+            MethodTypes[type_name][method->name.get_lexeme()] = func_type;
 
             llvm::Function* func = llvm::Function::Create(func_type, llvm::Function::InternalLinkage, type_name + "." + method->name.get_lexeme(), TheModule.get());
 
@@ -141,9 +177,9 @@ namespace hulk {
                 Builder->CreateStore(init_value, field_ptr);
             }
 
-            // Configurar el vptr para apuntar a la vtable
-            // llvm::Value* VTablePtr = Builder->CreateStructGEP(class_type, instance, 0, "vptr_loc");
-            // Builder->CreateStore(Builder->CreateBitCast(VTables[type_name], llvm::PointerType::get(VTablesType[type_name], 0)), VTablePtr);
+            // Configure vtable
+            llvm::Value* VTablePtr = Builder->CreateStructGEP(class_type, instance, 0, "vptr_loc");
+            Builder->CreateStore(Builder->CreateBitCast(VTableValues[type_name], llvm::PointerType::get(VTableTypes[type_name], 0)), VTablePtr);
 
             Builder->CreateRet(instance);
 
@@ -167,16 +203,17 @@ namespace hulk {
 
             class_type->setBody(field_types);
 
-            // create_vtable(this, class_type);
-
-            create_type_constructor(this, class_type);
-
             for (const auto& method : methods) {
-                auto func = create_method(type_name, method, class_type);
+                auto* func = create_method(type_name, method, class_type);
                 if (!func) {
-                    internal::error("Code generation error in function " + method->name.lexeme + "of type " + type_name, "CODE GENERATOR");
+                    internal::error("Failed to create method for class " + type_name, "CODEGEN");
+                    return nullptr;
                 }
             }
+
+            create_vtable(this, class_type);
+
+            create_type_constructor(this, class_type);
 
             return nullptr;
         }

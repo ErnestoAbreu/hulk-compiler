@@ -80,7 +80,21 @@ namespace hulk {
                 declare_printf();
                 declare_malloc();
                 declare_strlen();
+                declare_sin();
+                declare_cos();
                 define_sqrt();
+            }
+
+            void declare_sin() {
+                auto* arg = llvm::Type::getDoubleTy(*ast::TheContext);
+                llvm::FunctionType* sin_type = llvm::FunctionType::get(llvm::Type::getDoubleTy(*ast::TheContext), arg);
+                llvm::Function::Create(sin_type, llvm::Function::ExternalLinkage, "sin", ast::TheModule.get());
+            }
+
+            void declare_cos() {
+                auto* arg = llvm::Type::getDoubleTy(*ast::TheContext);
+                llvm::FunctionType* cos_type = llvm::FunctionType::get(llvm::Type::getDoubleTy(*ast::TheContext), arg);
+                llvm::Function::Create(cos_type, llvm::Function::ExternalLinkage, "cos", ast::TheModule.get());
             }
 
             void declare_printf() {

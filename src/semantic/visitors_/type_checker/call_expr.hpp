@@ -20,12 +20,19 @@ namespace hulk {
                         internal::error(callee,
                             "Method '" + callee.lexeme + "' expects argument " + std::to_string(i + 1) +
                             " of type '" + method.params[i].attr_type->name + "', but got '" + arg_type + "'");
-                    }
+                        }
                 }
 
                 return method.return_type->name;
             }
             else {
+                if(callee.lexeme == "base") {
+                    for (const auto& arg : arguments) {
+                        arg->type_check(ctx);
+                    }
+                    return "String";
+                }
+
                 auto& func = ctx.get_function(callee.lexeme);
 
                 for (size_t i = 0; i < arguments.size(); ++i) {

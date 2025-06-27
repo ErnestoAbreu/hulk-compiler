@@ -11,6 +11,13 @@ namespace hulk {
                 object.value()->scoped_visit(ctx);
             }
             else {
+                if (callee.lexeme == "base") {
+                    for (const auto& arg : arguments) {
+                        arg->scoped_visit(ctx);
+                    }
+                    return;
+                }
+
                 if (!ctx.function_exists(callee.lexeme)) {
                     internal::error(callee, "Function does not exist.");
                     return;

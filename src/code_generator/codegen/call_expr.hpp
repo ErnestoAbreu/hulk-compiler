@@ -69,6 +69,29 @@ namespace hulk {
                 return RetValue;
             }
 
+            if (callee.lexeme == "base") {
+                llvm::AllocaInst* alloca = NamedValues["self"];
+                llvm::Value* object_ptr = Builder->CreateLoad(alloca->getAllocatedType(), alloca, "self");
+
+                llvm::Value* vtable = VTableValues[ParentOfType[current_type]];
+                llvm::FunctionType* func_type = MethodTypes[ParentOfType[current_type]][current_func];
+
+                unsigned index = getMethodIndex(ParentOfType[current_type], current_func);
+
+                llvm::Value* method_ptr = Builder->CreateStructGEP(VTableTypes[ParentOfType[current_type]], vtable, index, "method_ptr");
+                llvm::Value* func_ptr = Builder->CreateLoad(func_type->getPointerTo(), method_ptr, current_func + "_ptr");
+
+                std::vector<llvm::Value*> args_values;
+                args_values.push_back(object_ptr);
+
+                for (auto i = 0; i < arguments.size(); i++) {
+                    args_values.push_back(arguments[i]->codegen());
+                    if (!args_values.back()) return nullptr;
+                }
+
+                return Builder->CreateCall(func_type, func_ptr, args_values, "calltmp");
+            }
+
             if (object) {
                 llvm::Value* object_ptr = object->get()->codegen();
                 if (!object_ptr || !object_ptr->getType()->isPointerTy()) {
@@ -81,8 +104,6 @@ namespace hulk {
 
                 llvm::FunctionType* func_type = MethodTypes[type_name][callee.lexeme];
 
-                func_ptr = Builder->CreateBitCast(func_ptr, func_type->getPointerTo(), "casted_method_ptr");
-
                 std::vector<llvm::Value*> args_values;
                 args_values.push_back(object_ptr);
 
@@ -91,9 +112,7 @@ namespace hulk {
                     if (!args_values.back()) return nullptr;
                 }
 
-                llvm::Value* return_value = Builder->CreateCall(func_type, func_ptr, args_values, "calltmp");
-
-                return return_value;
+                return Builder->CreateCall(func_type, func_ptr, args_values, "calltmp");
             }
             else {
                 llvm::Function* calleeF = TheModule->getFunction(callee.lexeme);

@@ -44,6 +44,13 @@ namespace hulk {
                     return arguments[0]->infer(ctx,"Object");
                 }
 
+                if(callee.lexeme == "base") {
+                    for (const auto& arg : arguments) {
+                        arg->infer(ctx);
+                    }
+                    return "String";
+                }
+
                 auto& func = ctx.get_function(callee.lexeme);
 
                 for (size_t i = 0; i < arguments.size(); ++i) {

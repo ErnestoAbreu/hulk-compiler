@@ -1,16 +1,23 @@
-type Point(x : Number,y : Number) {
-    x : Number = x;
-    y : Number = y;
+type Animal(name : String, age : Number) {
+    name : String = name;
+    age : Number = age;
 
-    getX() : Number => self.x;
-    getY() : Number => self.y;
-
-    setX(x) : Number => self.x := x;
-    setY(y) : Number => self.y := y;
+    sound() : String => "Mooo...";
+    eat(): String => "Comiendo...";
 }
 
-type PolarPoint inherits Point {
-    rho() : Number => sqrt(self.getX() ^ 2 + self.getY() ^ 2);
+type Perro inherits Animal {
+    sound() : String => "Guao guao...";
+    eat() : String => "No quiero, estoy enfermito";
 }
 
-let pt = new PolarPoint(3,4) in print("rho: " @ pt.rho());
+type Gato inherits Animal {
+    sound() : String => "Miau Miau...";
+}
+
+let pepito : Animal = new Perro("pepito", 5), gatico : Animal = new Gato("gatito", 3) in {
+    print(pepito.sound());
+    print(pepito.eat());
+    print(gatico.sound());
+    print(gatico.eat());
+}

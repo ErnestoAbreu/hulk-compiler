@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include <memory>
 using namespace std;
 
@@ -15,6 +16,8 @@ namespace hulk {
         struct type;
 
         using type_ptr = shared_ptr<type>;
+
+        static std::map<type, type_ptr> shared_type;
 
         struct attribute {
             string name;
@@ -44,7 +47,7 @@ namespace hulk {
                     if (param.name == param_name)
                         return false; // Parameter already exists
 
-                params.emplace_back(param_name, param_type);
+                params.push_back(attribute(param_name, param_type));
                 return true;
             }
 
@@ -75,6 +78,10 @@ namespace hulk {
 
             bool operator!=(const type& other) const {
                 return !(*this == other);
+            }
+
+            bool operator<(const type& other) const {
+                return this->name < other.name;
             }
 
             bool operator<=(const type& other) const {

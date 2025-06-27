@@ -28,7 +28,7 @@ namespace hulk {
                         internal::error(param.type, "Type does not exist in parameter '" + param.name.lexeme + "' in class '" + name.lexeme + "'.");
                     }
                     else
-                        error = !type.add_param(param.name.lexeme, std::make_shared<semantic::type>(ctx.get_type(param.type.lexeme)));
+                        error = !type.add_param(param.name.lexeme, semantic::shared_type[ctx.get_type(param.type.lexeme)]);
                 }
                 if (error) {
                     internal::error(param.name, "parameter already exists in class '" + name.lexeme + "'.");
@@ -45,7 +45,7 @@ namespace hulk {
                     internal::error(super_class->get()->name, "parent type cannot be a builtin type.");
                 }
                 else {
-                    type_ptr super_type = std::make_shared<semantic::type>(ctx.get_type(super_class_name));
+                    type_ptr super_type = semantic::shared_type[ctx.get_type(super_class_name)];
                     type.add_parent(super_type);
                 }
 
@@ -72,7 +72,7 @@ namespace hulk {
             }
             else {
                 // If no parent class, add Object as the default parent
-                type.add_parent(std::make_shared<semantic::type>(ctx.get_type("Object")));
+                type.add_parent(semantic::shared_type[ctx.get_type("Object")]);
                 super_class = std::optional<super_item_ptr>(
                     std::make_shared<super_item>(
                         lexer::token(lexer::token_type::IDENTIFIER, "Object", "", name.line, name.column), std::vector<expr_ptr>()
@@ -91,7 +91,7 @@ namespace hulk {
                         internal::error(field->type, "Type does not exist in field '" + field->name.lexeme + "' in class '" + name.lexeme + "'.");
                     }
                     else
-                        error = !type.add_field(field->name.lexeme, std::make_shared<semantic::type>(ctx.get_type(field->type.lexeme)));
+                        error = !type.add_field(field->name.lexeme, semantic::shared_type[ctx.get_type(field->type.lexeme)]);
                 }
                 if (error) {
                     internal::error(field->name, "field already exists in class '" + name.lexeme + "'.");
@@ -109,7 +109,7 @@ namespace hulk {
                         internal::error(meth->return_type, "return type does not exist in method '" + meth->name.lexeme + "' in class '" + name.lexeme + "'.");
                     }
                     else
-                        f = semantic::method(meth->name.lexeme, std::make_shared<semantic::type>(ctx.get_type(meth->return_type.lexeme)));
+                        f = semantic::method(meth->name.lexeme, semantic::shared_type[ctx.get_type(meth->return_type.lexeme)]);
                 }
 
                 for (const auto& param : meth->parameters) {
@@ -122,7 +122,7 @@ namespace hulk {
                             internal::error(param.type, "parameter type does not exist in method '" + meth->name.lexeme + "' in class '" + name.lexeme + "'.");
                         }
                         else
-                            error = !f.add_param(param.name.lexeme, std::make_shared<semantic::type>(ctx.get_type(param.type.lexeme)));
+                            error = !f.add_param(param.name.lexeme, semantic::shared_type[ctx.get_type(param.type.lexeme)]);
                     }
 
                     if (error) {

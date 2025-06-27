@@ -80,12 +80,12 @@ namespace hulk {
                 llvm::Value* func_ptr = getMethodPtr(object_ptr, type_name, callee.lexeme);
 
                 llvm::FunctionType* func_type = MethodTypes[type_name][callee.lexeme];
-                
+
                 func_ptr = Builder->CreateBitCast(func_ptr, func_type->getPointerTo(), "casted_method_ptr");
-                
+
                 std::vector<llvm::Value*> args_values;
                 args_values.push_back(object_ptr);
-                
+
                 for (auto i = 0; i < arguments.size(); i++) {
                     args_values.push_back(arguments[i]->codegen());
                     if (!args_values.back()) return nullptr;
@@ -97,6 +97,11 @@ namespace hulk {
             }
             else {
                 llvm::Function* calleeF = TheModule->getFunction(callee.lexeme);
+
+                if (!calleeF) {
+                    internal::error("Function not found: " + callee.lexeme, "CODEGEN");
+                    return nullptr;
+                }
 
                 std::vector<llvm::Value*> args_values;
                 for (auto i = 0; i < arguments.size(); i++) {

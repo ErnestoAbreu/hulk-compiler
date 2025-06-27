@@ -9,48 +9,46 @@ namespace hulk {
 
         llvm::Function* function_stmt::codegen() {
             // Create FunctionType
-            std::vector<llvm::Type*> ParamTypes;
+            std::vector<llvm::Type*> param_types;
             for (const auto& param : parameters)
-                ParamTypes.push_back(GetType(param.type.lexeme, TheModule.get()));
+                param_types.push_back(GetType(param.type.lexeme, TheModule.get()));
 
-            llvm::FunctionType* FuncType = llvm::FunctionType::get(GetType(return_type.lexeme, TheModule.get()), ParamTypes, false);
+            llvm::FunctionType* func_type = llvm::FunctionType::get(GetType(return_type.lexeme, TheModule.get()), param_types, false);
 
             // Create Function
-            llvm::Function* Func = llvm::Function::Create(FuncType, llvm::Function::ExternalLinkage, name.lexeme, TheModule.get());
+            llvm::Function* func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, name.lexeme, TheModule.get());
 
             // Get parameters
             int idx = 0;
-            for (auto& Arg : Func->args()) {
-                Arg.setName(parameters[idx].name.lexeme);
+            for (auto& arg : func->args()) {
+                arg.setName(parameters[idx].name.lexeme);
                 idx++;
             }
 
             // Create Entry Block
-            llvm::BasicBlock* EntryBB = llvm::BasicBlock::Create(*TheContext.get(), "entry", Func);
+            llvm::BasicBlock* EntryBB = llvm::BasicBlock::Create(*TheContext.get(), "entry", func);
             Builder->SetInsertPoint(EntryBB);
 
             // Allocate parameters
             NamedValues.clear();
-            for (auto& Arg : Func->args()) {
+            for (auto& arg : func->args()) {
                 // Create an alloca for this variable.
-                llvm::AllocaInst* Alloca = CreateEntryBlockAlloca(Func, Arg.getType(), std::string(Arg.getName()));
-
+                llvm::AllocaInst* alloca = CreateEntryBlockAlloca(func, arg.getType(), std::string(arg.getName()));
                 // Store the initial value into the alloca.
-                Builder->CreateStore(&Arg, Alloca);
-
+                Builder->CreateStore(&arg, alloca);
                 // Add arguments to variable symbol table.
-                NamedValues[std::string(Arg.getName())] = Alloca;
+                NamedValues[std::string(arg.getName())] = alloca;
             }
 
             // Get return value
-            llvm::Value* RetVal = body->codegen();
+            llvm::Value* ret_val = body->codegen();
 
-            Builder->CreateRet(RetVal);
+            Builder->CreateRet(ret_val);
 
             // Validate the generated code, checking for consistency.
-            llvm::verifyFunction(*Func);
+            llvm::verifyFunction(*func);
 
-            return Func;
+            return func;
         }
 
     } // namespace ast

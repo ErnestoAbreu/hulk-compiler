@@ -7,41 +7,6 @@
 namespace hulk {
     namespace ast {
 
-        void create_vtable(const class_stmt* class_ptr, llvm::StructType* class_type) {
-            std::string type_name = class_ptr->name.get_lexeme();
-            std::string parent_name = class_ptr->super_class->get()->name.get_lexeme();
-
-            // Register methods 
-            for (const auto& method : class_ptr->methods) {
-                registerMethod(type_name, parent_name, method->name.get_lexeme());
-            }
-
-            // Create vtable 
-            std::vector<llvm::Type*> vtable_func_types;
-            std::vector<llvm::Constant*> vtable_methods;
-
-            for (const auto& method_name : VTableMethodsName[type_name]) {
-                llvm::Function* func = TheModule->getFunction(method_name);
-                if (!func) {
-                    internal::error("function not found", "CODEGEN");
-                    continue;
-                }
-
-                vtable_func_types.push_back(func->getType());
-                vtable_methods.push_back(func);
-            }
-
-            llvm::StructType* vtable_type = llvm::StructType::create(*TheContext.get(), vtable_func_types, type_name + ".vtable_type");
-
-            llvm::GlobalVariable* vtable = new llvm::GlobalVariable(
-                *TheModule.get(), vtable_type, false, llvm::GlobalValue::ExternalLinkage,
-                llvm::ConstantStruct::get(vtable_type, vtable_methods), type_name + "_vtable"
-            );
-
-            VTableValues[type_name] = vtable;
-            VTableTypes[type_name] = vtable_type;
-        }
-
         llvm::Function* create_method(std::string type_name, function_stmt_ptr method, llvm::StructType* class_type) {
             std::vector<llvm::Type*> param_types;
 
@@ -55,7 +20,6 @@ namespace hulk {
 
             llvm::Type* return_type = GetType(method->return_type.get_lexeme(), TheModule.get());
             llvm::FunctionType* func_type = llvm::FunctionType::get(return_type, param_types, false);
-            MethodTypes[type_name][method->name.get_lexeme()] = func_type;
 
             llvm::Function* func = llvm::Function::Create(func_type, llvm::Function::InternalLinkage, type_name + "." + method->name.get_lexeme(), TheModule.get());
 
@@ -79,11 +43,83 @@ namespace hulk {
                 NamedValues[std::string(arg.getName())] = alloca;
             }
 
+            current_type = type_name;
+            current_func = method->name.get_lexeme();
+
             llvm::Value* ret_val = method->body->codegen();
 
             Builder->CreateRet(ret_val);
 
             return func;
+        }
+
+        void create_vtable(const class_stmt* class_ptr, llvm::StructType* class_type) {
+            std::string type_name = class_ptr->name.get_lexeme();
+            std::string parent_name = class_ptr->super_class->get()->name.get_lexeme();
+
+            // Copy parent vtable methods names
+            VTableMethodsName[type_name] = VTableMethodsName[parent_name];
+            MethodTypes[type_name] = MethodTypes[parent_name];
+
+            // Register methods in the vtable
+            for (const auto& method : class_ptr->methods) {
+                registerMethod(type_name, parent_name, method->name.get_lexeme());
+
+                // Add method type to MethodTypes
+                std::vector<llvm::Type*> param_types;
+
+                // Implicit 'self' parameter
+                param_types.push_back(class_type->getPointerTo());
+
+                for (const auto& param : method->parameters) {
+                    llvm::Type* param_type = GetType(param.type.get_lexeme(), TheModule.get());
+                    param_types.push_back(param_type);
+                }
+
+                llvm::Type* return_type = GetType(method->return_type.get_lexeme(), TheModule.get());
+                llvm::FunctionType* func_type = llvm::FunctionType::get(return_type, param_types, false);
+                MethodTypes[type_name][method->name.get_lexeme()] = func_type;
+            }
+
+            // Create vtable type
+            std::vector<llvm::Type*> vtable_func_types;
+            for(const auto& method_name : VTableMethodsName[type_name]) {
+                string method_without_type = method_name.substr(method_name.find('.') + 1);
+                auto* func_type = MethodTypes[type_name][method_without_type];
+                if (!func_type) {
+                    internal::error("Method type not found for " + method_name, "CODEGEN");
+                    return;
+                }
+                vtable_func_types.push_back(func_type->getPointerTo());
+            }
+
+            llvm::StructType* vtable_type = llvm::StructType::create(*TheContext.get(), vtable_func_types, type_name + ".vtable_type");
+
+            VTableTypes[type_name] = vtable_type;
+
+            // Create vtable
+            for (const auto& method : class_ptr->methods) {
+                auto* func = create_method(type_name, method, class_type);
+                if (!func) {
+                    internal::error("Failed to create method for class " + type_name, "CODEGEN");
+                    return;
+                }
+            }
+
+            std::vector<llvm::Constant*> vtable_methods;
+
+            // Add methods to the vtable
+            for (const auto& method_name : VTableMethodsName[type_name]) {
+                auto* func = TheModule->getFunction(method_name);
+                vtable_methods.push_back(func);
+            }
+
+            llvm::GlobalVariable* vtable = new llvm::GlobalVariable(
+                *TheModule.get(), vtable_type, false, llvm::GlobalValue::ExternalLinkage,
+                llvm::ConstantStruct::get(vtable_type, vtable_methods), type_name + "_vtable"
+            );
+
+            VTableValues[type_name] = vtable;
         }
 
         llvm::Function* create_type_constructor(const class_stmt* type_ptr, llvm::StructType* class_type) {
@@ -191,6 +227,7 @@ namespace hulk {
             llvm::StructType* class_type = llvm::StructType::create(*TheContext.get(), type_name);
             std::vector<llvm::Type*> field_types;
 
+            ParentOfType[name.lexeme] = super_class->get()->name.get_lexeme();
             // Add parent type fields at the beginning
             llvm::Type* super_type = GetType(super_class->get()->name.get_lexeme(), TheModule.get());
             field_types.push_back(super_type);
@@ -202,14 +239,6 @@ namespace hulk {
             }
 
             class_type->setBody(field_types);
-
-            for (const auto& method : methods) {
-                auto* func = create_method(type_name, method, class_type);
-                if (!func) {
-                    internal::error("Failed to create method for class " + type_name, "CODEGEN");
-                    return nullptr;
-                }
-            }
 
             create_vtable(this, class_type);
 

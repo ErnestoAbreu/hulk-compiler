@@ -80,6 +80,7 @@ namespace hulk {
                 declare_printf();
                 declare_malloc();
                 declare_strlen();
+                define_sqrt();
             }
 
             void declare_printf() {
@@ -104,6 +105,27 @@ namespace hulk {
                 llvm::Function::Create(strlen_type, llvm::Function::ExternalLinkage, "strlen", ast::TheModule.get());
             }
 
+            void define_sqrt() {
+                llvm::FunctionType* sqrt_type = llvm::FunctionType::get(
+                    llvm::Type::getDoubleTy(*ast::TheContext), { llvm::Type::getDoubleTy(*ast::TheContext) }, false
+                );
+                llvm::Function* sqrt_func = llvm::Function::Create(sqrt_type, llvm::Function::ExternalLinkage, "sqrt", ast::TheModule.get());
+
+                // Define the function body here if needed
+                llvm::BasicBlock* entry = llvm::BasicBlock::Create(*ast::TheContext, "entry", sqrt_func);
+                ast::Builder->SetInsertPoint(entry);
+                llvm::Value* arg = &*sqrt_func->arg_begin();
+
+                // Declare pow function
+                llvm::Module* module = ast::Builder->GetInsertBlock()->getModule();
+                llvm::Function* powFunc = llvm::Intrinsic::getDeclaration(module, llvm::Intrinsic::pow, { arg->getType() });
+
+                llvm::Value* exponent = llvm::ConstantFP::get(arg->getType(), 0.5);
+
+                // Call pow function
+                llvm::Value* ret_val = ast::Builder->CreateCall(powFunc, { arg, exponent }, "sqrt_result");
+                ast::Builder->CreateRet(ret_val);
+            }
         };
 
     } // namespace code_generator

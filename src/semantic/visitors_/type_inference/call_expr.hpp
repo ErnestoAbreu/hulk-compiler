@@ -54,7 +54,10 @@ namespace hulk {
                 auto& func = ctx.get_function(callee.lexeme);
 
                 for (size_t i = 0; i < arguments.size(); ++i) {
-                    arguments[i]->infer(ctx, func.params[i].attr_type->name);
+                    if(func.params[i].attr_type)
+                        arguments[i]->infer(ctx, func.params[i].attr_type->name);
+                    else 
+                         arguments[i]->infer(ctx);
                 }
 
                 if (func.return_type)

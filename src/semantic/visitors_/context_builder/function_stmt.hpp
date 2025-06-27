@@ -19,7 +19,7 @@ namespace hulk {
                     internal::error(return_type, "return type does not exist in function '" + name.lexeme + "'.");
                 }
                 else
-                    func.return_type = std::make_shared<semantic::type>(ctx.get_type(return_type.lexeme));
+                    func.return_type = semantic::shared_type[ctx.get_type(return_type.lexeme)];
             }
 
             for (const auto& param : parameters) {
@@ -32,7 +32,7 @@ namespace hulk {
                         internal::error(param.type, "parameter type does not exist in parameter '" + param.name.lexeme + "' in function '" + name.lexeme + "'.");
                     }
                     else
-                        error = !func.add_param(param.name.lexeme, std::make_shared<semantic::type>(ctx.get_type(param.type.lexeme)));
+                        error = !func.add_param(param.name.lexeme, semantic::shared_type[ctx.get_type(param.type.lexeme)]);
                 }
 
                 if (error) {

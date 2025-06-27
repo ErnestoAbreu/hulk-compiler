@@ -21,7 +21,7 @@ namespace hulk {
                     internal::error(super_protocol, "Protocol does not exist.");
                 }
                 else {
-                    type_ptr super_proto = std::make_shared<semantic::type>(ctx.get_type(super_protocol.lexeme));
+                    type_ptr super_proto = semantic::shared_type[ctx.get_type(super_protocol.lexeme)];
                     protocol.add_parent(super_proto);
                 }
             }
@@ -37,7 +37,7 @@ namespace hulk {
                         internal::error(meth->return_type, "return type does not exist, in method '" + meth->name.lexeme + "' in protocol '" + name.lexeme + "'.");
                     }
                     else {
-                        f = semantic::method(meth->name.lexeme, std::make_shared<semantic::type>(ctx.get_type(meth->return_type.lexeme)));
+                        f = semantic::method(meth->name.lexeme, semantic::shared_type[ctx.get_type(meth->return_type.lexeme)]);
                     }
                 }
 
@@ -51,7 +51,7 @@ namespace hulk {
                             internal::error(param.type, "parameter type does not exist, in method '" + meth->name.lexeme + "' in protocol '" + name.lexeme + "'.");
                         }
                         else {
-                            error = !f.add_param(param.name.lexeme, std::make_shared<semantic::type>(ctx.get_type(param.type.lexeme)));
+                            error = !f.add_param(param.name.lexeme, semantic::shared_type[ctx.get_type(param.type.lexeme)]);
                         }
                     }
 

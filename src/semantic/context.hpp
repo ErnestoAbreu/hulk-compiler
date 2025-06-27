@@ -37,6 +37,8 @@ namespace hulk {
                     return false; // Type already exists
                 }
                 types[type_name] = type(type_name, is_protocol);
+                shared_type[types[type_name]] = shared_ptr<type>(&types[type_name], [](type*){}); // Hack peligroso original
+
                 return true;
             }
 

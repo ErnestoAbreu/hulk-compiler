@@ -23,7 +23,7 @@ namespace hulk {
                 }
                 else {
                     return_type.lexeme = inferred_type;
-                    func.return_type = std::make_shared<semantic::type>(ctx.get_type(return_type.lexeme));
+                    func.return_type = semantic::shared_type[ctx.get_type(return_type.lexeme)];
                     semantic::repeat_infer = true; // If return type was inferred, we need to repeat inference
                 }
             }
@@ -37,7 +37,7 @@ namespace hulk {
                     }
                     else {
                         param.type.lexeme = inferred_type;
-                        func.get_param(param.name.lexeme).attr_type = std::make_shared<semantic::type>(ctx.get_type(param.type.lexeme));
+                        func.get_param(param.name.lexeme).attr_type = semantic::shared_type[ctx.get_type(param.type.lexeme)];
                         semantic::repeat_infer = true; // If parameter type was inferred, we need to repeat inference
                     }
                 }

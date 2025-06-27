@@ -6,6 +6,9 @@
 namespace hulk {
     namespace ast {
 
+        static string current_type = "";
+        static string current_func = "";
+
         static llvm::Type* GetType(const std::string& type_name, llvm::Module* module) {
             auto& context = module->getContext();
 
@@ -33,12 +36,7 @@ namespace hulk {
         }
 
         static void registerMethod(const std::string& type_name, const std::string& parent_name, const std::string& method_name) {
-            // Si es una clase nueva, inicializa su entrada
-            if (VTableMethodsName.find(type_name) == VTableMethodsName.end()) {
-                VTableMethodsName[type_name] = VTableMethodsName[parent_name];
-            }
-
-            // Verificar si el método ya existe (sobreescritura)
+              // Verificar si el método ya existe (sobreescritura)
             bool overridden = false;
             for (auto& meth : VTableMethodsName[type_name]) {
                 string meth_name = meth.substr(meth.find('.') + 1);
@@ -54,7 +52,6 @@ namespace hulk {
             }
             else {
                 VTableMethodsName[type_name][getMethodIndex(type_name, method_name)] = type_name + "." + method_name;
-                MethodTypes[type_name][method_name] = MethodTypes[parent_name][method_name];
             }
         }
 

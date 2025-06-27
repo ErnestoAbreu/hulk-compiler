@@ -31,11 +31,6 @@ namespace hulk {
                     return nullptr;
                 }
 
-                // llvm::Type* allocated_type = GetType(ret_type, TheModule.get());
-
-                // if (allocated_type->isStructTy())
-                //     allocated_type = allocated_type->getPointerTo();
-
                 return Builder->CreateLoad(alloca->getAllocatedType(), alloca, name.get_lexeme());
             }
         }

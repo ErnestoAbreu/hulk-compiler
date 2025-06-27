@@ -1,0 +1,23 @@
+type Animal(name : String, age : Number) {
+    name : String = name;
+    age : Number = age;
+
+    sound() : String => "Mooo...";
+    eat(): String => "Comiendo...";
+}
+
+type Perro inherits Animal {
+    sound() : String => "Guao guao...";
+    eat() : String => "No quiero, estoy enfermito";
+}
+
+type Gato inherits Animal {
+    sound() : String => "Miau Miau...";
+}
+
+let pepito : Animal = new Perro("pepito", 5), gatico : Animal = new Gato("gatito", 3) in {
+    print(pepito.sound());
+    print(pepito.eat());
+    print(gatico.sound());
+    print(gatico.eat());
+}

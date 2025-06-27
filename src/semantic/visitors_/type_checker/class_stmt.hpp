@@ -16,7 +16,8 @@ namespace hulk {
                     if (parent->has_method(method.name)) {
                         auto& parent_method = parent->get_method(method.name);
 
-                        if (method.return_type != parent_method.return_type) {
+                        if (*method.return_type != *parent_method.return_type) {
+                            cerr << method.return_type->name << ' ' << parent_method.return_type->name << '\n';
                             internal::error(name, "error overriding method " + method.name + ", doesn't have the same signature in return type");
                             error = true;
                         }

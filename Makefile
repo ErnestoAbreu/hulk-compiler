@@ -16,19 +16,19 @@ compile: compiler
 	@mkdir -p $(HULK_DIR)
 	@./$(BINARY) $(SCRIPT)
 	@echo
-	@echo "\033[31m----- Compiled script.hulk and generated LLVM IR -----\033[0m"
+	@echo "\033[35m----- Compiled script.hulk and generated LLVM IR -----\033[0m"
 	@clang++-19 $(LLVMOBJ) -o $(EXEC)
 	@echo
-	@echo "\033[35m----- Generated executable -----\033[0m"
+	@echo "\033[34m----- Generated executable -----\033[0m"
 
 compile_llvm:
 	@clang++-19 $(LLVMOBJ) -o $(EXEC)
 	@echo
-	@echo "\033[35m----- Generated executable -----\033[0m"
+	@echo "\033[34m----- Generated executable -----\033[0m"
 
 execute: compile
 	@echo
-	@echo "\033[34m----- Executing executable  -----\033[0m"
+	@echo "\033[32m----- Executing executable  -----\033[0m"
 	@echo
 	@./$(EXEC)
 

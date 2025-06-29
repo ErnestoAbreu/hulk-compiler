@@ -15,9 +15,11 @@ type Gato inherits Animal {
     sound() : String => "Miau Miau...";
 }
 
+function f(x : Animal) {
+    print(x.sound());
+}
+
 let pepito : Animal = new Perro("pepito", 5), gatico : Animal = new Gato("gatito", 3) in {
-    print(pepito.sound());
-    print(pepito.eat());
-    print(gatico.sound());
-    print(gatico.eat());
+    f(pepito);
+    f(gatico);
 }

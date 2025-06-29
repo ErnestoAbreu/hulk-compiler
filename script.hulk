@@ -1,13 +1,25 @@
-type Person(firstname : String, lastname : String) {
-    firstname : String = firstname;
-    lastname : String = lastname;
+type Animal(name : String, age : Number) {
+    name : String = name;
+    age : Number = age;
 
-    name() : String  => self.firstname @@ self.lastname;
+    sound() : String => "Mooo...";
+    eat(): String => "Comiendo...";
 }
 
-type Knight inherits Person {
-    name() : String => "Sir" @@ base();
+type Perro inherits Animal {
+    sound() : String => "Guao guao...";
+    eat() : String => "No quiero, estoy enfermito";
 }
 
-let p = new Knight("Phil", "Collins") in
-    print(p.name()); // prints 'Sir Phil Collins'
+type Gato inherits Animal {
+    sound() : String => "Miau Miau...";
+}
+
+function f(x : Animal) {
+    print(x.sound());
+}
+
+let pepito : Animal = new Perro("pepito", 5), gatico : Animal = new Gato("gatito", 3) in {
+    f(pepito);
+    f(gatico);
+}

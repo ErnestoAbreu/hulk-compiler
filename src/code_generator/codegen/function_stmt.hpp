@@ -10,8 +10,13 @@ namespace hulk {
         llvm::Function* function_stmt::codegen() {
             // Create FunctionType
             std::vector<llvm::Type*> param_types;
-            for (const auto& param : parameters)
-                param_types.push_back(GetType(param.type.lexeme, TheModule.get()));
+            for (const auto& param : parameters) {
+                llvm::Type* type = GetType(param.type.lexeme, TheModule.get());
+                if(type->isStructTy())
+                    param_types.push_back(type->getPointerTo());
+                else 
+                    param_types.push_back(type);
+            }
 
             llvm::FunctionType* func_type = llvm::FunctionType::get(GetType(return_type.lexeme, TheModule.get()), param_types, false);
 

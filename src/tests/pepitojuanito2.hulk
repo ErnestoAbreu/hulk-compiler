@@ -1,0 +1,52 @@
+type Animal(name : String, age : Number) {
+    name  = name;
+    age = age;
+
+    name() => self.name;
+    change_name(new_name) => self.name := new_name;
+    sound()  => "Mooo...";
+    eat() => "Comiendo...";
+}
+
+type Perro inherits Animal {
+    sound()  => "Guao guao...";
+    eat()  => "No quiero, estoy enfermito";
+}
+
+type Gato inherits Animal {
+    sound()  => "Miau Miau...";
+}
+
+function f(x : Animal) {
+    print(x.sound());
+}
+
+type AnimalContainer(x: Animal) {
+    x = x;
+    sound() => print(self.x.sound());
+    name(y: Animal) => print(self.x.name() @@ y.name());
+    get_animal() => self.x;
+}
+
+type PerroContainer(x : Perro) inherits AnimalContainer(x) {
+    name(y:Animal) => base(y);
+    get_animal() => base();
+}
+
+let pepito = new Perro("pepito", 5), gatico : Animal = new Gato("gatito", 3) in {
+    let cont = new AnimalContainer(pepito) in  {
+        cont.name(gatico);
+        let a = cont.get_animal() in {
+            a.change_name("juanito");
+            cont.name(gatico);
+        };  
+    };
+
+    print(pepito.name());
+    print("");
+
+    let pcont = new PerroContainer(pepito), a = pcont.get_animal() in {
+        print(a.name());
+        print(pcont.name(a));
+    };
+}

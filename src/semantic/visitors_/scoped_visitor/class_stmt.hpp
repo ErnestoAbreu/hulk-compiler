@@ -44,10 +44,17 @@ namespace hulk {
             ctx.self = name.lexeme;
 
             for (const auto& method : methods) {
+                ctx.current_method = nullptr;
+                if(ctx.get_type(name.lexeme).parent 
+                && ctx.get_type(name.lexeme).parent->has_method(method->name.lexeme)) {
+                    ctx.current_method = &(ctx.get_type(name.lexeme).parent->get_method(method->name.lexeme));
+                }
+                
                 method->scoped_visit(ctx);
             }
 
             ctx.self = "";
+            ctx.current_method = nullptr;
         }
 
     } // namespace ast

@@ -56,6 +56,7 @@ namespace hulk {
 
             for (auto& meth : methods) {
                 semantic::method& func = this_type.get_method(meth->name.lexeme);
+                ctx.current_method = &(this_type.parent->get_method(meth->name.lexeme));
 
                 for (const auto& param : meth->parameters) {
                     ctx.add_variable(param.name.lexeme, param.type.lexeme);
@@ -94,6 +95,7 @@ namespace hulk {
             }
 
             ctx.self = "";
+            ctx.current_method = nullptr;
 
             return name.lexeme; // Ignore return type for type definitions
         }

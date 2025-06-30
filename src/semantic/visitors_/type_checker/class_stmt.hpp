@@ -76,10 +76,13 @@ namespace hulk {
 
             ctx.self = name.lexeme;
 
-            for (const auto& method : methods)
+            for (const auto& method : methods) {
+                ctx.current_method = &(this_type.parent->get_method(method->name.lexeme));
                 method->type_check(ctx);
+            }
 
             ctx.self = "";
+            ctx.current_method = nullptr;
         }
 
     } // namespace ast

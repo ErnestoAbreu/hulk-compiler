@@ -1,41 +1,22 @@
-type Animal(name : String, age : Number) {
-    name  = name;
-    age = age;
-
-    name() => self.name;
-    change_name(new_name) => self.name := new_name;
-    sound()  => "Mooo...";
-    eat() => "Comiendo...";
-}
-
-type Perro inherits Animal {
-    sound()  => "Guao guao...";
-    eat()  => "No quiero, estoy enfermito";
-}
-
-type Gato inherits Animal {
-    sound()  => "Miau Miau...";
-}
-
-function f(x : Animal) {
-    print(x.sound());
-}
-
-type AnimalContainer(x: Animal) {
+type Point(x : Number,y : Number) {
     x = x;
-    sound() => print(self.x.sound());
-    name(y: Animal) => print(self.x.name() @@ y.name());
-    get_animal() => self.x;
+    y = y;
+
+    getX() => self.x;
+    getY() => self.y;
+
+    setX(x) => self.x := x;
+    setY(y) => self.y := y;
 }
 
-let pepito = new Perro("pepito", 5), gatico : Animal = new Gato("gatito", 3) in {
-    let cont = new AnimalContainer(pepito) in  {
-        cont.name(gatico);
-        let a = cont.get_animal() in {
-            a.change_name("juanito");
-            cont.name(gatico);
-        };  
-    };
+type PolarPoint inherits Point {
+    rho() => sqrt(self.getX() ^ 2 + self.getY() ^ 2);
+}
 
-    print(pepito.name());
+let pt = new PolarPoint(3,4) in {
+    pt.setX(5);
+    pt.setY(12);
+    print("X: " @ pt.getX());
+    print("Y: " @ pt.getY());
+    print("Rho: " @ pt.rho());
 }

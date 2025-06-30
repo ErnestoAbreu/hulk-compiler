@@ -45,10 +45,17 @@ namespace hulk {
                 }
 
                 if(callee.lexeme == "base") {
+                    int idx = 0;
                     for (const auto& arg : arguments) {
-                        arg->infer(ctx);
+                        string should_type = "";
+                        if(ctx.current_method->params[idx++].attr_type)
+                            should_type = ctx.current_method->params[idx - 1].attr_type->name;
+                        arg->infer(ctx, should_type);
                     }
-                    return "String";
+
+                    if(ctx.current_method->return_type)
+                        return ctx.current_method->return_type->name;
+                    return "";
                 }
 
                 auto& func = ctx.get_function(callee.lexeme);

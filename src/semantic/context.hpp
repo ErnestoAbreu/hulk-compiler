@@ -17,6 +17,7 @@ namespace hulk {
 
             map<string, vector<string>> variable_scope;
             string self;
+            method* current_method;
 
             context() = default;
 

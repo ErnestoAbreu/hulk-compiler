@@ -27,10 +27,15 @@ namespace hulk {
             }
             else {
                 if(callee.lexeme == "base") {
+                    int idx = 0;
                     for (const auto& arg : arguments) {
-                        arg->type_check(ctx);
+                        string inferred_type = arg->type_check(ctx);
+                        if(ctx.get_type(inferred_type) <= *ctx.current_method->params[idx++].attr_type);
+                        else {
+                            internal::error(callee, "invalid param type", "semantic");
+                        }
                     }
-                    return "String";
+                    return ctx.current_method->return_type->name;
                 }
 
                 auto& func = ctx.get_function(callee.lexeme);

@@ -12,8 +12,18 @@ namespace hulk {
             }
             else {
                 if (callee.lexeme == "base") {
-                    for (const auto& arg : arguments) {
-                        arg->scoped_visit(ctx);
+                    if(ctx.current_method) {
+                        if(ctx.current_method->params.size() != arguments.size())  {
+                            internal::error(callee, "base params size mismatch.", "semantic");
+                        }
+                        else {
+                            for (const auto& arg : arguments) {
+                                arg->scoped_visit(ctx);
+                            }
+                        }
+                    }
+                    else {
+                        internal::error(callee, "Function does not exist", "semantic");
                     }
                     return;
                 }

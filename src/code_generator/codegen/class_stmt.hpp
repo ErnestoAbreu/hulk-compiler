@@ -15,10 +15,14 @@ namespace hulk {
 
             for (const auto& param : method->parameters) {
                 llvm::Type* param_type = GetType(param.type.get_lexeme(), TheModule.get());
+                if(param_type->isStructTy())
+                    param_type = param_type->getPointerTo();
                 param_types.push_back(param_type);
             }
 
             llvm::Type* return_type = GetType(method->return_type.get_lexeme(), TheModule.get());
+            if(return_type->isStructTy())
+                return_type = return_type->getPointerTo();
             llvm::FunctionType* func_type = llvm::FunctionType::get(return_type, param_types, false);
 
             llvm::Function* func = llvm::Function::Create(func_type, llvm::Function::InternalLinkage, type_name + "." + method->name.get_lexeme(), TheModule.get());
@@ -73,10 +77,14 @@ namespace hulk {
 
                 for (const auto& param : method->parameters) {
                     llvm::Type* param_type = GetType(param.type.get_lexeme(), TheModule.get());
+                    if(param_type->isStructTy())
+                        param_type = param_type->getPointerTo();
                     param_types.push_back(param_type);
                 }
 
                 llvm::Type* return_type = GetType(method->return_type.get_lexeme(), TheModule.get());
+                if(return_type->isStructTy())
+                    return_type = return_type->getPointerTo();
                 llvm::FunctionType* func_type = llvm::FunctionType::get(return_type, param_types, false);
                 MethodTypes[type_name][method->name.get_lexeme()] = func_type;
             }
@@ -128,8 +136,10 @@ namespace hulk {
             std::vector<field_stmt_ptr> fields = type_ptr->fields;
 
             std::vector<llvm::Type*> ctor_param_types;
-            for (const auto& param : parameters) {
+            for (const auto& param : parameters) {                
                 llvm::Type* param_type = GetType(param.type.get_lexeme(), TheModule.get());
+                if(param_type->isStructTy())
+                    param_type = param_type->getPointerTo();
                 ctor_param_types.push_back(param_type);
             }
 
@@ -196,6 +206,7 @@ namespace hulk {
                 Builder->getInt1(false)
                 });
 
+
             // Initialize the instance
             idx = 0;
             int off_set = 1;
@@ -234,6 +245,8 @@ namespace hulk {
 
             for (const auto& field : fields) {
                 llvm::Type* field_type = GetType(field->type.get_lexeme(), TheModule.get());
+                if(field_type->isStructTy())
+                    field_type = field_type->getPointerTo();
                 field_types.push_back(field_type);
                 AddStructField(type_name, field->name.lexeme);
             }
@@ -243,6 +256,7 @@ namespace hulk {
             create_vtable(this, class_type);
 
             create_type_constructor(this, class_type);
+
 
             return nullptr;
         }

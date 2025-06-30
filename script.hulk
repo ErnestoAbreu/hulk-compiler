@@ -1,25 +1,41 @@
 type Animal(name : String, age : Number) {
-    name : String = name;
-    age : Number = age;
+    name  = name;
+    age = age;
 
-    sound() : String => "Mooo...";
-    eat(): String => "Comiendo...";
+    name() => self.name;
+    change_name(new_name) => self.name := new_name;
+    sound()  => "Mooo...";
+    eat() => "Comiendo...";
 }
 
 type Perro inherits Animal {
-    sound() : String => "Guao guao...";
-    eat() : String => "No quiero, estoy enfermito";
+    sound()  => "Guao guao...";
+    eat()  => "No quiero, estoy enfermito";
 }
 
 type Gato inherits Animal {
-    sound() : String => "Miau Miau...";
+    sound()  => "Miau Miau...";
 }
 
 function f(x : Animal) {
     print(x.sound());
 }
 
-let pepito : Animal = new Perro("pepito", 5), gatico : Animal = new Gato("gatito", 3) in {
-    f(pepito);
-    f(gatico);
+type AnimalContainer(x: Animal) {
+    x = x;
+    sound() => print(self.x.sound());
+    name(y: Animal) => print(self.x.name() @@ y.name());
+    get_animal() => self.x;
+}
+
+let pepito = new Perro("pepito", 5), gatico : Animal = new Gato("gatito", 3) in {
+    let cont = new AnimalContainer(pepito) in  {
+        cont.name(gatico);
+        let a = cont.get_animal() in {
+            a.change_name("juanito");
+            cont.name(gatico);
+        };  
+    };
+
+    print(pepito.name());
 }

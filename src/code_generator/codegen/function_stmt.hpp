@@ -18,7 +18,11 @@ namespace hulk {
                     param_types.push_back(type);
             }
 
-            llvm::FunctionType* func_type = llvm::FunctionType::get(GetType(return_type.lexeme, TheModule.get()), param_types, false);
+            llvm::Type* ret_type = GetType(return_type.lexeme, TheModule.get());
+            if(ret_type->isStructTy())
+                ret_type = ret_type->getPointerTo();
+
+            llvm::FunctionType* func_type = llvm::FunctionType::get(ret_type, param_types, false);
 
             // Create Function
             llvm::Function* func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, name.lexeme, TheModule.get());

@@ -168,6 +168,7 @@ struct predictive_parser {
 
     for (const auto& prod : productions) {
       const string& A = prod.first;
+      if (A != "type_params" && A != "type_inheritance") continue;
       cout << A << "\n";
 
       for (const string& t : terminals) {
@@ -270,40 +271,27 @@ struct predictive_parser {
     do {
       changed = false;
       for (const auto& prod : productions) {
-        const string& A = prod.first;
+        const string& X = prod.first;
         for (const auto& production : prod.second) {
-          for (size_t i = 0; i < production.size(); i++) {
-            const string& B = production[i];
+          const vector<string>& W = production;
+          for (size_t i = 0; i < W.size(); i++) {
+            const string& B = W[i];
             if (!is_nonterminal(B)) continue;
 
-            // A -> αBβ
-            if (i + 1 < production.size()) {
-              const string& betaFirst = production[i + 1];
-              if (is_nonterminal(betaFirst)) {
-                // Add FIRST(β) - ε to FOLLOW(B)
-                for (const auto& b : first[betaFirst]) {
-                  if (b != epsilon) {
-                    changed |= follow[B].insert(b).second;
-                  }
-                }
+            // Calculate FIRST of the suffix (β)
+            vector<string> beta(W.begin() + i + 1, W.end());
+            auto first_beta = compute_firsts(beta);
 
-                // If β derives ε, also add FOLLOW(A) to FOLLOW(B)
-                if (!first[betaFirst].count(epsilon)) {
-                  for (const string& f : follow[A]) {
-                    changed |= follow[B].insert(f).second;
-                  }
-                }
-              } else {
-                // β is a terminal, add it to FOLLOW(B)
-                changed |= follow[B].insert(betaFirst).second;
+            // Add FIRST(β) - ε to FOLLOW(B)
+            for (const auto& b: first_beta) {
+              if (b != epsilon) {
+                changed |= follow[B].insert(b).second;
               }
             }
 
-            // A -> αB or A -> αBβ where β =>* ε
-            if (i + 1 >= production.size() ||
-                (is_nonterminal(production[i + 1]) &&
-                 first[production[i + 1]].count(epsilon))) {
-              for (const string& f : follow[A]) {
+            // If β derives ε, add FOLLOW(X) to FOLLOW(B)
+            if (first_beta.count(epsilon) || beta.empty()) {
+              for (const string& f : follow[X]) {
                 changed |= follow[B].insert(f).second;
               }
             }

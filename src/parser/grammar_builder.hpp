@@ -78,12 +78,17 @@ struct hulk_grammar : public grammar_builder {
     add_production("function_body", {ARROW, "expression"});
     add_production("function_body", {LBRACE, "expression_list", RBRACE});
 
-    add_production("type_decl", {KW_TYPE, IDENTIFIER, "type_params", "inheritance", LBRACE, "type_body", RBRACE});
-    add_production("type_params", {LPAREN, "args", RPAREN});
+    add_production("type_decl", {KW_TYPE, IDENTIFIER, "type_params", "type_inheritance", LBRACE, "type_body", RBRACE});
+    add_production("type_params", {LPAREN, "t_param_list", RPAREN});
     add_epsilon_production("type_params");
+
+    add_production("t_param_list", {"t_param", "t_param_list_tail"});
+    add_production("t_param_list_tail", {COMMA, "t_param", "t_param_list_tail"});
+    add_production("t_param", {IDENTIFIER, "opt_type_annotation"});
+    add_epsilon_production("t_param_list_tail");
     
-    add_production("inheritance", {KW_INHERITS, IDENTIFIER, "parent_args"});
-    add_epsilon_production("inheritance");
+    add_production("type_inheritance", {KW_INHERITS, IDENTIFIER, "parent_args"});
+    add_epsilon_production("type_inheritance");
     add_production("parent_args", {LPAREN, "args", RPAREN});
     add_epsilon_production("parent_args");
 

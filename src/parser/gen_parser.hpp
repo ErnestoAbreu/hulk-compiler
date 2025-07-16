@@ -84,12 +84,13 @@ struct predictive_parser {
   bool parse(const vector<token>& tokens) {
     vector<string> input;
     for (auto &x: tokens)
-      input.push_back(token_type_to_string(x.type));
+      input.push_back(x.type == END_OF_FILE ? "$" : token_type_to_string(x.type));
 
     bool success = true;
 
     vector<string> w = input;
-    w.push_back(eof_symb);
+
+    for (auto &v: w) cout << v << "\n";
 
     stack<string> st;
     st.push(eof_symb); st.push(start_symbol);

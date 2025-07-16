@@ -231,6 +231,14 @@ std::string token_type_to_string(token_type type) {
   return it != mapping.end() ? it->second : "???";
 }
 
+token_type string_to_token_type(std::string token_str) {
+  for (auto &[x, y]: mapping) {
+    if (y == token_str) return x; 
+  }
+  token_type tt = UNKNOWN;
+  return tt;
+}
+
 using literal = std::variant<std::nullptr_t, std::string, double, bool>;
 
 // Token simple con: Type, Value, Line y Column

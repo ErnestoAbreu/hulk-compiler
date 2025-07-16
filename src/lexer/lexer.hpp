@@ -87,6 +87,9 @@ std::vector<token> lex(const std::string &input) {
       tokens.push_back(tok);
     }
 
+    if (best_type == RBRACE)
+      tokens.push_back(token(token_type::D_SEMICOLON, "", nullptr, line, column));
+
     pos += max_len;
   }
 

@@ -106,6 +106,7 @@ enum token_type {
   RBRACE,    // }
   LBRACKET,  // [
   RBRACKET,  // ]
+  D_SEMICOLON,
 
   // Funciones reservadas *(No se si hacen falta)
   F_RANGE,   // range
@@ -208,6 +209,7 @@ const std::unordered_map<token_type, std::string> mapping = {
     TOKEN_ENTRY(RBRACE),
     TOKEN_ENTRY(LBRACKET),
     TOKEN_ENTRY(RBRACKET),
+    TOKEN_ENTRY(D_SEMICOLON),
 
     TOKEN_ENTRY(ARROW),
     TOKEN_ENTRY(RT_ARROW),

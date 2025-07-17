@@ -28,6 +28,19 @@ struct parse_error final : public std::runtime_error {
 
 const string epsilon = "ε", eof_symb = "$";
 
+struct derivation_node {
+  string symbol;
+  optional<token> node_token;
+  vector<unique_ptr<derivation_node>> children;
+
+  derivation_node(string symb) : symbol(std::move(symb)) {}
+  derivation_node(string symb, token t) : symbol(std::move(symb)), node_token(std::move(t)) {}
+
+  void add_child(unique_ptr<derivation_node> child) {
+    children.push_back(std::move(child));
+  }
+};
+
 struct predictive_parser {
   predictive_parser(const unordered_map<string, vector<vector<string>>>& grammar,
          const string& start, bool _verbose = false)
@@ -81,7 +94,9 @@ struct predictive_parser {
     }
   }
 
-  bool parse(const vector<token>& tokens) {
+  unique_ptr<derivation_node> root;
+
+  bool parse(vector<token> tokens) {
     vector<string> input;
     for (auto &x: tokens)
       input.push_back(x.type == END_OF_FILE ? "$" : token_type_to_string(x.type));
@@ -91,6 +106,10 @@ struct predictive_parser {
     vector<string> w = input;
 
     for (auto &v: w) cout << v << "\n";
+    
+    root = make_unique<derivation_node>(start_symbol);
+    stack<derivation_node*> node_st;
+    node_st.push(root.get());
 
     stack<string> st;
     st.push(eof_symb); st.push(start_symbol);
@@ -111,32 +130,46 @@ struct predictive_parser {
       }
 
       if (X == a) {
+        node_st.top()->node_token = tokens[ip];
+        node_st.pop();
+
         st.pop();
         ip++;
 
         if (verbose) cout << "Match " << X << endl;
       } else if (!is_nonterminal(X)) {
-        error(X, "Unexpected token '" + X + "'");
+        error(tokens[ip], "Unexpected token '" + X + "'");
         success = false;
         
-        if (!handle_unexpected_terminal(st, X))
+        if (!handle_unexpected_terminal(st, X, tokens[ip]))
           return success;
 
       } else if (!parsing_table[X].count(a)) {
-        error(X, "Unexpected token '" + a + "' on " + X);
+        error(tokens[ip], "Unexpected token '" + a + "' on " + X);
         success = false;
 
-        if (!handle_missing_production(st, w, ip, X, a))
+        if (!handle_missing_production(st, w, ip, X, a, tokens))
           return success;
 
       } else {
         vector<string> production = parsing_table[X][a];
         st.pop();
 
+        derivation_node* current_node = node_st.top();
+        node_st.pop();
+
         if (production[0] != epsilon) {
           for (auto it = production.rbegin(); it != production.rend(); it++) {
             st.push(*it);
+            auto child_node = make_unique<derivation_node>(*it);
+            current_node->add_child(std::move(child_node));
           }
+
+          for (auto it = current_node->children.rbegin(); it != current_node->children.rend(); it++) {
+            node_st.push(it->get());
+          }
+        } else {
+          current_node->add_child(make_unique<derivation_node>(epsilon));
         }
 
         if (verbose) {
@@ -154,6 +187,30 @@ struct predictive_parser {
     success |= w[ip] == eof_symb;
 
     return success;
+  }
+
+  void print_derivation_tree() {
+    if (!root) {
+      internal::error("No derivation tree built yet", "parser");
+      return;
+    }
+    print_node(root.get(), 0);
+  }
+
+  void print_node(const derivation_node* node, int depth) {
+    if (!node) return;
+
+    for (int i = 0; i < depth; i++)
+      cout << " ";
+
+    cout << node->symbol;
+    if (node->node_token.has_value()) {
+      cout << "(" << node->node_token->lexeme << ")" << "\n";
+    }
+    cout << "\n";
+
+    for (const auto &child: node->children)
+      print_node(child.get(), depth + 1);
   }
 
   void print_parsing_table() {
@@ -334,7 +391,7 @@ struct predictive_parser {
     return result;
   }
 
-  bool handle_unexpected_terminal(stack<string>& st, const string& X) {
+  bool handle_unexpected_terminal(stack<string>& st, const string& X, token tt) {
     st.pop();
 
     string next = st.top();
@@ -342,13 +399,13 @@ struct predictive_parser {
       return true;
     }
 
-    error(X, "Discarding unexpected token '" + X + "'");
+    error(tt, "Discarding unexpected token '" + X + "'");
     return true;
   }
   
-  bool handle_missing_production(stack<string>& st, vector<string>& w, size_t &ip, const string& X, const string& a) {
+  bool handle_missing_production(stack<string>& st, vector<string>& w, size_t &ip, const string& X, const string& a, vector<token> tokens) {
     if (parsing_table[X].count(epsilon)) {
-      error(X, "Using epsilon production " + X);
+      error(tokens[ip], "Using epsilon production " + X);
       st.pop();
       return true;
     }
@@ -358,7 +415,7 @@ struct predictive_parser {
     sync_set.insert(sync_symbols.begin(), sync_symbols.end());
 
     if (sync_set.count(a)) {
-      error(X, "Skipping nonterminal " + X + " (found sync token '" + a + "')");
+      error(tokens[ip], "Maybe you won't use a " + X + " (found sync token '" + a + "')");
       st.pop();
       return true;
     }
@@ -367,12 +424,12 @@ struct predictive_parser {
 
     while (ip < w.size() && skips < max_skips) {
       if (sync_set.count(w[ip])) {
-        error(w[ip], "Found sync token '" + w[ip] + "' after skipping" + to_string(skips) + " tokens");
+        error(tokens[ip], "Found sync token '" + w[ip] + "' after skipping" + to_string(skips) + " tokens");
         return true;
       }
     }
 
-    error(X, "Reached end of input during recovery");
+    error(tokens[ip], "Reached end of input during recovery");
     return false;
   }
 
@@ -397,10 +454,9 @@ struct predictive_parser {
     return result;
   }
 
-  static parse_error error(string x,
+  static parse_error error(token x,
                           std::string message) {
-    lexer::token token;
-    internal::error(token, message, "parser");
+    internal::error(x, message, "parser");
     return parse_error(message);
   }
 };

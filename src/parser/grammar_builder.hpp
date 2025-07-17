@@ -76,7 +76,7 @@ struct hulk_grammar : public grammar_builder {
     add_epsilon_production("param_list_tail");
 
     add_production("function_body", {ARROW, "expression"});
-    add_production("function_body", {LBRACE, "expression_list", RBRACE});
+    add_production("function_body", {"block_expr"});
 
     add_production("type_decl", {KW_TYPE, IDENTIFIER, "type_params", "type_inheritance", LBRACE, "type_body", RBRACE});
     add_production("type_params", {LPAREN, "t_param_list", RPAREN});
@@ -100,7 +100,7 @@ struct hulk_grammar : public grammar_builder {
     add_production("opt_initializer", {"initializer"});
     add_epsilon_production("opt_initializer");
 
-    add_production("member_tail", {LPAREN, "args", RPAREN, "opt_type_annotation", "function_body", "sep_semicolon"});
+    add_production("member_tail", {LPAREN, "opt_param_list", RPAREN, "opt_type_annotation", "function_body", "sep_semicolon"});
 
     add_production("protocol_decl", {KW_PROTOCOL, IDENTIFIER, "protocol_inheritance", LBRACE, "protocol_body", RBRACE});
 

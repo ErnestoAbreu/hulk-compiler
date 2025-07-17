@@ -79,6 +79,9 @@ std::vector<token> lex(const std::string &input) {
         column++;
     }
 
+    if (!tokens.empty() && tokens.back().type == RBRACE && best_type != SEMICOLON)
+      tokens.push_back(token(token_type::D_SEMICOLON, "", nullptr, line, column));
+
     token tok(best_type, lexeme, value, line, column);
 
     // agregar si no es WHITESPACE ni COMMENT ni NEWLINE
@@ -87,13 +90,14 @@ std::vector<token> lex(const std::string &input) {
       tokens.push_back(tok);
     }
 
-    if (best_type == RBRACE)
-      tokens.push_back(token(token_type::D_SEMICOLON, "", nullptr, line, column));
-
     pos += max_len;
   }
 
+  if (!tokens.empty() && tokens.back().type == RBRACE)
+      tokens.push_back(token(token_type::D_SEMICOLON, "", nullptr, line, column));
+
   tokens.push_back(token(token_type::END_OF_FILE, "", nullptr, line, column));
+
   return tokens;
 }
 

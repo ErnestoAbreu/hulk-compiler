@@ -427,7 +427,7 @@ struct predictive_parser {
 
     if (sync_set.count(a)) {
       error(tokens[ip],
-            "Maybe you won't use a " + X + " (found sync token '" + a + "')");
+            "did can't use " + X + " (found sync token '" + a + "')");
       st.pop();
       return true;
     }

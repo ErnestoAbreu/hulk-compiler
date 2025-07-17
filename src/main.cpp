@@ -53,13 +53,21 @@ int main(const int argc, char** argv) {
    
   std::cerr << "LEXED" << "\n";
 
-  auto parser = parser::parser(tokens);
-  const auto& ast = parser.parse();
+  gen_parser::hulk_grammar HG;
+
+  auto parser = gen_parser::predictive_parser(HG.grammar, HG.start, false);
+
+  auto success = parser.parse(tokens);
 
   if (internal::error_found) return -1;
 
-  std::cerr << "PARSED" << "\n";
+  // parser.print_derivation_tree();
 
+  gen_parser::ast_builder builder;
+  const auto& ast = builder.build(parser.root.get());
+
+  std::cerr << "PARSED" << "\n";
+  
   if (semantic::analyze(ast))
     return -1;
 

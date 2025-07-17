@@ -109,8 +109,6 @@ struct predictive_parser {
 
     vector<string> w = input;
 
-    for (auto& v : w) cout << v << "\n";
-
     root = make_unique<derivation_node>(start_symbol);
     stack<derivation_node*> node_st;
     node_st.push(root.get());

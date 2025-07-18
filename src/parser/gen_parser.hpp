@@ -51,15 +51,6 @@ struct predictive_parser {
     compute_first();
     compute_follow();
     build_parsing_table();
-    init_error_handlers();
-  }
-
-  void init_error_handlers() {
-    for (const auto& row : parsing_table) {
-      for (const auto& entry : row.second) {
-        sync_symbols.insert(entry.first);
-      }
-    }
   }
 
   void build_parsing_table() {
@@ -400,13 +391,12 @@ struct predictive_parser {
   bool handle_unexpected_terminal(stack<string>& st, const string& X,
                                   token tt) {
     st.pop();
-
+  
     string next = st.top();
     if (is_nonterminal(next) && parsing_table[next].count(X)) {
       return true;
     }
 
-    error(tt, "Discarding unexpected token '" + X + "'");
     return true;
   }
 
@@ -414,18 +404,29 @@ struct predictive_parser {
                                  size_t& ip, const string& X, const string& a,
                                  vector<token> tokens) {
     if (parsing_table[X].count(epsilon)) {
-      error(tokens[ip], "Using epsilon production " + X);
+      error(tokens[ip],
+        "Found: '" + w[ip] + "' where " + X + " is optional; " +
+        "possible fixes: (1) add valid " + X + " content " + "(2) remove this token if unintended");
       st.pop();
       return true;
     }
 
     unordered_set<string> sync_set = follow[X];
     sync_set.insert(first[X].begin(), first[X].end());
-    sync_set.insert(sync_symbols.begin(), sync_symbols.end());
+
+    auto suggest = [&](const string& nonterminal) {
+      string res;
+      for (const auto &entry: parsing_table[nonterminal]) {
+        if (!res.empty()) res += ", ";
+        auto repr_symbol = token_to_symbol(entry.first);
+        if (!repr_symbol.empty())
+          res += "'" + repr_symbol + "'";
+      }
+      return res;
+    };
 
     if (sync_set.count(a)) {
-      error(tokens[ip],
-            "did can't use " + X + " (found sync token '" + a + "')");
+      error(tokens[ip], X + " cannot contain '" + a + "' here; expected " + suggest(X));
       st.pop();
       return true;
     }
@@ -434,13 +435,11 @@ struct predictive_parser {
 
     while (ip < w.size() && skips < max_skips) {
       if (sync_set.count(w[ip])) {
-        error(tokens[ip], "Found sync token '" + w[ip] + "' after skipping" +
-                              to_string(skips) + " tokens");
         return true;
       }
+      ip++; skips++;
     }
 
-    error(tokens[ip], "Reached end of input during recovery");
     return false;
   }
 

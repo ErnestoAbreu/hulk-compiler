@@ -228,6 +228,99 @@ const std::unordered_map<token_type, std::string> mapping = {
 #undef TOKEN_ENTRY
 };
 
+std::string token_to_symbol(const std::string& token_name) {
+    static const std::unordered_map<std::string, std::string> token_symbols = {
+        // Operadores y símbolos
+        {"OP_PLUS", "+"},
+        {"OP_MINUS", "-"},
+        {"OP_MULTIPLY", "*"},
+        {"OP_DIVIDE", "/"},
+        {"OP_MODULE", "%"},
+        {"OP_INCREMENT", "++"},
+        {"OP_DECREMENT", "--"},
+        {"OP_EXPONENT", "**"},
+        {"OP_CONCAT", "@"},
+        {"OP_DOBLE_CONCAT", "@@"},
+        {"OP_ASSIGN", "="},
+        {"OP_DESTRUCT_ASSIGN", ":="},
+        {"OP_PLUS_ASSIGN", "+="},
+        {"OP_MINUS_ASSIGN", "-="},
+        {"OP_MULT_ASSIGN", "*="},
+        {"OP_DIV_ASSIGN", "/="},
+        {"OP_MOD_ASSIGN", "%="},
+        {"OP_EQUAL", "=="},
+        {"OP_NOT_EQUAL", "!="},
+        {"OP_LESS", "<"},
+        {"OP_LESS_EQ", "<="},
+        {"OP_GREATER", ">"},
+        {"OP_GREATER_EQ", ">="},
+        {"OP_AND", "&"},
+        {"OP_OR", "|"},
+        {"OP_NOT", "!"},
+        {"OP_IS", "is"},
+        {"OP_AS", "as"},
+        {"SEMICOLON", ";"},
+        {"COLON", ":"},
+        {"COMMA", ","},
+        {"DOT", "."},
+        {"LPAREN", "("},
+        {"RPAREN", ")"},
+        {"LBRACE", "{"},
+        {"RBRACE", "}"},
+        {"LBRACKET", "["},
+        {"RBRACKET", "]"},
+        {"ARROW", "=>"},
+        {"RT_ARROW", "->"},
+
+        // Palabras clave y literales
+        {"KW_IF", "if"},
+        {"KW_ELIF", "elif"},
+        {"KW_ELSE", "else"},
+        {"KW_WHILE", "while"},
+        {"KW_FOR", "for"},
+        {"KW_FUNCTION", "function"},
+        {"KW_LET", "let"},
+        {"KW_IN", "in"},
+        {"KW_TYPE", "type"},
+        {"KW_NEW", "new"},
+        {"KW_INHERITS", "inherits"},
+        {"KW_SELF", "self"},
+        {"KW_BASE", "base"},
+        {"KW_PROTOCOL", "protocol"},
+        {"KW_EXTENDS", "extends"},
+        {"TRUE", "true"},
+        {"FALSE", "false"},
+        {"T_NULL", "null"},
+        {"T_OBJECT", "object"},
+        {"T_NUMBER", "number"},
+        {"T_BOOLEAN", "boolean"},
+        {"T_STRING", "string"},
+        {"T_CHAR", "char"},
+        {"F_RANGE", "range"},
+        {"F_RANDOM", "rand"},
+        {"F_PRINT", "print"},
+        {"F_SIN", "sin"},
+        {"F_COS", "cos"},
+        {"F_LOG", "log"},
+        {"F_COT", "cot"},
+        {"F_TAN", "tan"},
+        {"F_PI", "pi"}
+    };
+
+    auto it = token_symbols.find(token_name);
+    if (it != token_symbols.end()) {
+        return it->second;
+    }
+
+    if (token_name == "IDENTIFIER") return "identifier";
+    if (token_name == "NUMBER") return "number";
+    if (token_name == "STRING") return "string";
+    if (token_name == "CHAR") return "char";
+    if (token_name == "END_OF_FILE") return "eof";
+
+    return "";
+}
+
 std::string token_type_to_string(token_type type) {
   auto it = mapping.find(type);
   return it != mapping.end() ? it->second : "???";

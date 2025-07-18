@@ -28,7 +28,9 @@ type Point(x : Number,y : Number) {
 }
 
 type PolarPoint inherits Point {
-    rho() : Number => sqrt(self.getX() ^ 2 + self.getY() ^ 2);
+    rho() : Number {
+        sqrt(self.getX() ^ 2 + self.getY() ^ 2);
+    }
 }
 
 function f(x : Animal) {
@@ -79,17 +81,17 @@ let pepito = new Perro("pepito", 5), gatico : Animal = new Gato("gatito", 3) in 
             print("Gatico ahora es Juanito");
         } else {
             print("Gatico no es ni Gatico ni Juanito");
-        }
+        };
     } else {
         print("Se sigue llamado Pepito");
-    }
+    };
 
     let i = 0 in while (i < 10) {
         if (i % 2 == 0) {
             print("Iteracion" @@ i @@ gatico.name());
         } else {
             print("Iteracion" @@ i @@ pepito.name());
-        }
+        };
         i := i + 1;
     };
 

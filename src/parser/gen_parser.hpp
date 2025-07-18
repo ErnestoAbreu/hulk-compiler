@@ -132,7 +132,7 @@ struct predictive_parser {
 
         if (verbose) cout << "Match " << X << endl;
       } else if (!is_nonterminal(X)) {
-        error(tokens[ip], "Unexpected token '" + X + "'");
+        error(tokens[ip - (tokens[ip].type == D_SEMICOLON)], "Unexpected token '" + X + "'");
         success = false;
 
         if (!handle_unexpected_terminal(st, X, tokens[ip])) return success;

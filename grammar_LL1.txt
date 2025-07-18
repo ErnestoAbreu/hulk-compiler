@@ -1,102 +1,184 @@
-program -> decl_list expr opt_semicolon EOF
+program -> declaration_list
 
-decl_list -> decl decl_list
-           | e
+declaration_list -> declaration sep_semicolon declaration_list
+                  | ε
 
-decl -> function_decl_inline function_decl_fullform type_decl protocol_decl
+sep_semicolon -> SEMICOLON
+               | D_SEMICOLON
 
-function_decl_inline -> "function" IDENTIFIER "(" params_list ")" opt_type "=>" expr ";"
+declaration -> function_decl
+             | type_decl
+             | protocol_decl
+             | stmt
 
-function_decl_fullform -> "function" IDENTIFIER "(" params_list ")" opt_type block_expr
+function_decl -> KW_FUNCTION IDENTIFIER LPAREN opt_param_list RPAREN opt_type_annotation function_body
 
-type_decl -> "type" IDENTIFIER opt_type_params op_inherits opt_inherits_args type_body
+opt_param_list -> param_list
+                | ε
 
-type_body -> opt_type_fields opt_type_methods
+param_list -> param param_list_tail
+param_list_tail -> COMMA param param_list_tail
+                 | ε
 
-opt_type_fields -> IDENTIFIER opt_type "=" expr ";"
+param -> IDENTIFIER opt_type_annotation
 
-opt_type_methods -> IDENTIFIER "(" params_list ")" opt_type "=>" expr ";"
-                   | IDENTIFIER "(" params_list ")" opt_type block_expr
+function_body -> ARROW expression
+               | block_expr
 
-protocol_decl -> "protocol" IDENTIFIER opt_protocol_extends "{" protocol_methods "}"
+type_decl -> KW_TYPE IDENTIFIER type_params type_inheritance LBRACE type_body RBRACE
 
-params_list -> IDENTIFIER opt_type ("," IDENTIFIER opt_type)*
+type_params -> LPAREN t_param_list RPAREN
+             | ε
 
-opt_type_params -> "(" IDENTIFIER opt_type ("," IDENTIFIER opt)* ")"
+t_param_list -> t_param t_param_list_tail
+t_param_list_tail -> COMMA t_param t_param_list_tail
+                   | ε
 
-opt_inherits_args -> "(" expr ("," expr)* ")"
+t_param -> IDENTIFIER opt_type_annotation
 
-opt_inherits -> "inherits" IDENTIFIER "(" args ")"
-              | e
+type_inheritance -> KW_INHERITS IDENTIFIER parent_args
+                  | ε
 
-opt_protocol_extends -> "extends" IDENTIFIER
+parent_args -> LPAREN args RPAREN
+             | ε
 
-protocol_methods -> IDENTIFIER "(" protocol_params ")" ":" TYPE ";" protocol_methods
+type_body -> member type_body
+           | ε
 
-protocol_params -> IDENTIFIER ":" TYPE ("," IDENTIFIER ":" TYPE)*
+member -> IDENTIFIER member_tail
+member_tail -> opt_type_annotation opt_initializer SEMICOLON
+             | LPAREN opt_param_list RPAREN opt_type_annotation function_body sep_semicolon
 
-args -> expr ("," expr)*
-      | e
+opt_initializer -> initializer
+                 | ε
 
-stmt_list -> expr ";" stmt_list
-          | decl stmt_list
+protocol_decl -> KW_PROTOCOL IDENTIFIER protocol_inheritance LBRACE protocol_body RBRACE
 
-opt_semicolon -> ";"
-              | e
-              
-expr -> let_expr if_expr while_expr for_expr block_expr assignment
+protocol_inheritance -> KW_EXTENDS IDENTIFIER
+                      | ε
 
-let_expr -> "let" declaration_expr "in" expr
+protocol_body -> protocol_method protocol_body_tail
+protocol_body_tail -> SEMICOLON protocol_method protocol_body_tail
+                    | ε
 
-declaration_expr -> IDENTIFIER opt_type "=" expr
+protocol_method -> IDENTIFIER LPAREN method_params RPAREN type_annotation SEMICOLON
 
-block_expr -> "{" expr_list "}"
+method_params -> m_param_list
+               | ε
 
-if_expr -> "if" "(" expr ")" expr elif_list opt_else
+m_param_list -> m_param m_param_list_tail
+m_param_list_tail -> COMMA m_param m_param_list_tail
+                   | ε
 
-elif_list -> "elif" "(" expr ")" expr elif_list
-          | e
+m_param -> IDENTIFIER type_annotation
 
-opt_else -> "else" expr
-          | e
+expression -> let_expr
+            | if_expr
+            | while_expr
+            | block_expr
+            | for_expr
+            | assignment
 
-while_expr -> "while" "(" expr ")" expr
+block_expr -> LBRACE expression_list RBRACE
 
-for_expr -> "for" "(" IDENTIFIER "in" expr ")" expr
+expression_list -> opt_expression expression_list_tail
+expression_list_tail -> SEMICOLON opt_expression expression_list_tail
+                      | ε
 
-assignment -> or_expr (":=" assignment)
+opt_expression -> expression
+                | ε
 
-or_expr -> and_expr ("|" and_expr)
+let_expr -> KW_LET binding_list KW_IN expression
 
-and_expr -> equality ("&" equality)
+binding -> IDENTIFIER opt_type_annotation initializer
 
-concat -> add ("@" add)*
+binding_list -> binding binding_list_tail
+binding_list_tail -> COMMA binding binding_list_tail
+                   | ε
 
-add -> mul (("+" | "-") mul)*
+if_expr -> KW_IF LPAREN expression RPAREN expression elif_list KW_ELSE expression
+elif_list -> KW_ELIF LPAREN expression RPAREN expression elif_list
+           | ε
 
-mul -> power (("*" | "/") power)*
+while_expr -> KW_WHILE LPAREN expression RPAREN expression
+for_expr -> KW_FOR LPAREN IDENTIFIER opt_type_annotation KW_IN expression RPAREN expression
 
-power -> unary ("^" power)?
+let_expr -> KW_LET binding_list KW_IN expression
 
-unary -> ("!" | "-") unary
-      | primary
+binding -> IDENTIFIER opt_type_annotation initializer
 
-primary -> NUMBER
-        | STRING
-        | ("true" | "false")
-        | IDENTIFIER call_or_member *
-        | "(" expr ")"
-        | new_expr 
-        | block_expr
+binding_list -> binding binding_list_tail
+binding_list_tail -> COMMA binding binding_list_tail
+                   | ε
 
-new_expr -> "new" IDENTIFIER "(" args ")"
+if_expr -> KW_IF LPAREN expression RPAREN expression elif_list KW_ELSE expression
+elif_list -> KW_ELIF LPAREN expression RPAREN expression elif_list
+           | ε
 
-call_or_member -> "(" args ")"
-                | "." IDENTIFIER
+while_expr -> KW_WHILE LPAREN expression RPAREN expression
+for_expr -> KW_FOR LPAREN IDENTIFIER opt_type_annotation KW_IN expression RPAREN expression
 
-opt_type -> ":" TYPE
-          | e
+assignment -> or_expr assignment_tail
+assignment_tail -> OP_DESTRUCT_ASSIGN or_expr assignment_tail
+                 | ε
 
-expr_list -> expr ";" expr_list
-          | e
+or_expr -> and_expr or_expr_tail
+or_expr_tail -> OP_OR and_expr or_expr_tail
+              | ε
 
+and_expr -> equality and_expr_tail
+and_expr_tail -> OP_AND equality and_expr_tail
+               | ε
+
+equality -> comparison equality_tail
+equality_tail -> OP_NOT_EQUAL comparison equality_tail
+               | OP_EQUAL comparison equality_tail
+               | ε
+
+comparison -> term comparison_tail
+comparison_tail -> OP_GREATER term comparison_tail
+                 | OP_GREATER_EQ term comparison_tail
+                 | OP_LESS term comparison_tail
+                 | OP_LESS_EQ term comparison_tail
+                 | ε
+
+term -> factor term_tail
+term_tail -> OP_MINUS factor term_tail
+           | OP_PLUS factor term_tail
+           | ε
+
+factor -> unary factor_tail
+factor_tail -> OP_DIVIDE unary factor_tail
+             | OP_MODULE unary factor_tail
+             | OP_MULTIPLY unary factor_tail
+             | OP_EXPONENT unary factor_tail
+             | OP_CONCAT unary factor_tail
+             | OP_DOBLE_CONCAT unary factor_tail
+             | ε
+
+unary -> OP_NOT unary
+       | OP_MINUS unary
+       | var_call
+
+primary -> FALSE
+         | TRUE
+         | T_NULL
+         | NUMBER
+         | STRING
+         | IDENTIFIER finish_call
+         | LPAREN expression RPAREN
+         | KW_NEW IDENTIFIER LPAREN args RPAREN
+
+var_call -> primary var_call_tail
+var_call_tail -> DOT IDENTIFIER finish_call var_call_tail
+               | ε
+
+finish_call -> LPAREN args RPAREN
+             | ε
+
+args -> expr_list
+      | ε
+
+expr_list -> expression expr_list_tail
+expr_list_tail -> COMMA expression expr_list_tail
+                | ε

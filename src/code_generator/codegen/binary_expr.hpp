@@ -97,6 +97,50 @@ namespace hulk {
             return Builder->CreateCall(powFunc, { base, exponent }, name);
         }
 
+        llvm::Value* compare_strings(llvm::IRBuilder<>* builder, llvm::Value* str1, llvm::Value* str2, binary_op op) {
+            llvm::Module* module = builder->GetInsertBlock()->getModule();
+            
+            // Ensure we have strcmp function
+            llvm::Function* strcmp_fn = module->getFunction("strcmp");
+            if (!strcmp_fn) {
+                llvm::FunctionType* strcmpType = llvm::FunctionType::get(
+                    builder->getInt32Ty(),
+                    {builder->getInt8Ty()->getPointerTo(), builder->getInt8Ty()->getPointerTo()},
+                    false
+                );
+                strcmp_fn = llvm::Function::Create(
+                    strcmpType,
+                    llvm::Function::ExternalLinkage,
+                    "strcmp",
+                    module
+                );
+            }
+            
+            // Call strcmp
+            llvm::Value* cmp_result = builder->CreateCall(strcmp_fn, {
+                builder->CreateBitCast(str1, builder->getInt8Ty()->getPointerTo()),
+                builder->CreateBitCast(str2, builder->getInt8Ty()->getPointerTo())
+            }, "strcmp_result");
+            
+            // Convert result to boolean based on comparison type
+            switch(op) {
+                case binary_op::EQUAL_EQUAL:
+                    return builder->CreateICmpEQ(cmp_result, builder->getInt32(0), "streq");
+                case binary_op::NOT_EQUAL:
+                    return builder->CreateICmpNE(cmp_result, builder->getInt32(0), "strneq");
+                case binary_op::LESS:
+                    return builder->CreateICmpSLT(cmp_result, builder->getInt32(0), "strlt");
+                case binary_op::LESS_EQUAL:
+                    return builder->CreateICmpSLE(cmp_result, builder->getInt32(0), "strle");
+                case binary_op::GREATER:
+                    return builder->CreateICmpSGT(cmp_result, builder->getInt32(0), "strgt");
+                case binary_op::GREATER_EQUAL:
+                    return builder->CreateICmpSGE(cmp_result, builder->getInt32(0), "strge");
+                default:
+                    return nullptr;
+            }
+        }
+
         llvm::Value* binary_expr::codegen() {
             llvm::Value* L = left->codegen();
             llvm::Value* R = right->codegen();
@@ -104,6 +148,15 @@ namespace hulk {
             if (!L || !R) {
                 internal::error(token, "binary expression is nullptr");
                 return nullptr;
+            }
+
+            bool is_string_comparison = (op == binary_op::EQUAL_EQUAL || op == binary_op::NOT_EQUAL || 
+                                       op == binary_op::LESS || op == binary_op::LESS_EQUAL ||
+                                       op == binary_op::GREATER || op == binary_op::GREATER_EQUAL) &&
+                                      (L->getType()->isPointerTy() && R->getType()->isPointerTy());
+
+            if (is_string_comparison) {
+                return compare_strings(Builder.get(), L, R, op);
             }
 
             switch (op) {

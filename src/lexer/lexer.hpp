@@ -44,12 +44,13 @@ std::vector<token> lex(const std::string &input) {
     size_t max_len = 0;
     token_type best_type = token_type::UNKNOWN;
 
-    for (size_t len = 1; pos + len <= n; ++len) {
+    for (size_t len = n - pos; len >= 1 && max_len == 0; --len) {
       for (auto &nfa : nfas) {
         std::string sub = input.substr(pos, len);
-        if (match(nfa.first, sub) && len > max_len) {
+        if (len > max_len && match(nfa.first, sub)) {
           max_len = len;
           best_type = nfa.second;
+          break;
         }
       }
     }
@@ -79,14 +80,17 @@ std::vector<token> lex(const std::string &input) {
         column++;
     }
 
-    if (!tokens.empty() && tokens.back().type == RBRACE && best_type != SEMICOLON)
-      tokens.push_back(token(token_type::D_SEMICOLON, "", nullptr, line, column));
-
+    
     token tok(best_type, lexeme, value, line, column);
-
+    
     // agregar si no es WHITESPACE ni COMMENT ni NEWLINE
     if (best_type != token_type::WHITESPACE &&
-        best_type != token_type::COMMENT && best_type != token_type::NEWLINE) {
+      best_type != token_type::COMMENT && best_type != token_type::NEWLINE) {
+      
+      if (!tokens.empty() && tokens.back().type == RBRACE && (best_type != SEMICOLON && best_type != KW_ELIF && best_type != KW_ELSE)) {
+        tokens.push_back(token(token_type::D_SEMICOLON, "", nullptr, line, column));
+      }
+      
       tokens.push_back(tok);
     }
 

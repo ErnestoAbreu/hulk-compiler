@@ -52,7 +52,7 @@ int main(const int argc, char** argv) {
   if (internal::error_found) return -1;
    
   std::cerr << "LEXED" << "\n";
-
+  
   gen_parser::hulk_grammar HG;
 
   auto parser = gen_parser::predictive_parser(HG.grammar, HG.start, false);

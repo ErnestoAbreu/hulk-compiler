@@ -105,6 +105,7 @@ struct hulk_grammar : public grammar_builder {
     add_production("protocol_decl", {KW_PROTOCOL, IDENTIFIER, "protocol_inheritance", LBRACE, "protocol_body", RBRACE});
 
     add_production("protocol_inheritance", {KW_EXTENDS, IDENTIFIER});
+    add_epsilon_production("protocol_inheritance");
     add_production("protocol_body", {"protocol_method", "protocol_body_tail"});
     add_production("protocol_body_tail", {SEMICOLON, "protocol_method", "protocol_body_tail"});
     add_production("protocol_method", {IDENTIFIER, LPAREN, "method_params", RPAREN, "type_annotation", SEMICOLON});
